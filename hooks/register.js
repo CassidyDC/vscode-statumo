@@ -77,8 +77,8 @@ async function refresh($) {
     formatContext(usage?.context),
     formatLimit('5h', limits.find(limit => limit.kind === 'five_hour'), resetTime),
     formatLimit('7d', limits.find(limit => limit.kind === 'seven_day'), resetDate),
-    branch || '—',
     title || 'Untitled',
+    branch || '—',
   ].join(' | '))
 }
 

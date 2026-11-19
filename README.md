@@ -2,7 +2,7 @@
 
 **Usage** is a Claude Code mod that displays a plain-text usage line above the prompt when the graphical VS Code panel is the session's only display surface.
 
-`Context <used>/<window>, x% used | 5h x% left, resets HH:mm | 7d x% left, resets Mon D | git-branch | session title`
+`Context <used>/<window>, x% used | 5h x% left, resets HH:mm | 7d x% left, resets Mon D | session title | git-branch`
 
 Token counts use `k` for thousands and `m` for millions, as in `48.3k/1m`.
 
