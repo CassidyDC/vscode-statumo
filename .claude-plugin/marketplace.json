@@ -6,7 +6,7 @@
   },
   "plugins": [
     {
-      "name": "code-usage-preview",
+      "name": "usage",
       "source": "./",
       "description": "Show live context usage, remaining rate limits, Git branch, and session title in Claude Code for VS Code."
     }

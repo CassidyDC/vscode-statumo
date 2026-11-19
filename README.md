@@ -1,6 +1,6 @@
 # Claude Code Usage
 
-A Claude Code mod that displays a plain-text usage line above the prompt when the graphical VS Code panel is the session's only display surface.
+**Usage** is a Claude Code mod that displays a plain-text usage line above the prompt when the graphical VS Code panel is the session's only display surface.
 
 `Context <used>/<window>, x% used | 5h x% left, resets HH:mm | 7d x% left, resets Mon D | git-branch | session title`
 
@@ -16,10 +16,12 @@ Use Claude Code for VS Code 2.1.299 or later. Sessions that run without feature 
 
 ```sh
 claude plugin marketplace add "$PWD"
-claude plugin install code-usage-preview@code-usage-local --scope local
+claude plugin install usage@code-usage-local --scope local
 ```
 
 Open this folder in VS Code, dock the graphical Claude Code panel in the Secondary Side Bar, and start a new local conversation. Look for **Context** in the plugin’s status line. The line follows the Claude Code panel when you move it.
+
+To migrate an existing project-local install, run `claude plugin marketplace update code-usage-local`, install `usage@code-usage-local` as shown above, then run `claude plugin uninstall code-usage-preview@code-usage-local --scope local --keep-data`.
 
 For validation, run `claude plugin validate ./.claude-plugin/plugin.json --strict`.
 
