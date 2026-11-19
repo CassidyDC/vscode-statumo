@@ -8,7 +8,12 @@ const resetTime = new Intl.DateTimeFormat('en-GB', {
 const resetDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
 
 function formatTokens(tokens) {
-  return Number.isFinite(tokens) ? `${Math.round(tokens / 100) / 10}k` : '—'
+  if (!Number.isFinite(tokens)) return '—'
+
+  const thousands = Math.round(tokens / 100) / 10
+  if (thousands < 1000) return `${thousands}k`
+
+  return `${Math.round(tokens / 100_000) / 10}m`
 }
 
 function formatContext(context) {
