@@ -12,16 +12,45 @@ A dash marks a reading Claude hasn't reported or a branch the mod couldn't read.
 
 ## Install in VS Code
 
-Use Claude Code for VS Code 2.1.299 or later. Sessions that run without feature flags require 2.1.304 or later. From a terminal in this directory, register the local marketplace and install the mod for the current project.
+Use Claude Code for VS Code 2.1.299 or later. Sessions that run without feature flags require 2.1.304 or later.
+
+From the Usage checkout, register its marketplace once. Claude Code loads the mod from this checkout, so keep it at the registered path.
 
 ```sh
 claude plugin marketplace add "$PWD"
+```
+
+### Local install for one project
+
+Run the install command from the root of the project where you want Usage.
+
+```sh
 claude plugin install usage@code-usage-local --scope local
 ```
 
-Open this folder in VS Code, dock the graphical Claude Code panel in the Secondary Side Bar, and start a new local conversation. Look for **Context** in the plugin’s status line. The line follows the Claude Code panel when you move it.
+### Global install for all local projects
 
-To migrate an existing project-local install, run `claude plugin marketplace update code-usage-local`, install `usage@code-usage-local` as shown above, then run `claude plugin uninstall code-usage-preview@code-usage-local --scope local --keep-data`.
+Install Usage at user scope to make it available across your local projects on this machine.
+
+```sh
+claude plugin install usage@code-usage-local --scope user
+```
+
+If you're switching from a local install, run this from that project's root after the global install succeeds.
+
+```sh
+claude plugin uninstall usage@code-usage-local --scope local --keep-data
+```
+
+### Open the Claude Code panel
+
+Open a project in VS Code, dock the graphical Claude Code panel in the Secondary Side Bar, and start a new local conversation. Look for **Context** in the Usage status line. The line follows the Claude Code panel when you move it.
+
+### Migrate from the old plugin name
+
+If you installed `code-usage-preview` in a project, run `claude plugin marketplace update code-usage-local` before installing Usage at your chosen scope. After the install succeeds, run `claude plugin uninstall code-usage-preview@code-usage-local --scope local --keep-data` from that project's root.
+
+## Validation
 
 For validation, run `claude plugin validate ./.claude-plugin/plugin.json --strict`.
 
