@@ -1,0 +1,8 @@
+{
+  "name": "code-usage-preview",
+  "version": "0.1.0",
+  "description": "Show live context usage, remaining rate limits, Git branch, and session title in Claude Code for VS Code.",
+  "author": {
+    "name": "Jacob Cassidy"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "code-usage-local",
+  "description": "Local marketplace for the Claude Code Usage mod.",
+  "owner": {
+    "name": "Jacob Cassidy"
+  },
+  "plugins": [
+    {
+      "name": "code-usage-preview",
+      "source": "./",
+      "description": "Show live context usage, remaining rate limits, Git branch, and session title in Claude Code for VS Code."
+    }
+  ]
+}
