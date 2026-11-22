@@ -3,10 +3,10 @@
 Statumo shows how much context and rate limit you have left in Claude Code and Codex, right in the VS Code status bar.
 
 ```text
-[Claude logo] (layers) 12%  (clock) 84%  (calendar) 61%    [OpenAI logo] (layers) 41%  (clock) 16%  (calendar) 80%
+Claude (layers) 12%  (clock) 84%  (calendar) 61%    Codex (layers) 41%  (clock) 16%  (calendar) 80%
 ```
 
-Each tool is marked by its logo, Claude or OpenAI, and shows three percents, each led by a ring that fills to match it in 5% steps:
+Each tool is marked by its name, Claude or Codex, and shows three percents, each led by a ring that fills to match it in 5% steps:
 
 - **Context** (layers in the ring) is how much of the current session's context window is used.
 - **5-hour limit** (clock) and **7-day limit** (calendar) are how much of each rate-limit window is left.
@@ -74,10 +74,10 @@ Statumo only reads files on your machine and makes no network requests. Session 
 
 ## Development
 
-Run the tests with `npm test`. The logos and progress rings in the status bar come from an icon font that `npm run build:icons` builds from `images/logos/` and the ring shapes drawn in `scripts/build-icons.js`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`.
+Run the tests with `npm test`. The progress rings in the status bar come from an icon font that `npm run build:icons` builds from the ring shapes drawn in `scripts/build-icons.js`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`.
 
 The Usage mod for Claude Code lives in `claude-mod/` and stays out of the extension package. Its [README](claude-mod/README.md) documents the session file format Statumo reads and how to validate the mod.
 
 ## Trademarks
 
-Claude is a trademark of Anthropic. OpenAI and Codex are trademarks of OpenAI. Statumo isn't affiliated with or endorsed by either company, and uses their logos only to label each tool's usage.
+Claude is a trademark of Anthropic. OpenAI and Codex are trademarks of OpenAI. Statumo isn't affiliated with or endorsed by either company, and uses their names only to label each tool's usage.

@@ -4,7 +4,6 @@ AGENTS.md
 images/icon.svg
 test/**
 *.vsix
-images/logos/**
 scripts/**
 claude-mod/**
 .claude-plugin/**

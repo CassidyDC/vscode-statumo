@@ -1,6 +1,6 @@
 /**
  * Icon font build.
- * @file Turn the brand logos in `images/logos/` and the generated progress rings into the icon font the status bar items draw.
+ * @file Draw the progress rings and build them into the icon font the status bar items use.
  */
 
 'use strict'
@@ -213,28 +213,16 @@ function ringSvg(symbol, step) {
 }
 
 /**
- * Every glyph in the font: the brand logos, then each ring kind at each step.
+ * Every glyph in the font: each ring kind at each step.
  * @returns {Glyph[]} The glyphs.
  */
 function collectGlyphs() {
-  const logos = [
-    { name: 'claude', description: 'Claude logo', codePoint: 0xe001 },
-    { name: 'codex', description: 'OpenAI Codex logo', codePoint: 0xe002 },
-  ].map(({ name, description, codePoint }) => ({
-    id: `statumo-${name}`,
-    description,
-    codePoint,
-    svg: fs.readFileSync(path.join(root, 'images', 'logos', `${name}.svg`)),
-  }))
-
-  const rings = ringKinds.flatMap(({ kind, symbol, description }, kindIndex) => ringSteps.map((step, stepIndex) => ({
+  return ringKinds.flatMap(({ kind, symbol, description }, kindIndex) => ringSteps.map((step, stepIndex) => ({
     id: ringIconId(kind, step),
     description: `${description} at ${step}%`,
     codePoint: ringCodePointBase + kindIndex * 0x20 + stepIndex,
     svg: Buffer.from(ringSvg(symbol, step)),
   })))
-
-  return [...logos, ...rings]
 }
 
 /**

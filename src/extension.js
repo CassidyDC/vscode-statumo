@@ -44,7 +44,7 @@ const pruneIntervalMs = 86_400_000
  * One tool's status bar item.
  * @typedef {object} Tool
  * @property {'claude' | 'codex'} id - The tool's settings key.
- * @property {string} icon - The brand logo from Statumo's icon font, as status bar text.
+ * @property {string} label - The tool's short name, which starts its status bar items.
  * @property {string} name - The tool's full name.
  * @property {number} priority - The tool's status bar priority; higher sits further left.
  * @property {string} openCommand - The Statumo command that opens the tool.
@@ -58,7 +58,7 @@ const pruneIntervalMs = 86_400_000
 const tools = [
   {
     id: 'claude',
-    icon: '$(statumo-claude)',
+    label: 'Claude',
     name: 'Claude Code',
     priority: 101,
     openCommand: 'statumo.openClaude',
@@ -66,7 +66,7 @@ const tools = [
   },
   {
     id: 'codex',
-    icon: '$(statumo-codex)',
+    label: 'Codex',
     name: 'Codex',
     priority: 100,
     openCommand: 'statumo.openCodex',
@@ -168,7 +168,7 @@ function render(items, tool, usage, settings, now) {
   const contextItem = items.get('context')
 
   contextItem.tooltip = toTooltip(buildTooltip(tool.name, usage, now))
-  contextItem.text = `${tool.icon} ${segments.context.text}`
+  contextItem.text = `${tool.label} ${segments.context.text}`
   contextItem.accessibilityInformation = { label: `${tool.name} context ${segments.context.value} used` }
   contextItem.show()
 
