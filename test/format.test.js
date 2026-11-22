@@ -55,8 +55,8 @@ function texts(segments) {
   return [segments.context.text, ...segments.windows.map(window => window.text)]
 }
 
-test('builds segments with context used and limits left', () => {
-  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['$(statumo-cx-10) 12%', '$(statumo-5h-85) 84%', '$(statumo-7d-60) 61%'])
+test('builds segments with context and limits used', () => {
+  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['$(statumo-cx-10) 12%', '$(statumo-5h-15) 16%', '$(statumo-7d-40) 39%'])
 })
 
 test('shows only an empty context ring when the workspace has no session', () => {
@@ -84,8 +84,8 @@ test('empties the ring of a window whose reset has passed', () => {
   })
   const segments = buildSegments(usage, now)
 
-  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-60) 61%'])
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/small> · .*Reset Nov 22 at 09:00.*\s+No reading since the reset/)
+  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-40) 39%'])
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/small><\/small>&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\s+.*No reading since the reset/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -116,20 +116,27 @@ test('formats token counts in thousands and millions', () => {
   assert.equal(formatTokens(null), '—')
 })
 
-test('escapes session titles in the tooltip', () => {
+test('lays out each tooltip section as label and note, bold amount, then bar', () => {
   const usage = makeUsage({ plan: 'Plus' })
 
   usage.session.title = 'Fix [link](https://example.com) *now*'
 
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
+  const sections = tooltip.split('\n\n---\n\n')
 
-  assert.match(tooltip, /\\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*/)
-  assert.match(tooltip, /<small>Context<\/small> · .*48\\\.3k \/ 400k tokens.*\s+12% used\s+<span/)
-  assert.match(tooltip, /<small>5-hour limit<\/small> · .*Resets Nov 22 at 14:30.*\s+84% left\s+<span/)
-  assert.match(tooltip, /<small>7-day limit<\/small> · .*Resets Nov 27 at 09:00.*\s+61% left\s+<span/)
-  assert.match(tooltip, /Plan: Plus/)
-  assert.doesNotMatch(tooltip, /Click to open/)
-  assert.equal(tooltip.split('\n\n---\n\n').length, 5)
+  assert.equal(sections.length, 5)
+  assert.equal(sections[0], '#### Codex \\- Statumo')
+  assert.match(sections[1], /^<small><small>Context<\/small><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
+  assert.match(sections[2], /^<small><small>5-hour limit<\/small><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(4h 30m\\\).*\s+\*\*16%\*\* .*used/)
+  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(4d 23h\\\).*\s+\*\*39%\*\* .*used/)
+  assert.match(sections[4], /Plan: Plus.*\s+.*Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
+})
+
+test('splits the updated line when the session and limits were read at different times', () => {
+  const usage = makeUsage({ limitsUpdatedAt: new Date(2026, 10, 22, 6, 45) })
+  const footer = buildTooltip('Codex', usage, thresholds, now).split('\n\n---\n\n').at(-1)
+
+  assert.match(footer, /Session Updated: 2m ago.*\s+.*Limits Read: 3h 15m ago/)
 })
 
 test('escapes HTML in session titles so only the progress bars are HTML', () => {
@@ -149,6 +156,6 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   })
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▂<\/span><span style="color:var\(--vscode-scrollbarSlider-background\);">▂{19}</)
-  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▂{12}<\/span>/)
+  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▂{19}<\/span><span style="color:var\(--vscode-scrollbarSlider-background\);">▂</)
+  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▂{8}<\/span>/)
 })

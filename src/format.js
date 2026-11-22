@@ -43,6 +43,15 @@ function isLimitStale(limit, now) {
 }
 
 /**
+ * Percent of a window used, rounded and kept between 0 and 100.
+ * @param {import('./usage').LimitReading} limit - The window's reading.
+ * @returns {number} The percent used.
+ */
+function percentUsed(limit) {
+  return Math.max(0, Math.min(100, Math.round(limit.percentUsed)))
+}
+
+/**
  * Percent of a window left, rounded and kept between 0 and 100.
  * @param {import('./usage').LimitReading} limit - The window's reading.
  * @returns {number} The percent left.
@@ -70,8 +79,8 @@ function formatTokens(tokens) {
  * One rate-limit window's part of the status bar.
  * @typedef {object} WindowSegment
  * @property {'fiveHour' | 'sevenDay'} key - Which window.
- * @property {string} text - The window's ring icon and percent left, such as `$(statumo-5h-85) 84%`, or the empty ring alone when unknown or stale.
- * @property {string | null} value - The percent left, such as `84%`, or null when unknown or stale.
+ * @property {string} text - The window's ring icon and percent used, such as `$(statumo-5h-15) 16%`, or the empty ring alone when unknown or stale.
+ * @property {string | null} value - The percent used, such as `16%`, or null when unknown or stale.
  * @property {boolean} isStale - Whether the reading predates the window's reset.
  * @property {import('./usage').LimitReading | null} limit - The window's reading.
  */
@@ -89,33 +98,48 @@ function buildWindowSegment(key, ring, limit, now) {
 
   if (!limit || isStale) return { key, text: ringIcon(ring, null), value: null, isStale, limit }
 
-  const remaining = percentLeft(limit)
+  const used = percentUsed(limit)
 
-  return { key, text: `${ringIcon(ring, remaining)} ${remaining}%`, value: `${remaining}%`, isStale, limit }
+  return { key, text: `${ringIcon(ring, used)} ${used}%`, value: `${used}%`, isStale, limit }
 }
 
 /**
- * Format when a window resets.
- * @param {Date} date - The reset time.
- * @returns {string} The reset, such as `Nov 27 at 09:00`.
+ * Format a span of whole minutes in days, hours, and minutes, leaving out units that are zero.
+ * @param {number} minutes - The span in minutes.
+ * @returns {string} The span, such as `5h 22m` or `1d 3m`, or `<1m` when under a minute.
  */
-function formatReset(date) {
-  return `${shortDate.format(date)} at ${clockTime.format(date)}`
+function formatDuration(minutes) {
+  const parts = [
+    [Math.floor(minutes / 1440), 'd'],
+    [Math.floor((minutes % 1440) / 60), 'h'],
+    [minutes % 60, 'm'],
+  ].filter(([amount]) => amount > 0)
+
+  return parts.length ? parts.map(([amount, unit]) => `${amount}${unit}`).join(' ') : '<1m'
+}
+
+/**
+ * Format when a window resets and how long until then.
+ * @param {Date} date - The reset time.
+ * @param {Date} now - The current time.
+ * @returns {string} The reset, such as `Nov 27 at 09:00 (4d 23h)`.
+ */
+function formatReset(date, now) {
+  const minutes = Math.max(0, Math.ceil((date.getTime() - now.getTime()) / 60_000))
+
+  return `${shortDate.format(date)} at ${clockTime.format(date)} (${formatDuration(minutes)})`
 }
 
 /**
  * Format how long ago something happened.
  * @param {Date} date - When it happened.
  * @param {Date} now - The current time.
- * @returns {string} The age, such as `3 min ago`.
+ * @returns {string} The age, such as `2m ago` or `1d 3h ago`.
  */
 function formatAge(date, now) {
-  const seconds = Math.max(0, (now.getTime() - date.getTime()) / 1000)
+  const minutes = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 60_000))
 
-  if (seconds < 60) return 'just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`
-  if (seconds < 86_400) return `${Math.floor(seconds / 3600)} h ago`
-  return shortDate.format(date)
+  return minutes ? `${formatDuration(minutes)} ago` : 'just now'
 }
 
 /**
@@ -146,7 +170,7 @@ function tildify(value) {
  */
 
 /**
- * Build a tool's status bar segments: context used, then each window's percent left,
+ * Build a tool's status bar segments: the percent of context used, then of each window used,
  * each percent led by a ring that fills to match it.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
@@ -255,15 +279,34 @@ function progressBar(percent, level = null) {
 }
 
 /**
- * Build one tooltip section: a small label with a smaller dimmed note, the value, then an optional bar.
+ * Shrink text two steps and show it in the theme's dimmer description color.
+ * @param {string} text - The escaped text.
+ * @returns {string} The text's HTML.
+ */
+function fine(text) {
+  return dim(`<small><small>${text}</small></small>`)
+}
+
+/**
+ * Format a section's amount: a bold percent followed by a fine word.
+ * @param {number} percent - The percent.
+ * @param {string} word - What the percent measures, such as `used`.
+ * @returns {string} The amount's Markdown.
+ */
+function amount(percent, word) {
+  return `**${percent}%** ${fine(word)}`
+}
+
+/**
+ * Build one tooltip section: a small label and fine note, the amount, then an optional bar.
  * @param {string} label - The section's label.
  * @param {string | null} note - The note after the label, already escaped, or null for none.
- * @param {string} value - The section's value, such as `84% left`.
+ * @param {string} value - The section's amount or status, as Markdown.
  * @param {string | null} bar - The section's progress bar, or null for none.
  * @returns {string} The section's Markdown.
  */
 function tooltipSection(label, note, value, bar) {
-  const heading = note ? `<small>${label}</small> · ${dim(`<small><small>${note}</small></small>`)}` : `<small>${label}</small>`
+  const heading = `<small><small>${label}</small></small>${note ? `&nbsp;&nbsp;${fine(note)}` : ''}`
 
   return [heading, value, bar].filter(Boolean).join('  \n')
 }
@@ -274,15 +317,15 @@ function tooltipSection(label, note, value, bar) {
  * @returns {string} The section's Markdown.
  */
 function contextSection(session) {
-  if (!session) return tooltipSection('Context', null, 'No session in this workspace yet', null)
-  if (!session.context) return tooltipSection('Context', null, 'Not reported yet', null)
+  if (!session) return tooltipSection('Context', null, fine('No session in this workspace yet'), null)
+  if (!session.context) return tooltipSection('Context', null, fine('Not reported yet'), null)
 
   const { tokens = null, window = null, percent = null } = session.context
   const note = escapeMarkdown(`${formatTokens(tokens)} / ${formatTokens(window)} tokens`)
 
-  if (percent === null) return tooltipSection('Context', note, 'Unknown', null)
+  if (percent === null) return tooltipSection('Context', note, fine('Unknown'), null)
 
-  return tooltipSection('Context', note, `${Math.round(percent)}% used`, progressBar(percent))
+  return tooltipSection('Context', note, amount(Math.round(percent), 'used'), progressBar(percent))
 }
 
 /**
@@ -296,23 +339,50 @@ function contextSection(session) {
 function limitSection(key, limit, thresholds, now) {
   const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
 
-  if (!limit) return tooltipSection(label, null, 'Not reported yet', null)
+  if (!limit) return tooltipSection(label, null, fine('Not reported yet'), null)
 
   if (isLimitStale(limit, now)) {
-    const note = escapeMarkdown(`Reset ${formatReset(limit.resetsAt)}`)
+    const note = escapeMarkdown(`Reset ${shortDate.format(limit.resetsAt)} at ${clockTime.format(limit.resetsAt)}`)
 
-    return tooltipSection(label, note, 'No reading since the reset', progressBar(0))
+    return tooltipSection(label, note, fine('No reading since the reset'), progressBar(0))
   }
 
-  const remaining = percentLeft(limit)
-  const note = limit.resetsAt ? escapeMarkdown(`Resets ${formatReset(limit.resetsAt)}`) : null
+  const used = percentUsed(limit)
+  const note = limit.resetsAt ? escapeMarkdown(`Resets ${formatReset(limit.resetsAt, now)}`) : null
 
-  return tooltipSection(label, note, `${remaining}% left`, progressBar(remaining, getWindowLevel(limit, thresholds, now)))
+  return tooltipSection(label, note, amount(used, 'used'), progressBar(used, getWindowLevel(limit, thresholds, now)))
+}
+
+/**
+ * Build the tooltip's footer lines: the plan, the session's title and folder, and when the session
+ * and limits were last updated, merged into one line when both read the same.
+ * @param {import('./usage').ToolUsage} usage - The tool's readings.
+ * @param {Date} now - The current time.
+ * @returns {string[]} The lines, already escaped.
+ */
+function footerLines(usage, now) {
+  const { session } = usage
+  const lines = []
+  const sessionAge = session ? formatAge(session.updatedAt, now) : null
+  const limitsAge = usage.limitsUpdatedAt ? formatAge(usage.limitsUpdatedAt, now) : null
+
+  if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
+  if (session?.title) lines.push(escapeMarkdown(session.title))
+  if (session?.cwd) lines.push(`Session: ${escapeMarkdown(tildify(session.cwd))}`)
+
+  if (sessionAge && sessionAge === limitsAge && !session.isEnded) {
+    lines.push(`Updated: ${sessionAge}`)
+  } else {
+    if (sessionAge) lines.push(`Session ${session.isEnded ? 'Ended' : 'Updated'}: ${sessionAge}`)
+    if (limitsAge) lines.push(`Limits Read: ${limitsAge}`)
+  }
+
+  return lines
 }
 
 /**
  * Build a tool's hover tooltip as Markdown with HTML: a large heading, then context and each window
- * in sections divided by rules, each with a progress bar, and the reading details at the bottom.
+ * in sections divided by rules, each with a progress bar, and the session and reading details at the bottom.
  *
  * Render it with `supportHtml` on.
  * @param {string} name - The tool's full name.
@@ -322,28 +392,12 @@ function limitSection(key, limit, thresholds, now) {
  * @returns {string} The tooltip's Markdown.
  */
 function buildTooltip(name, usage, thresholds, now) {
-  const { session } = usage
-  const header = [`### ${escapeMarkdown(name)}`]
-  const footer = []
-
-  if (session?.title) header.push(dim(escapeMarkdown(session.title)))
-  if (usage.plan) footer.push(`Plan: ${escapeMarkdown(usage.plan)}`)
-
-  if (session) {
-    const state = session.isEnded ? 'ended' : 'updated'
-    const folder = session.cwd ? `${escapeMarkdown(tildify(session.cwd))}, ` : ''
-
-    footer.push(`Session: ${folder}${state} ${formatAge(session.updatedAt, now)}`)
-  }
-
-  if (usage.limitsUpdatedAt) footer.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
-
   return [
-    header.join('\n\n'),
-    contextSection(session),
+    `#### ${escapeMarkdown(`${name} - Statumo`)}`,
+    contextSection(usage.session),
     limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
     limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),
-    footer.map(line => dim(`<small>${line}</small>`)).join('  \n'),
+    footerLines(usage, now).map(line => dim(`<small>${line}</small>`)).join('  \n'),
   ].filter(Boolean).join('\n\n---\n\n')
 }
 

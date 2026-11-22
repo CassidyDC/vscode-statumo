@@ -1,15 +1,15 @@
 # Statumo
 
-Statumo shows how much context and rate limit you have left in Claude Code and Codex, right in the VS Code status bar.
+Statumo shows how much context and rate limit you've used in Claude Code and Codex, right in the VS Code status bar.
 
 ```text
-Claude (layers) 12% (clock) 84% (calendar) 61%    Codex (layers) 41% (clock) 16% (calendar) 80%
+Claude (layers) 12% (clock) 16% (calendar) 39%    Codex (layers) 41% (clock) 84% (calendar) 20%
 ```
 
 Each tool is one status bar item that starts with its name, Claude or Codex, and shows three percents, each led by a ring that fills to match it in 5% steps:
 
 - **Context** (layers in the ring) is how much of the current session's context window is used.
-- **5-hour limit** (clock) and **7-day limit** (calendar) are how much of each rate-limit window is left.
+- **5-hour limit** (clock) and **7-day limit** (calendar) are how much of each rate-limit window is used.
 
 Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets, your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
 
@@ -18,7 +18,7 @@ Hover over an item for the full breakdown, with a progress bar for context and e
 - **Context** comes from the most recently active session whose working folder is in the current VS Code workspace. Until a tool has a session here, context shows just an empty ring.
 - **Rate limits** belong to your account, so they come from the most recent reading in any session.
 - When a window's reset time passes with no newer reading, it shows just an empty ring until the tool reports again. So does a window the tool hasn't reported yet.
-- An item turns the warning color when either window has 25% or less left, and the error color at 10% or less. Both thresholds are settings.
+- An item turns the warning color when either window has 25% or less left (75% or more used), and the error color at 10% or less left (90% or more used). Both thresholds are settings, set as percent left.
 
 A tool's item stays hidden until it has written any usage on this machine.
 
