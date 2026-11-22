@@ -2,6 +2,7 @@
 .vscodeignore
 AGENTS.md
 images/icon.svg
+images/statumo-icon.png
 test/**
 *.vsix
 scripts/**
