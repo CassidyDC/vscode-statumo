@@ -127,8 +127,8 @@ test('lays out each tooltip section as label and note, bold amount, then bar', (
   assert.equal(sections.length, 5)
   assert.equal(sections[0], '#### Codex \\- Statumo')
   assert.match(sections[1], /^<small><small><b>Context<\/b><\/small><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
-  assert.match(sections[2], /^<small><small><b>5-hour limit<\/b><\/small><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(4h 30m\\\).*\s+\*\*16%\*\* .*used/)
-  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(4d 23h\\\).*\s+\*\*39%\*\* .*used/)
+  assert.match(sections[2], /^<small><small><b>5-hour limit<\/b><\/small><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(in 4h 30m\\\).*\s+\*\*16%\*\* .*used/)
+  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(in 4d 23h\\\).*\s+\*\*39%\*\* .*used/)
   assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
 })
 

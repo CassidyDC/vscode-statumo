@@ -122,12 +122,12 @@ function formatDuration(minutes) {
  * Format when a window resets and how long until then.
  * @param {Date} date - The reset time.
  * @param {Date} now - The current time.
- * @returns {string} The reset, such as `Nov 27 at 09:00 (4d 23h)`.
+ * @returns {string} The reset, such as `Nov 27 at 09:00 (in 4d 23h)`.
  */
 function formatReset(date, now) {
   const minutes = Math.max(0, Math.ceil((date.getTime() - now.getTime()) / 60_000))
 
-  return `${shortDate.format(date)} at ${clockTime.format(date)} (${formatDuration(minutes)})`
+  return `${shortDate.format(date)} at ${clockTime.format(date)} (in ${formatDuration(minutes)})`
 }
 
 /**
