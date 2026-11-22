@@ -6,6 +6,7 @@
 'use strict'
 
 const fs = require('node:fs/promises')
+const os = require('node:os')
 const path = require('node:path')
 const { listNames, parseJson, statFile } = require('./files')
 const { isInWorkspace } = require('./paths')
@@ -33,6 +34,79 @@ const formatVersion = 1
  * @type {Map<string, { mtimeMs: number, size: number, record: ClaudeRecord | null }>}
  */
 const recordCache = new Map()
+
+/**
+ * The plan last read from Claude Code's global config file, kept until the file changes.
+ * @type {{ filePath: string, mtimeMs: number, size: number, plan: string | null } | undefined}
+ */
+let planCache
+
+/**
+ * Find Claude Code's global config file, which records the signed-in account.
+ *
+ * Claude Code keeps it in the home folder beside the default `~/.claude` config
+ * folder, and inside the config folder when `CLAUDE_CONFIG_DIR` moves it.
+ * @param {string} configDirectory - The Claude config folder.
+ * @returns {string} The config file's path.
+ */
+function globalConfigPath(configDirectory) {
+  const isDefault = path.resolve(configDirectory) === path.join(os.homedir(), '.claude')
+
+  return path.join(isDefault ? os.homedir() : configDirectory, '.claude.json')
+}
+
+/**
+ * Name the account's plan from the config file's account fields, such as `Max 5x`
+ * for the `claude_max` organization type with a `default_claude_max_5x` rate-limit tier.
+ * @param {any} account - The config file's `oauthAccount` value.
+ * @returns {string | null} The plan's name, or null when the account has none.
+ */
+function formatClaudePlan(account) {
+  const type = account?.organizationType
+
+  if (typeof type !== 'string' || !type.trim()) return null
+
+  const name = type
+    .replace(/^claude_/, '')
+    .split('_')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+
+  const tier = typeof account.organizationRateLimitTier === 'string' ? account.organizationRateLimitTier : ''
+  const multiplier = /_(\d+x)$/.exec(tier)?.[1]
+
+  return multiplier ? `${name} ${multiplier}` : name
+}
+
+/**
+ * Read the signed-in account's plan from Claude Code's global config file,
+ * reusing the last reading while the file is unchanged.
+ * @param {string} configDirectory - The Claude config folder.
+ * @returns {Promise<string | null>} The plan's name, or null when it isn't recorded.
+ */
+async function readClaudePlan(configDirectory) {
+  const filePath = globalConfigPath(configDirectory)
+  const stats = await statFile(filePath)
+
+  if (!stats) return null
+
+  const cached = planCache?.filePath === filePath ? planCache : undefined
+
+  if (cached?.mtimeMs === stats.mtimeMs && cached.size === stats.size) return cached.plan
+
+  const text = await fs.readFile(filePath, 'utf8').catch(() => undefined)
+  const data = text === undefined ? undefined : parseJson(text)
+
+  // A file caught mid-write fails to parse; keep the last reading until it settles.
+  if (data === undefined) return cached?.plan ?? null
+
+  const plan = formatClaudePlan(data?.oauthAccount)
+
+  planCache = { filePath, mtimeMs: stats.mtimeMs, size: stats.size, plan }
+
+  return plan
+}
 
 /**
  * The folder the Usage mod writes session files to.
@@ -138,7 +212,7 @@ async function readClaudeUsage({ configDirectory, folders }) {
     },
     limits: limitsRecord?.limits ?? emptyLimits(),
     limitsUpdatedAt: limitsRecord?.updatedAt ?? null,
-    plan: null,
+    plan: await readClaudePlan(configDirectory),
   }
 }
 

@@ -91,6 +91,33 @@ test('Claude: follows the workspace session and the newest limits', async () => 
   assert.equal(usage.limitsUpdatedAt.toISOString(), '2026-11-22T09:30:00.000Z')
 })
 
+test('Claude: names the plan from the signed-in account in the global config file', async () => {
+  const configDirectory = path.join(root, 'claude-plan')
+
+  /**
+   * Write Claude Code's global config file with the given account.
+   * @param {object} oauthAccount - The account's fields.
+   * @returns {Promise<void>} Resolves once written.
+   */
+  const writeAccount = oauthAccount => fs.writeFile(path.join(configDirectory, '.claude.json'), JSON.stringify({ oauthAccount }))
+
+  await writeClaudeSession(configDirectory, 'session', {})
+
+  assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).plan, null)
+
+  await writeAccount({ organizationType: 'claude_max', organizationRateLimitTier: 'default_claude_max_20x' })
+
+  assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).plan, 'Max 20x')
+
+  await writeAccount({ organizationType: 'claude_pro', organizationRateLimitTier: null })
+
+  assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).plan, 'Pro')
+
+  await fs.writeFile(path.join(configDirectory, '.claude.json'), '{')
+
+  assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).plan, 'Pro')
+})
+
 test('Claude: returns null without session files, and prunes old ones', async () => {
   const configDirectory = path.join(root, 'claude-prune')
 

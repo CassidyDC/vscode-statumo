@@ -26,7 +26,7 @@ A tool's item stays hidden until it has written any usage on this machine.
 
 ### Claude Code
 
-VS Code extensions can't see Claude Code's rate limits directly, so Statumo reads them from **Usage**, a Claude Code mod that ships in this repository's [`claude-mod/`](claude-mod/README.md) folder. Usage writes each session's usage to `~/.claude/usage/sessions/`. Statumo deletes session files there that haven't changed in 30 days.
+VS Code extensions can't see Claude Code's rate limits directly, so Statumo reads them from **Usage**, a Claude Code mod that ships in this repository's [`claude-mod/`](claude-mod/README.md) folder. Usage writes each session's usage to `~/.claude/usage/sessions/`. Statumo deletes session files there that haven't changed in 30 days. Your plan comes from the signed-in account Claude Code records in `~/.claude.json`.
 
 Usage needs Claude Code 2.1.304 or later. From the root of a Statumo checkout, register the checkout as a marketplace and install Usage at user scope so every session writes its usage, whether it runs in the VS Code panel or a terminal. Claude Code loads the mod from the checkout, so keep it at the registered path.
 
