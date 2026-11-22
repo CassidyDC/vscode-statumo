@@ -152,6 +152,15 @@ function escapeMarkdown(text) {
 }
 
 /**
+ * Escape text so HTML shows it literally, for text inside HTML blocks, where Markdown escapes don't apply.
+ * @param {string} text - The text to escape.
+ * @returns {string} The escaped text.
+ */
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+/**
  * Shorten a path under the home folder to start with `~`.
  * @param {string} value - The path to shorten.
  * @returns {string} The shortened path.
@@ -284,8 +293,8 @@ function dim(text) {
 }
 
 /**
- * Draw a progress bar as HTML the hover sanitizer keeps: runs of upper-half block characters,
- * which join into a solid line half the text's height along the top of its line, colored with theme colors.
+ * Draw a progress bar as HTML the hover sanitizer keeps: runs of lower-quarter block characters,
+ * which join into a solid line a quarter of the text's height, about 4px, colored with theme colors.
  * @param {number} percent - How full the bar is, from 0 to 100.
  * @param {'error' | 'warning' | null} [level] - The warning level that colors the fill.
  * @returns {string} The bar's HTML.
@@ -299,7 +308,7 @@ function progressBar(percent, level = null) {
    * @param {number} cells - How many cells the run spans.
    * @returns {string} The run's HTML, or nothing when it spans no cells.
    */
-  const run = (color, cells) => cells ? `<span style="color:${color};">${'▀'.repeat(cells)}</span>` : ''
+  const run = (color, cells) => cells ? `<span style="color:${color};">${'▂'.repeat(cells)}</span>` : ''
 
   return `${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}`
 }
@@ -316,15 +325,18 @@ function amount(percent, word) {
 }
 
 /**
- * Build one tooltip section: a bold label and dimmed note, the amount, then an optional bar.
+ * Build one tooltip section: a bold label with an optional dimmed note aligned to the right edge,
+ * the amount, then an optional bar. The heading is a full-width table, the only way the hover
+ * sanitizer allows right alignment, so the note ends where the bar ends.
  * @param {string} label - The section's label.
- * @param {string | null} note - The note after the label, already escaped, or null for none.
+ * @param {string | null} note - The note across from the label, unescaped, or null for none.
  * @param {string} value - The section's amount, or a dimmed status, as Markdown.
  * @param {string | null} bar - The section's progress bar, or null for none.
  * @returns {string} The section's Markdown.
  */
 function tooltipSection(label, note, value, bar) {
-  const heading = `**${label}**${note ? `&nbsp;&nbsp;${dim(note)}` : ''}`
+  const noteCell = note ? `<td align="right">${dim(escapeHtml(note))}</td>` : ''
+  const heading = `<table width="100%"><tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr></table>`
 
   return [heading, value, bar].filter(Boolean).join('\n\n')
 }
@@ -339,7 +351,7 @@ function contextSection(session) {
   if (!session.context) return tooltipSection('Context', null, dim('Not reported yet'), null)
 
   const { tokens = null, window = null, percent = null } = session.context
-  const note = escapeMarkdown(`${formatTokens(tokens)} / ${formatTokens(window)} tokens`)
+  const note = `${formatTokens(tokens)} / ${formatTokens(window)} tokens`
 
   if (percent === null) return tooltipSection('Context', note, dim('Unknown'), null)
 
@@ -360,13 +372,13 @@ function limitSection(key, limit, thresholds, now) {
   if (!limit) return tooltipSection(label, null, dim('Not reported yet'), null)
 
   if (isLimitStale(limit, now)) {
-    const note = escapeMarkdown(`Reset ${shortDate.format(limit.resetsAt)} at ${clockTime.format(limit.resetsAt)}`)
+    const note = `Reset ${shortDate.format(limit.resetsAt)} at ${clockTime.format(limit.resetsAt)}`
 
     return tooltipSection(label, note, dim('No reading since the reset'), progressBar(0))
   }
 
   const used = percentUsed(limit)
-  const note = limit.resetsAt ? escapeMarkdown(`Resets ${formatReset(limit.resetsAt, now)}`) : null
+  const note = limit.resetsAt ? `Resets ${formatReset(limit.resetsAt, now)}` : null
 
   return tooltipSection(label, note, amount(used, 'used'), progressBar(used, getWindowLevel(limit, thresholds, now)))
 }

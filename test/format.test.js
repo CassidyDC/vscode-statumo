@@ -85,7 +85,7 @@ test('empties the ring of a window whose reset has passed', () => {
   const segments = buildSegments(usage, now)
 
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-40) 39%'])
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /\*\*5-hour limit\*\*&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\n\n.*No reading since the reset/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*Reset Nov 22 at 09:00<.*\n\n.*No reading since the reset/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -126,9 +126,9 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
 
   assert.equal(sections.length, 5)
   assert.equal(sections[0], 'Codex \\- Statumo')
-  assert.match(sections[1], /^\*\*Context\*\*&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\n\n## 12% .*used.*\n\n<span/)
-  assert.match(sections[2], /^\*\*5-hour limit\*\*&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(4h 30m\\\).*\n\n## 16% .*used/)
-  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(4d 23h\\\).*\n\n## 39% .*used/)
+  assert.match(sections[1], /^<table width="100%"><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><\/table>\n\n## 12% .*used.*\n\n<span/)
+  assert.match(sections[2], /^<table width="100%"><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/table>\n\n## 16% .*used/)
+  assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/table>\n\n## 39% .*used/)
   assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
 })
 
@@ -156,8 +156,8 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   })
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{39}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{2}</)
-  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▀{16}<\/span>/)
+  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▂{39}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▂{2}</)
+  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▂{16}<\/span>/)
 })
 
 test('shortens long paths in the middle, keeping the first and last folders', () => {
