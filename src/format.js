@@ -262,10 +262,11 @@ function getToolLevel(limits, thresholds, now) {
 }
 
 /**
- * How many cells wide a tooltip progress bar is, about 320px at the hover's 13px text.
+ * How many cells wide a tooltip progress bar is, about 320px at the bar's text size: the hover's
+ * 13px text made smaller twice, about 9px.
  * @type {number}
  */
-const barCells = 41
+const barCells = 59
 
 /**
  * Theme colors for a progress bar's fill, by warning level.
@@ -293,8 +294,12 @@ function dim(text) {
 }
 
 /**
- * Draw a progress bar as HTML the hover sanitizer keeps: runs of lower-quarter block characters,
- * which join into a solid line a quarter of the text's height, about 4px, colored with theme colors.
+ * Draw a progress bar as HTML the hover sanitizer keeps: runs of upper-half block characters in
+ * text made smaller twice, which join into a solid line about 4.5px tall, colored with theme colors.
+ *
+ * The upper half block is one of the few block characters the system font falls back to Menlo for,
+ * which draws them edge to edge. Others, such as the lower quarter block, fall back to a font that
+ * leaves a gap between each cell.
  * @param {number} percent - How full the bar is, from 0 to 100.
  * @param {'error' | 'warning' | null} [level] - The warning level that colors the fill.
  * @returns {string} The bar's HTML.
@@ -308,9 +313,9 @@ function progressBar(percent, level = null) {
    * @param {number} cells - How many cells the run spans.
    * @returns {string} The run's HTML, or nothing when it spans no cells.
    */
-  const run = (color, cells) => cells ? `<span style="color:${color};">${'▂'.repeat(cells)}</span>` : ''
+  const run = (color, cells) => cells ? `<span style="color:${color};">${'▀'.repeat(cells)}</span>` : ''
 
-  return `${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}`
+  return `<small><small>${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}</small></small>`
 }
 
 /**
@@ -384,8 +389,8 @@ function limitSection(key, limit, thresholds, now) {
 }
 
 /**
- * Build the tooltip's footer lines: the plan, the session's title and folder, and when the session
- * and limits were last updated, merged into one line when both read the same.
+ * Build the tooltip's footer lines: the plan, the session's title and folder, and one line with when
+ * the session and limits were last updated, separated by a dot, or a single age when both read the same.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string[]} The lines, already escaped.
@@ -403,8 +408,10 @@ function footerLines(usage, now) {
   if (sessionAge && sessionAge === limitsAge && !session.isEnded) {
     lines.push(`Updated: ${sessionAge}`)
   } else {
-    if (sessionAge) lines.push(`Session ${session.isEnded ? 'Ended' : 'Updated'}: ${sessionAge}`)
-    if (limitsAge) lines.push(`Limits Read: ${limitsAge}`)
+    const ages = []
+    if (sessionAge) ages.push(`Session ${session.isEnded ? 'ended ' : ''}${sessionAge}`)
+    if (limitsAge) ages.push(`Limits ${limitsAge}`)
+    if (ages.length) lines.push(`Updated: ${ages.join(' · ')}`)
   }
 
   return lines
