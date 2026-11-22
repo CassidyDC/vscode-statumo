@@ -1,0 +1,14 @@
+{
+  "name": "code-usage-local",
+  "description": "Local marketplace for the Claude Code Usage mod.",
+  "owner": {
+    "name": "Jacob Cassidy"
+  },
+  "plugins": [
+    {
+      "name": "usage",
+      "source": "./",
+      "description": "Write live Claude Code context usage, rate limits, and session titles for the Statumo VS Code status bar."
+    }
+  ]
+}
