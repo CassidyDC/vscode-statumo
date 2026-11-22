@@ -1,13 +1,13 @@
 /**
  * Status text formatting tests.
- * @file Check the status bar text, warning levels, staleness, and tooltip escaping.
+ * @file Check the status bar segments, per-window warning levels, staleness, and tooltip escaping.
  */
 
 'use strict'
 
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
-const { buildStatusText, buildTooltip, formatTokens, getLevel, isUsageStale } = require('../src/format')
+const { buildSegments, buildTooltip, formatTokens, getWindowLevel } = require('../src/format')
 
 /**
  * A fixed current time for every test.
@@ -39,42 +39,51 @@ function makeUsage(overrides = {}) {
   }
 }
 
-test('builds compact text with context used and limits left', () => {
-  assert.equal(buildStatusText('Claude', makeUsage(), now), 'Claude ctx 12% · 5h 84% 14:30 · 7d 61% Nov 27')
+/**
+ * Reduce segments to their visible text, dropping missing resets.
+ * @param {ReturnType<typeof buildSegments>} segments - The segments.
+ * @returns {string[]} The texts, left to right.
+ */
+function texts(segments) {
+  return [segments.context, ...segments.windows.flatMap(window => [window.text, window.reset])].filter(Boolean)
+}
+
+test('builds segments with context used, limits left, and resets apart', () => {
+  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['cx 12%', '5h 84%', '14:30', '7d 61%', 'Nov 27'])
 })
 
 test('dashes context when the workspace has no session', () => {
-  assert.equal(buildStatusText('Codex', makeUsage({ session: null }), now), 'Codex ctx — · 5h 84% 14:30 · 7d 61% Nov 27')
+  assert.equal(buildSegments(makeUsage({ session: null }), now).context, 'cx —')
 })
 
-test('dashes a window whose reset has passed and dims the item', () => {
+test('dashes a window whose reset has passed and drops its reset', () => {
   const usage = makeUsage({
     limits: {
       fiveHour: { percentUsed: 90, resetsAt: new Date(2026, 10, 22, 9, 0) },
       sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
     },
   })
+  const segments = buildSegments(usage, now)
 
-  assert.equal(buildStatusText('Claude', usage, now), 'Claude ctx 12% · 5h — · 7d 61% Nov 27')
-  assert.equal(isUsageStale(usage, now), true)
-  assert.equal(getLevel(usage, { warningThreshold: 25, errorThreshold: 10 }, now), null)
+  assert.deepEqual(texts(segments), ['cx 12%', '5h —', '7d 61%', 'Nov 27'])
+  assert.equal(segments.windows[0].isStale, true)
+  assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
 })
 
-test('warns and errors on the lowest current window', () => {
+test('warns and errors per window', () => {
   const thresholds = { warningThreshold: 25, errorThreshold: 10 }
 
   /**
-   * Build usage with the 5-hour window at a given percent used.
-   * @param {number} percentUsed - Percent of the 5-hour window used.
-   * @returns {import('../src/usage').ToolUsage} The usage.
+   * Build a current reading at a given percent used.
+   * @param {number} percentUsed - Percent of the window used.
+   * @returns {import('../src/usage').LimitReading} The reading.
    */
-  const withFiveHour = percentUsed => makeUsage({
-    limits: { fiveHour: { percentUsed, resetsAt: null }, sevenDay: null },
-  })
+  const limit = percentUsed => ({ percentUsed, resetsAt: null })
 
-  assert.equal(getLevel(withFiveHour(50), thresholds, now), null)
-  assert.equal(getLevel(withFiveHour(75), thresholds, now), 'warning')
-  assert.equal(getLevel(withFiveHour(95), thresholds, now), 'error')
+  assert.equal(getWindowLevel(limit(50), thresholds, now), null)
+  assert.equal(getWindowLevel(limit(75), thresholds, now), 'warning')
+  assert.equal(getWindowLevel(limit(95), thresholds, now), 'error')
+  assert.equal(getWindowLevel(null, thresholds, now), null)
 })
 
 test('formats token counts in thousands and millions', () => {

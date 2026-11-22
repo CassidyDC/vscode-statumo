@@ -73,19 +73,36 @@ function formatTokens(tokens) {
 }
 
 /**
- * Format one window for the status bar, such as `5h 84% 14:30`.
+ * One rate-limit window's part of the status bar.
+ * @typedef {object} WindowSegment
+ * @property {'fiveHour' | 'sevenDay'} key - Which window.
+ * @property {string} text - The window's label and percent left, such as `5h 84%`.
+ * @property {string | null} reset - When it resets, such as `14:30`, or null when unknown or stale.
+ * @property {boolean} isStale - Whether the reading predates the window's reset.
+ * @property {import('./usage').LimitReading | null} limit - The window's reading.
+ */
+
+/**
+ * Build one window's segment.
+ * @param {'fiveHour' | 'sevenDay'} key - Which window.
  * @param {string} label - The window's label.
  * @param {import('./usage').LimitReading | null} limit - The window's reading.
  * @param {Intl.DateTimeFormat} formatter - Formats the reset.
  * @param {Date} now - The current time.
- * @returns {string} The window's text.
+ * @returns {WindowSegment} The segment.
  */
-function formatLimitShort(label, limit, formatter, now) {
-  if (!limit || isLimitStale(limit, now)) return `${label} ${dash}`
+function buildWindowSegment(key, label, limit, formatter, now) {
+  const isStale = isLimitStale(limit, now)
 
-  const reset = limit.resetsAt ? ` ${formatter.format(limit.resetsAt)}` : ''
+  if (!limit || isStale) return { key, text: `${label} ${dash}`, reset: null, isStale, limit }
 
-  return `${label} ${percentLeft(limit)}%${reset}`
+  return {
+    key,
+    text: `${label} ${percentLeft(limit)}%`,
+    reset: limit.resetsAt ? formatter.format(limit.resetsAt) : null,
+    isStale,
+    limit,
+  }
 }
 
 /**
@@ -140,54 +157,43 @@ function tildify(value) {
 }
 
 /**
- * Build a tool's status bar text, such as `Claude ctx 12% · 5h 84% 14:30 · 7d 61% Nov 27`.
- * @param {string} label - The tool's short label.
+ * Build a tool's status bar segments: context used, then each window's percent left and reset.
+ *
+ * VS Code draws each status bar item in one color, so the reset times are separate
+ * items that can be dimmed.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
- * @returns {string} The status bar text.
+ * @returns {{ context: string, windows: WindowSegment[] }} The context text, such as `cx 12%`, and the windows.
  */
-function buildStatusText(label, usage, now) {
+function buildSegments(usage, now) {
   const percent = usage.session?.context?.percent ?? null
-  const context = percent === null ? `ctx ${dash}` : `ctx ${Math.round(percent)}%`
 
-  return [
-    `${label} ${context}`,
-    formatLimitShort('5h', usage.limits.fiveHour, resetTime, now),
-    formatLimitShort('7d', usage.limits.sevenDay, resetDate, now),
-  ].join(' · ')
+  return {
+    context: percent === null ? `cx ${dash}` : `cx ${Math.round(percent)}%`,
+    windows: [
+      buildWindowSegment('fiveHour', '5h', usage.limits.fiveHour, resetTime, now),
+      buildWindowSegment('sevenDay', '7d', usage.limits.sevenDay, resetDate, now),
+    ],
+  }
 }
 
 /**
- * Decide the item's warning level from the lowest percent left in a current window.
- * @param {import('./usage').ToolUsage} usage - The tool's readings.
+ * Decide a window's warning level from its percent left.
+ * @param {import('./usage').LimitReading | null} limit - The window's reading.
  * @param {object} thresholds - Percent-left thresholds.
  * @param {number} thresholds.warningThreshold - At or below this, warn.
  * @param {number} thresholds.errorThreshold - At or below this, show an error.
  * @param {Date} now - The current time.
- * @returns {'error' | 'warning' | null} The level, or null when no window is low.
+ * @returns {'error' | 'warning' | null} The level, or null when the window isn't low or isn't current.
  */
-function getLevel(usage, { warningThreshold, errorThreshold }, now) {
-  const remaining = [usage.limits.fiveHour, usage.limits.sevenDay]
-    .filter(limit => limit && !isLimitStale(limit, now))
-    .map(percentLeft)
+function getWindowLevel(limit, { warningThreshold, errorThreshold }, now) {
+  if (!limit || isLimitStale(limit, now)) return null
 
-  if (!remaining.length) return null
+  const remaining = percentLeft(limit)
 
-  const lowest = Math.min(...remaining)
-
-  if (lowest <= errorThreshold) return 'error'
-  if (lowest <= warningThreshold) return 'warning'
+  if (remaining <= errorThreshold) return 'error'
+  if (remaining <= warningThreshold) return 'warning'
   return null
-}
-
-/**
- * Whether any reported window's reading predates its reset.
- * @param {import('./usage').ToolUsage} usage - The tool's readings.
- * @param {Date} now - The current time.
- * @returns {boolean} True when the item should look dimmed.
- */
-function isUsageStale(usage, now) {
-  return isLimitStale(usage.limits.fiveHour, now) || isLimitStale(usage.limits.sevenDay, now)
 }
 
 /**
@@ -235,4 +241,4 @@ function buildTooltip(name, usage, now) {
   return lines.join('  \n')
 }
 
-module.exports = { buildStatusText, buildTooltip, escapeMarkdown, formatTokens, getLevel, isUsageStale }
+module.exports = { buildSegments, buildTooltip, escapeMarkdown, formatTokens, getWindowLevel }

@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Show Claude Code and Codex context use, 5-hour and 7-day limits left, and reset times as two status bar items.
+- Show Claude Code and Codex context use, 5-hour and 7-day limits left, and reset times in the status bar, each tool marked by its logo and each reset time dimmed.
 - Follow the latest session in the current workspace for context, and the account's latest reading for rate limits.
 - Add a hover tooltip with session titles, token counts, exact reset times, plan, and reading age.
-- Use the warning and error backgrounds when a window runs low, with configurable thresholds.
+- Use the warning and error backgrounds on a window that runs low, with configurable thresholds.
 - Open the Claude Code or Codex panel when you click its item.

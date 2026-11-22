@@ -10,7 +10,7 @@ const path = require('node:path')
 const vscode = require('vscode')
 const { pruneClaudeSessions, readClaudeUsage } = require('./claude')
 const { readCodexUsage } = require('./codex')
-const { buildStatusText, buildTooltip, getLevel, isUsageStale } = require('./format')
+const { buildSegments, buildTooltip, getWindowLevel } = require('./format')
 const { expandHome } = require('./paths')
 
 /**
@@ -44,9 +44,9 @@ const pruneIntervalMs = 86_400_000
  * One tool's status bar item.
  * @typedef {object} Tool
  * @property {'claude' | 'codex'} id - The tool's settings key.
- * @property {string} label - The short label in the status bar.
+ * @property {string} icon - The brand logo from Statumo's icon font, as status bar text.
  * @property {string} name - The tool's full name.
- * @property {number} priority - The item's status bar priority; higher sits further left.
+ * @property {number} priority - The tool's status bar priority; higher sits further left.
  * @property {string} openCommand - The Statumo command that opens the tool.
  * @property {(settings: Settings, folders: string[], now: Date) => Promise<import('./usage').ToolUsage | null>} read - Reads the tool's usage.
  */
@@ -58,7 +58,7 @@ const pruneIntervalMs = 86_400_000
 const tools = [
   {
     id: 'claude',
-    label: 'Claude',
+    icon: '$(statumo-claude)',
     name: 'Claude Code',
     priority: 101,
     openCommand: 'statumo.openClaude',
@@ -66,7 +66,7 @@ const tools = [
   },
   {
     id: 'codex',
-    label: 'Codex',
+    icon: '$(statumo-codex)',
     name: 'Codex',
     priority: 100,
     openCommand: 'statumo.openCodex',
@@ -112,36 +112,89 @@ function isEnabled(tool) {
 }
 
 /**
- * Draw a tool's usage on its item, or hide the item when there's nothing to show.
- * @param {vscode.StatusBarItem} item - The tool's item.
+ * The status bar items that make up one tool, left to right, with their names in the status bar menu.
+ *
+ * Each item draws in one color, so reset times get items of their own to be dimmed.
+ * @type {Array<{ part: ItemPart, name: string }>}
+ */
+const itemParts = [
+  { part: 'context', name: '' },
+  { part: 'fiveHour', name: ' 5h limit' },
+  { part: 'fiveHourReset', name: ' 5h reset' },
+  { part: 'sevenDay', name: ' 7d limit' },
+  { part: 'sevenDayReset', name: ' 7d reset' },
+]
+
+/**
+ * One of a tool's status bar items.
+ * @typedef {'context' | 'fiveHour' | 'fiveHourReset' | 'sevenDay' | 'sevenDayReset'} ItemPart
+ */
+
+/**
+ * The full names of the windows, for screen readers.
+ * @type {Record<'fiveHour' | 'sevenDay', string>}
+ */
+const windowNames = { fiveHour: '5-hour limit', sevenDay: '7-day limit' }
+
+/**
+ * Hide every item of a tool.
+ * @param {Map<ItemPart, vscode.StatusBarItem>} items - The tool's items.
+ */
+function hideAll(items) {
+  for (const item of items.values()) item.hide()
+}
+
+/**
+ * Draw a tool's usage on its items, or hide them when there's nothing to show.
+ * @param {Map<ItemPart, vscode.StatusBarItem>} items - The tool's items.
  * @param {Tool} tool - The tool.
  * @param {import('./usage').ToolUsage | null} usage - The tool's usage.
  * @param {Settings} settings - The current settings.
  * @param {Date} now - The current time.
  */
-function render(item, tool, usage, settings, now) {
+function render(items, tool, usage, settings, now) {
   if (!usage || !isEnabled(tool)) {
-    item.hide()
+    hideAll(items)
     return
   }
 
-  const level = getLevel(usage, settings, now)
+  const segments = buildSegments(usage, now)
   const tooltip = new vscode.MarkdownString(buildTooltip(tool.name, usage, now))
+  const contextItem = items.get('context')
 
   tooltip.isTrusted = false
   tooltip.supportHtml = false
-  item.text = buildStatusText(tool.label, usage, now)
-  item.tooltip = tooltip
-  item.accessibilityInformation = { label: `${tool.name} usage: ${item.text}` }
-  item.backgroundColor = level ? new vscode.ThemeColor(`statusBarItem.${level}Background`) : undefined
 
-  if (level) {
-    item.color = new vscode.ThemeColor(`statusBarItem.${level}Foreground`)
-  } else {
-    item.color = isUsageStale(usage, now) ? new vscode.ThemeColor('disabledForeground') : undefined
+  for (const item of items.values()) item.tooltip = tooltip
+
+  contextItem.text = `${tool.icon} ${segments.context}`
+  contextItem.accessibilityInformation = { label: `${tool.name} context ${segments.context.slice(3)} used` }
+  contextItem.show()
+
+  for (const window of segments.windows) {
+    const level = getWindowLevel(window.limit, settings, now)
+    const background = level ? new vscode.ThemeColor(`statusBarItem.${level}Background`) : undefined
+    const foreground = level ? new vscode.ThemeColor(`statusBarItem.${level}Foreground`) : undefined
+    const limitItem = items.get(window.key)
+    const resetItem = items.get(`${window.key}Reset`)
+
+    limitItem.text = window.text
+    limitItem.backgroundColor = background
+    limitItem.color = foreground ?? (window.isStale ? new vscode.ThemeColor('disabledForeground') : undefined)
+    limitItem.accessibilityInformation = { label: `${tool.name} ${windowNames[window.key]} ${window.text.slice(3)} left` }
+    limitItem.show()
+
+    if (!window.reset) {
+      resetItem.hide()
+      continue
+    }
+
+    resetItem.text = window.reset
+    resetItem.backgroundColor = background
+    resetItem.color = foreground ?? new vscode.ThemeColor('descriptionForeground')
+    resetItem.accessibilityInformation = { label: `resets ${window.reset}` }
+    resetItem.show()
   }
-
-  item.show()
 }
 
 /**
@@ -175,16 +228,25 @@ function activate(context) {
   let isRefreshQueued = false
 
   for (const tool of tools) {
-    const item = vscode.window.createStatusBarItem(`statumo.${tool.id}`, vscode.StatusBarAlignment.Right, tool.priority)
+    const toolItems = new Map()
 
-    item.name = `Statumo: ${tool.name}`
-    item.command = tool.openCommand
-    items.set(tool.id, item)
-    context.subscriptions.push(item, vscode.commands.registerCommand(tool.openCommand, () => openTool(tool)))
+    itemParts.forEach(({ part, name }, index) => {
+      const id = part === 'context' ? `statumo.${tool.id}` : `statumo.${tool.id}.${part}`
+      const priority = tool.priority + (itemParts.length - index) / 10
+      const item = vscode.window.createStatusBarItem(id, vscode.StatusBarAlignment.Right, priority)
+
+      item.name = `Statumo: ${tool.name}${name}`
+      item.command = tool.openCommand
+      toolItems.set(part, item)
+      context.subscriptions.push(item)
+    })
+
+    items.set(tool.id, toolItems)
+    context.subscriptions.push(vscode.commands.registerCommand(tool.openCommand, () => openTool(tool)))
   }
 
   /**
-   * Re-read every tool's usage and redraw its item, folding overlapping calls into one more pass.
+   * Re-read every tool's usage and redraw its items, folding overlapping calls into one more pass.
    * @returns {Promise<void>} Resolves once the items are redrawn.
    */
   const refresh = async () => {
@@ -204,15 +266,15 @@ function activate(context) {
         const now = new Date()
 
         await Promise.all(tools.map(async tool => {
-          const item = items.get(tool.id)
+          const toolItems = items.get(tool.id)
 
           if (!isEnabled(tool)) {
-            item.hide()
+            hideAll(toolItems)
             return
           }
 
           try {
-            render(item, tool, await tool.read(settings, folders, now), settings, now)
+            render(toolItems, tool, await tool.read(settings, folders, now), settings, now)
             lastErrors.delete(tool.id)
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error)

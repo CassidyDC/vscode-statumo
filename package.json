@@ -52,6 +52,22 @@
         "category": "Statumo"
       }
     ],
+    "icons": {
+      "statumo-claude": {
+        "description": "Claude logo",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E001"
+        }
+      },
+      "statumo-codex": {
+        "description": "OpenAI Codex logo",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E002"
+        }
+      }
+    },
     "configuration": {
       "title": "Statumo",
       "properties": {
@@ -107,6 +123,12 @@
   "scripts": {
     "package": "vsce package",
     "test": "node --test",
+    "build:icons": "node scripts/build-icons.js",
     "install:local": "vsce package --out statumo.vsix && code --install-extension statumo.vsix --force"
+  },
+  "devDependencies": {
+    "svg2ttf": "^6.1.0",
+    "svgicons2svgfont": "^16.0.0",
+    "ttf2woff": "^3.0.0"
   }
 }
