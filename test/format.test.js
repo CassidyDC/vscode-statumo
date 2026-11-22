@@ -49,8 +49,8 @@ function texts(segments) {
   return [segments.context.text, ...segments.windows.map(window => window.text)]
 }
 
-test('builds segments with context and limits left', () => {
-  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['$(statumo-cx-90) 88%', '$(statumo-5h-85) 84%', '$(statumo-7d-60) 61%'])
+test('builds segments with context used and limits left', () => {
+  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['$(statumo-cx-10) 12%', '$(statumo-5h-85) 84%', '$(statumo-7d-60) 61%'])
 })
 
 test('shows only an empty context ring when the workspace has no session', () => {
@@ -78,7 +78,7 @@ test('empties the ring of a window whose reset has passed', () => {
   })
   const segments = buildSegments(usage, now)
 
-  assert.deepEqual(texts(segments), ['$(statumo-cx-90) 88%', '$(statumo-5h-0)', '$(statumo-7d-60) 61%'])
+  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-60) 61%'])
   assert.match(buildTooltip('Codex', usage, now), /5h limit: reset Sun, Nov 22, 09:00, no reading since/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
@@ -118,7 +118,7 @@ test('escapes session titles in the tooltip', () => {
   const tooltip = buildTooltip('Codex', usage, now)
 
   assert.match(tooltip, /\\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*/)
-  assert.match(tooltip, /Context: 48\\\.3k \/ 400k used · 88% left/)
+  assert.match(tooltip, /Context: 48\\\.3k \/ 400k · 12% used/)
   assert.match(tooltip, /Plan: Plus/)
   assert.match(tooltip, /7d limit: 61% left, resets in 4 d 23 h/)
   assert.match(tooltip, /5h limit: 84% left, resets in 4 h 30 min \\\(Sun, Nov 22, 14:30\\\)/)
