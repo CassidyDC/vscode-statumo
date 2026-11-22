@@ -132,11 +132,10 @@ const itemParts = [
  */
 
 /**
- * Separates the parts of a combined item: two en spaces, about the gap between separate items.
- * VS Code would collapse repeated plain spaces.
+ * Separates the parts of a combined item: one en space, a little wider than a plain space.
  * @type {string}
  */
-const combinedGap = '\u2002\u2002'
+const combinedGap = '\u2002'
 
 /**
  * Wrap tooltip Markdown so it renders without running commands or HTML.
