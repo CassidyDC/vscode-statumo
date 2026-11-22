@@ -367,7 +367,7 @@ function footerLines(usage, now) {
   const limitsAge = usage.limitsUpdatedAt ? formatAge(usage.limitsUpdatedAt, now) : null
 
   if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
-  if (session?.title) lines.push(escapeMarkdown(session.title))
+  if (session?.title) lines.push(`Chat Title: ${escapeMarkdown(session.title)}`)
   if (session?.cwd) lines.push(`Session: ${escapeMarkdown(tildify(session.cwd))}`)
 
   if (sessionAge && sessionAge === limitsAge && !session.isEnded) {

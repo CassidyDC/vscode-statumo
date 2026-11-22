@@ -129,7 +129,7 @@ test('lays out each tooltip section as label and note, bold amount, then bar', (
   assert.match(sections[1], /^<small><small>Context<\/small><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
   assert.match(sections[2], /^<small><small>5-hour limit<\/small><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(4h 30m\\\).*\s+\*\*16%\*\* .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(4d 23h\\\).*\s+\*\*39%\*\* .*used/)
-  assert.match(sections[4], /Plan: Plus.*\s+.*Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
+  assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
 })
 
 test('splits the updated line when the session and limits were read at different times', () => {
