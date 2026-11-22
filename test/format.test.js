@@ -7,7 +7,7 @@
 
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
-const { buildSegments, buildTooltip, formatTokens, getToolLevel, getWindowLevel } = require('../src/format')
+const { buildSegments, buildTooltip, formatTokens, getToolLevel, getWindowLevel, truncatePath } = require('../src/format')
 const { ringIcon, ringStep } = require('../src/rings')
 
 /**
@@ -85,7 +85,7 @@ test('empties the ring of a window whose reset has passed', () => {
   const segments = buildSegments(usage, now)
 
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-40) 39%'])
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/b><\/small><\/small>&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\s+.*No reading since the reset/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/b><\/small>&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\s+.*No reading since the reset/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -125,9 +125,9 @@ test('lays out each tooltip section as label and note, bold amount, then bar', (
   const sections = tooltip.split('\n\n---\n\n')
 
   assert.equal(sections.length, 5)
-  assert.equal(sections[0], '#### Codex \\- Statumo')
-  assert.match(sections[1], /^<small><small><b>Context<\/b><\/small><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
-  assert.match(sections[2], /^<small><small><b>5-hour limit<\/b><\/small><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(in 4h 30m\\\).*\s+\*\*16%\*\* .*used/)
+  assert.equal(sections[0], '### Codex \\- Statumo')
+  assert.match(sections[1], /^<small><b>Context<\/b><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
+  assert.match(sections[2], /^<small><b>5-hour limit<\/b><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(in 4h 30m\\\).*\s+\*\*16%\*\* .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(in 4d 23h\\\).*\s+\*\*39%\*\* .*used/)
   assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
 })
@@ -158,4 +158,14 @@ test('draws progress bars from theme colors, coloring low windows', () => {
 
   assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▂{19}<\/span><span style="color:var\(--vscode-scrollbarSlider-background\);">▂</)
   assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▂{8}<\/span>/)
+})
+
+test('shortens long paths in the middle, keeping the first and last folders', () => {
+  assert.equal(truncatePath('~/work/project'), '~/work/project')
+  assert.equal(
+    truncatePath('~/Projects/Software/First-Party/Groups/CassidyDC/Packages/Repos/_statumo'),
+    '~/…/CassidyDC/Packages/Repos/_statumo',
+  )
+  assert.equal(truncatePath('/Volumes/Data/very/deep/folder/structure/for/a/project'), '/Volumes/…/structure/for/a/project')
+  assert.equal(truncatePath(`~/${'x'.repeat(60)}`, 20), `…${'x'.repeat(19)}`)
 })

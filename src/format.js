@@ -163,6 +163,32 @@ function tildify(value) {
 }
 
 /**
+ * Shorten a long path in the middle, keeping its first folder and as many trailing folders as fit.
+ * @param {string} value - The path to shorten.
+ * @param {number} [maxLength] - The longest the result may be.
+ * @returns {string} The path, such as `~/…/Packages/Repos/_statumo`.
+ */
+function truncatePath(value, maxLength = 40) {
+  if (value.length <= maxLength) return value
+
+  const parts = value.split('/')
+  const head = parts[0] === '' ? `/${parts[1]}` : parts[0]
+  const tail = []
+
+  for (let index = parts.length - 1; index > (parts[0] === '' ? 1 : 0); index--) {
+    const candidate = [parts[index], ...tail].join('/')
+
+    if (`${head}/…/${candidate}`.length > maxLength) break
+
+    tail.unshift(parts[index])
+  }
+
+  if (tail.length) return `${head}/…/${tail.join('/')}`
+
+  return `…${value.slice(-(maxLength - 1))}`
+}
+
+/**
  * The context part of the status bar.
  * @typedef {object} ContextSegment
  * @property {string} text - The context ring icon and percent used, such as `$(statumo-cx-10) 12%`, or the empty ring alone when unknown.
@@ -279,12 +305,12 @@ function progressBar(percent, level = null) {
 }
 
 /**
- * Shrink text two steps and show it in the theme's dimmer description color.
+ * Shrink text a step and show it in the theme's dimmer description color.
  * @param {string} text - The escaped text.
  * @returns {string} The text's HTML.
  */
 function fine(text) {
-  return dim(`<small><small>${text}</small></small>`)
+  return dim(`<small>${text}</small>`)
 }
 
 /**
@@ -306,7 +332,7 @@ function amount(percent, word) {
  * @returns {string} The section's Markdown.
  */
 function tooltipSection(label, note, value, bar) {
-  const heading = `<small><small><b>${label}</b></small></small>${note ? `&nbsp;&nbsp;${fine(note)}` : ''}`
+  const heading = `<small><b>${label}</b></small>${note ? `&nbsp;&nbsp;${fine(note)}` : ''}`
 
   return [heading, value, bar].filter(Boolean).join('  \n')
 }
@@ -368,7 +394,7 @@ function footerLines(usage, now) {
 
   if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
   if (session?.title) lines.push(`Chat Title: ${escapeMarkdown(session.title)}`)
-  if (session?.cwd) lines.push(`Session: ${escapeMarkdown(tildify(session.cwd))}`)
+  if (session?.cwd) lines.push(`Session: ${escapeMarkdown(truncatePath(tildify(session.cwd)))}`)
 
   if (sessionAge && sessionAge === limitsAge && !session.isEnded) {
     lines.push(`Updated: ${sessionAge}`)
@@ -393,11 +419,11 @@ function footerLines(usage, now) {
  */
 function buildTooltip(name, usage, thresholds, now) {
   return [
-    `#### ${escapeMarkdown(`${name} - Statumo`)}`,
+    `### ${escapeMarkdown(`${name} - Statumo`)}`,
     contextSection(usage.session),
     limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
     limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),
-    footerLines(usage, now).map(line => dim(`<small>${line}</small>`)).join('  \n'),
+    footerLines(usage, now).map(dim).join('  \n'),
   ].filter(Boolean).join('\n\n---\n\n')
 }
 
@@ -408,5 +434,6 @@ module.exports = {
   formatTokens,
   getToolLevel,
   getWindowLevel,
+  truncatePath,
   windowNames,
 }
