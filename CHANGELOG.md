@@ -13,3 +13,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Add a hover tooltip with session titles, token counts, exact reset times, plan, and reading age.
 - Use the warning and error backgrounds on a window that runs low, with configurable thresholds.
 - Open the Claude Code or Codex panel when you click its item.
+- Ship the Usage mod for Claude Code in `claude-mod/`, installed from this repository's `statumo` marketplace, to write each session's context use, rate limits, and title for Statumo to read.

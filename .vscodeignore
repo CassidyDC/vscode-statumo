@@ -6,3 +6,5 @@ test/**
 *.vsix
 images/logos/**
 scripts/**
+claude-mod/**
+.claude-plugin/**

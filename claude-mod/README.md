@@ -1,6 +1,6 @@
-# Claude Code Usage
+# Usage mod for Claude Code
 
-**Usage** is a Claude Code mod that records each session's live usage in a small JSON file, so the [Statumo](https://marketplace.visualstudio.com/items?itemName=jacobcassidy.statumo) VS Code extension can show it in the editor's status bar.
+**Usage** is the Claude Code mod that records each session's live usage in a small JSON file for Statumo to read. See the [Statumo README](../README.md#claude-code) to install it.
 
 The mod writes one file per session to `~/.claude/usage/sessions/<session-id>.json`, or under your `CLAUDE_CONFIG_DIR` when you set one.
 
@@ -23,46 +23,8 @@ The mod writes one file per session to `~/.claude/usage/sessions/<session-id>.js
 
 The file updates after turns and as Claude reports changes to plan limits. The mod checks the saved session title and project root every 10 seconds and rewrites the file only when one changes. A value Claude hasn't reported is `null`. When the session ends, the mod sets `endedAt` and leaves the file in place.
 
-## Install
-
-Use Claude Code 2.1.304 or later. Install the mod wherever you run Claude Code, whether in the VS Code panel or a terminal.
-
-From the Usage checkout, register its marketplace once. Claude Code loads the mod from this checkout, so keep it at the registered path.
-
-```sh
-claude plugin marketplace add "$PWD"
-```
-
-### Local install for one project
-
-Run the install command from the root of the project where you want Usage.
-
-```sh
-claude plugin install usage@code-usage-local --scope local
-```
-
-### Global install for all local projects
-
-Install Usage at user scope to make it available across your local projects on this machine.
-
-```sh
-claude plugin install usage@code-usage-local --scope user
-```
-
-If you're switching from a local install, run this from that project's root after the global install succeeds.
-
-```sh
-claude plugin uninstall usage@code-usage-local --scope local --keep-data
-```
-
-### Update an existing install
-
-After pulling a new version, run `claude plugin marketplace update code-usage-local`, then start a new Claude Code session.
-
-### Migrate from the old plugin name
-
-If you installed `code-usage-preview` in a project, run `claude plugin marketplace update code-usage-local` before installing Usage at your chosen scope. After the install succeeds, run `claude plugin uninstall code-usage-preview@code-usage-local --scope local --keep-data` from that project's root.
+The format is shared with Statumo's reader in [`src/claude.js`](../src/claude.js). When you change a field, change both and bump `formatVersion` in each if older readers can't handle the new file.
 
 ## Validation
 
-For validation, run `claude plugin validate ./.claude-plugin/plugin.json --strict`.
+From the repository root, run `claude plugin validate ./claude-mod/.claude-plugin/plugin.json --strict` and `claude plugin validate ./.claude-plugin/marketplace.json --strict`.

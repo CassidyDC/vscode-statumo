@@ -28,7 +28,23 @@ A tool's items stay hidden until it has written any usage on this machine.
 
 ### Claude Code
 
-VS Code extensions can't see Claude Code's rate limits directly, so Statumo reads them from the [Usage](https://github.com/jacobcassidy/claude-code-usage) mod for Claude Code. Install the mod at user scope so every session writes its usage to `~/.claude/usage/sessions/`. Statumo deletes session files there that haven't changed in 30 days.
+VS Code extensions can't see Claude Code's rate limits directly, so Statumo reads them from **Usage**, a Claude Code mod that ships in this repository's [`claude-mod/`](claude-mod/README.md) folder. Usage writes each session's usage to `~/.claude/usage/sessions/`. Statumo deletes session files there that haven't changed in 30 days.
+
+Usage needs Claude Code 2.1.304 or later. From the root of a Statumo checkout, register the checkout as a marketplace and install Usage at user scope so every session writes its usage, whether it runs in the VS Code panel or a terminal. Claude Code loads the mod from the checkout, so keep it at the registered path.
+
+```sh
+claude plugin marketplace add "$PWD"
+claude plugin install usage@statumo --scope user
+```
+
+After pulling a new version, run `claude plugin marketplace update statumo`, then start a new Claude Code session.
+
+If you installed Usage from its old standalone `code-usage-local` marketplace, remove that copy after installing from Statumo:
+
+```sh
+claude plugin uninstall usage@code-usage-local --scope user --keep-data
+claude plugin marketplace remove code-usage-local
+```
 
 ### Codex
 
@@ -59,6 +75,8 @@ Statumo only reads files on your machine and makes no network requests. Session 
 ## Development
 
 Run the tests with `npm test`. The logos in the status bar come from an icon font built from `images/logos/` by `npm run build:icons`. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`.
+
+The Usage mod for Claude Code lives in `claude-mod/` and stays out of the extension package. Its [README](claude-mod/README.md) documents the session file format Statumo reads and how to validate the mod.
 
 ## Trademarks
 
