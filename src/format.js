@@ -122,12 +122,12 @@ function formatDuration(minutes) {
  * Format when a window resets and how long until then.
  * @param {Date} date - The reset time.
  * @param {Date} now - The current time.
- * @returns {string} The reset, such as `Nov 27 at 09:00 (in 4d 23h)`.
+ * @returns {string} The reset, such as `Nov 27 at 09:00 (4d 23h)`.
  */
 function formatReset(date, now) {
   const minutes = Math.max(0, Math.ceil((date.getTime() - now.getTime()) / 60_000))
 
-  return `${shortDate.format(date)} at ${clockTime.format(date)} (in ${formatDuration(minutes)})`
+  return `${shortDate.format(date)} at ${clockTime.format(date)} (${formatDuration(minutes)})`
 }
 
 /**
@@ -253,10 +253,10 @@ function getToolLevel(limits, thresholds, now) {
 }
 
 /**
- * How many cells wide a tooltip progress bar is.
+ * How many cells wide a tooltip progress bar is, about 320px at the hover's 13px text.
  * @type {number}
  */
-const barCells = 20
+const barCells = 41
 
 /**
  * Theme colors for a progress bar's fill, by warning level.
@@ -269,10 +269,10 @@ const barFills = {
 }
 
 /**
- * Theme color for the unfilled part of a progress bar.
+ * Theme color for the unfilled part of a progress bar: the hover's border, which is opaque so the cells join without seams.
  * @type {string}
  */
-const barTrack = 'var(--vscode-scrollbarSlider-background)'
+const barTrack = 'var(--vscode-editorHoverWidget-border)'
 
 /**
  * Show escaped text in the theme's dimmer description color.
@@ -284,8 +284,8 @@ function dim(text) {
 }
 
 /**
- * Draw a thin progress bar as HTML the hover sanitizer keeps: runs of lower-quarter block characters,
- * which join into a solid line a quarter of the text's height, colored with theme colors.
+ * Draw a progress bar as HTML the hover sanitizer keeps: runs of upper-half block characters,
+ * which join into a solid line half the text's height along the top of its line, colored with theme colors.
  * @param {number} percent - How full the bar is, from 0 to 100.
  * @param {'error' | 'warning' | null} [level] - The warning level that colors the fill.
  * @returns {string} The bar's HTML.
@@ -299,20 +299,20 @@ function progressBar(percent, level = null) {
    * @param {number} cells - How many cells the run spans.
    * @returns {string} The run's HTML, or nothing when it spans no cells.
    */
-  const run = (color, cells) => cells ? `<span style="color:${color};">${'▂'.repeat(cells)}</span>` : ''
+  const run = (color, cells) => cells ? `<span style="color:${color};">${'▀'.repeat(cells)}</span>` : ''
 
   return `${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}`
 }
 
 /**
- * Format a section's amount as a heading, the only way a hover shows text larger than normal:
- * the percent, then a smaller dimmed word.
+ * Format a section's amount as a second-level heading, the only way a hover shows text larger than
+ * normal: the percent, then a smaller dimmed word.
  * @param {number} percent - The percent.
  * @param {string} word - What the percent measures, such as `used`.
  * @returns {string} The amount's Markdown.
  */
 function amount(percent, word) {
-  return `### ${percent}% ${dim(`<small>${word}</small>`)}`
+  return `## ${percent}% ${dim(`<small>${word}</small>`)}`
 }
 
 /**
@@ -399,7 +399,7 @@ function footerLines(usage, now) {
 }
 
 /**
- * Build a tool's hover tooltip as Markdown with HTML: a large heading, then context and each window
+ * Build a tool's hover tooltip as Markdown with HTML: a plain title, then context and each window
  * in sections divided by rules, each with a progress bar, and the session and reading details at the bottom.
  *
  * Render it with `supportHtml` on.
@@ -411,7 +411,7 @@ function footerLines(usage, now) {
  */
 function buildTooltip(name, usage, thresholds, now) {
   return [
-    `## ${escapeMarkdown(`${name} - Statumo`)}`,
+    escapeMarkdown(`${name} - Statumo`),
     contextSection(usage.session),
     limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
     limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),

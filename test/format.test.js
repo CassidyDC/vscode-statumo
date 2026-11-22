@@ -125,10 +125,10 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
   const sections = tooltip.split('\n\n---\n\n')
 
   assert.equal(sections.length, 5)
-  assert.equal(sections[0], '## Codex \\- Statumo')
-  assert.match(sections[1], /^\*\*Context\*\*&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\n\n### 12% .*used.*\n\n<span/)
-  assert.match(sections[2], /^\*\*5-hour limit\*\*&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(in 4h 30m\\\).*\n\n### 16% .*used/)
-  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(in 4d 23h\\\).*\n\n### 39% .*used/)
+  assert.equal(sections[0], 'Codex \\- Statumo')
+  assert.match(sections[1], /^\*\*Context\*\*&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\n\n## 12% .*used.*\n\n<span/)
+  assert.match(sections[2], /^\*\*5-hour limit\*\*&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(4h 30m\\\).*\n\n## 16% .*used/)
+  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(4d 23h\\\).*\n\n## 39% .*used/)
   assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
 })
 
@@ -156,8 +156,8 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   })
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▂{19}<\/span><span style="color:var\(--vscode-scrollbarSlider-background\);">▂</)
-  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▂{8}<\/span>/)
+  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{39}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{2}</)
+  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▀{16}<\/span>/)
 })
 
 test('shortens long paths in the middle, keeping the first and last folders', () => {
