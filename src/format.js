@@ -59,6 +59,15 @@ function percentLeft(limit) {
 }
 
 /**
+ * Percent of a session's context window left, rounded and kept between 0 and 100.
+ * @param {number} percentUsed - Percent of the window used.
+ * @returns {number} The percent left.
+ */
+function contextLeft(percentUsed) {
+  return Math.max(0, Math.min(100, Math.round(100 - percentUsed)))
+}
+
+/**
  * Format a token count with `k` for thousands and `m` for millions.
  * @param {number | null} tokens - The token count.
  * @returns {string} The formatted count, such as `48.3k`.
@@ -173,12 +182,12 @@ function tildify(value) {
 /**
  * The context part of the status bar.
  * @typedef {object} ContextSegment
- * @property {string} text - The context ring icon and percent used, such as `$(statumo-cx-10) 12%`, or the empty ring alone when unknown.
- * @property {string | null} value - The percent used, such as `12%`, or null when unknown.
+ * @property {string} text - The context ring icon and percent left, such as `$(statumo-cx-90) 88%`, or the empty ring alone when unknown.
+ * @property {string | null} value - The percent left, such as `88%`, or null when unknown.
  */
 
 /**
- * Build a tool's status bar segments: context used, then each window's percent left,
+ * Build a tool's status bar segments: the percent of context left, then of each window left,
  * each percent led by a ring that fills to match it.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
@@ -186,11 +195,11 @@ function tildify(value) {
  */
 function buildSegments(usage, now) {
   const percent = usage.session?.context?.percent ?? null
-  const used = percent === null ? null : Math.round(percent)
-  const value = used === null ? null : `${used}%`
+  const left = percent === null ? null : contextLeft(percent)
+  const value = left === null ? null : `${left}%`
 
   return {
-    context: { text: value === null ? ringIcon('cx', null) : `${ringIcon('cx', used)} ${value}`, value },
+    context: { text: value === null ? ringIcon('cx', null) : `${ringIcon('cx', left)} ${value}`, value },
     windows: [
       buildWindowSegment('fiveHour', '5h', usage.limits.fiveHour, now),
       buildWindowSegment('sevenDay', '7d', usage.limits.sevenDay, now),
@@ -248,8 +257,8 @@ function buildTooltip(name, usage, now) {
 
   if (session) {
     const { tokens = null, window = null, percent = null } = session.context ?? {}
-    const used = percent === null ? '' : ` · ${Math.round(percent)}% used`
-    const context = session.context ? `${formatTokens(tokens)} / ${formatTokens(window)}${used}` : 'not reported yet'
+    const left = percent === null ? '' : ` · ${contextLeft(percent)}% left`
+    const context = session.context ? `${formatTokens(tokens)} / ${formatTokens(window)} used${left}` : 'not reported yet'
 
     lines.push(`Context: ${escapeMarkdown(context)}`)
   } else {

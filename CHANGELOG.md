@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Show Claude Code and Codex context use and 5-hour and 7-day limits left in the status bar, one item per tool that starts with the tool's name, kept side by side.
+- Show how much Claude Code and Codex context and 5-hour and 7-day limits are left in the status bar, one item per tool that starts with the tool's name, kept side by side.
 - Lead each percent with a circular progress ring that fills in 5% steps, marked inside by layers for context, a clock for the 5-hour limit, or a calendar for the 7-day limit.
 - Follow the latest session in the current workspace for context, and the account's latest reading for rate limits.
 - Add a hover tooltip with session titles, token counts, when each limit resets as a countdown and an exact time, plan, and reading age.
