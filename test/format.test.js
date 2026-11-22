@@ -85,7 +85,7 @@ test('empties the ring of a window whose reset has passed', () => {
   const segments = buildSegments(usage, now)
 
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-60) 61%'])
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit\*\* · not current[\s\S]*Reset Sun, Nov 22, 09:00, no reading since/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/small> · .*Reset Nov 22 at 09:00.*\s+No reading since the reset/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -124,11 +124,11 @@ test('escapes session titles in the tooltip', () => {
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
   assert.match(tooltip, /\\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*/)
-  assert.match(tooltip, /\$\(layers\) \*\*Context\*\* · 12% used/)
-  assert.match(tooltip, /48\\\.3k \/ 400k tokens/)
+  assert.match(tooltip, /<small>Context<\/small> · .*48\\\.3k \/ 400k tokens.*\s+12% used\s+<span/)
+  assert.match(tooltip, /<small>5-hour limit<\/small> · .*Resets Nov 22 at 14:30.*\s+84% left\s+<span/)
+  assert.match(tooltip, /<small>7-day limit<\/small> · .*Resets Nov 27 at 09:00.*\s+61% left\s+<span/)
   assert.match(tooltip, /Plan: Plus/)
-  assert.match(tooltip, /\$\(clock\) \*\*5-hour limit\*\* · 84% left[\s\S]*Resets in 4 h 30 min · Sun, Nov 22, 14:30/)
-  assert.match(tooltip, /\$\(calendar\) \*\*7-day limit\*\* · 61% left[\s\S]*Resets in 4 d 23 h · Fri, Nov 27, 09:00/)
+  assert.doesNotMatch(tooltip, /Click to open/)
   assert.equal(tooltip.split('\n\n---\n\n').length, 5)
 })
 
@@ -149,6 +149,6 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   })
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /background-color:var\(--vscode-editorError-foreground\);display:inline-block;border-radius:2px;">(&nbsp;){4}</)
-  assert.match(tooltip, /background-color:var\(--vscode-progressBar-background\);display:inline-block;border-radius:2px;">(&nbsp;){10}</)
+  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▂<\/span><span style="color:var\(--vscode-scrollbarSlider-background\);">▂{19}</)
+  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▂{12}<\/span>/)
 })

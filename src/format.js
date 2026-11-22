@@ -15,17 +15,10 @@ const { ringIcon } = require('./rings')
 const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
 
 /**
- * Formats a reset in the tooltip, such as `Thu, Nov 27, 09:00`.
+ * Formats a reset's time of day, such as `09:00`.
  * @type {Intl.DateTimeFormat}
  */
-const resetFull = new Intl.DateTimeFormat('en-US', {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-})
+const clockTime = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
 /**
  * Stands in for a value that hasn't been reported.
@@ -102,19 +95,12 @@ function buildWindowSegment(key, ring, limit, now) {
 }
 
 /**
- * Format how long until something happens.
- * @param {Date} date - When it happens.
- * @param {Date} now - The current time.
- * @returns {string} The wait, such as `4 h 30 min` or `2 d 5 h`.
+ * Format when a window resets.
+ * @param {Date} date - The reset time.
+ * @returns {string} The reset, such as `Nov 27 at 09:00`.
  */
-function formatCountdown(date, now) {
-  const minutes = Math.max(0, Math.ceil((date.getTime() - now.getTime()) / 60_000))
-  const days = Math.floor(minutes / 1440)
-  const hours = Math.floor((minutes % 1440) / 60)
-
-  if (days) return hours ? `${days} d ${hours} h` : `${days} d`
-  if (hours) return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`
-  return `${minutes} min`
+function formatReset(date) {
+  return `${shortDate.format(date)} at ${clockTime.format(date)}`
 }
 
 /**
@@ -220,7 +206,7 @@ function getToolLevel(limits, thresholds, now) {
  * How many cells wide a tooltip progress bar is.
  * @type {number}
  */
-const barCells = 80
+const barCells = 20
 
 /**
  * Theme colors for a progress bar's fill, by warning level.
@@ -248,7 +234,8 @@ function dim(text) {
 }
 
 /**
- * Draw a progress bar as HTML the hover sanitizer keeps: shrunken non-breaking spaces on theme-colored spans.
+ * Draw a thin progress bar as HTML the hover sanitizer keeps: runs of lower-quarter block characters,
+ * which join into a solid line a quarter of the text's height, colored with theme colors.
  * @param {number} percent - How full the bar is, from 0 to 100.
  * @param {'error' | 'warning' | null} [level] - The warning level that colors the fill.
  * @returns {string} The bar's HTML.
@@ -258,34 +245,27 @@ function progressBar(percent, level = null) {
 
   /**
    * Draw one colored run of cells.
-   * @param {string} color - The run's background color.
+   * @param {string} color - The run's color.
    * @param {number} cells - How many cells the run spans.
    * @returns {string} The run's HTML, or nothing when it spans no cells.
    */
-  const run = (color, cells) => cells
-    ? `<span style="background-color:${color};display:inline-block;border-radius:2px;">${'&nbsp;'.repeat(cells)}</span>`
-    : ''
+  const run = (color, cells) => cells ? `<span style="color:${color};">${'▂'.repeat(cells)}</span>` : ''
 
-  return `<small><small>${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}</small></small>`
+  return `${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}`
 }
 
 /**
- * Build one tooltip section: a heading line with a codicon, then optional bar and detail lines.
- * @param {string} icon - The codicon name.
+ * Build one tooltip section: a small label with a smaller dimmed note, the value, then an optional bar.
  * @param {string} label - The section's label.
+ * @param {string | null} note - The note after the label, already escaped, or null for none.
  * @param {string} value - The section's value, such as `84% left`.
  * @param {string | null} bar - The section's progress bar, or null for none.
- * @param {string[]} details - Detail lines, already escaped.
  * @returns {string} The section's Markdown.
  */
-function tooltipSection(icon, label, value, bar, details) {
-  const lines = [`$(${icon}) **${label}** · ${value}`]
+function tooltipSection(label, note, value, bar) {
+  const heading = note ? `<small>${label}</small> · ${dim(`<small><small>${note}</small></small>`)}` : `<small>${label}</small>`
 
-  if (bar) lines.push(bar)
-
-  lines.push(...details.map(detail => `<small>${detail}</small>`))
-
-  return lines.join('  \n')
+  return [heading, value, bar].filter(Boolean).join('  \n')
 }
 
 /**
@@ -294,14 +274,15 @@ function tooltipSection(icon, label, value, bar, details) {
  * @returns {string} The section's Markdown.
  */
 function contextSection(session) {
-  if (!session) return tooltipSection('layers', 'Context', 'no session', null, ['No session in this workspace yet'])
-  if (!session.context) return tooltipSection('layers', 'Context', 'not reported', null, ['Not reported yet'])
+  if (!session) return tooltipSection('Context', null, 'No session in this workspace yet', null)
+  if (!session.context) return tooltipSection('Context', null, 'Not reported yet', null)
 
   const { tokens = null, window = null, percent = null } = session.context
-  const value = percent === null ? 'unknown' : `${Math.round(percent)}% used`
-  const bar = percent === null ? null : progressBar(percent)
+  const note = escapeMarkdown(`${formatTokens(tokens)} / ${formatTokens(window)} tokens`)
 
-  return tooltipSection('layers', 'Context', value, bar, [escapeMarkdown(`${formatTokens(tokens)} / ${formatTokens(window)} tokens`)])
+  if (percent === null) return tooltipSection('Context', note, 'Unknown', null)
+
+  return tooltipSection('Context', note, `${Math.round(percent)}% used`, progressBar(percent))
 }
 
 /**
@@ -313,31 +294,27 @@ function contextSection(session) {
  * @returns {string} The section's Markdown.
  */
 function limitSection(key, limit, thresholds, now) {
-  const icon = key === 'fiveHour' ? 'clock' : 'calendar'
   const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
 
-  if (!limit) return tooltipSection(icon, label, 'not reported', null, ['Not reported yet'])
+  if (!limit) return tooltipSection(label, null, 'Not reported yet', null)
 
   if (isLimitStale(limit, now)) {
-    const reset = escapeMarkdown(`Reset ${resetFull.format(limit.resetsAt)}, no reading since`)
+    const note = escapeMarkdown(`Reset ${formatReset(limit.resetsAt)}`)
 
-    return tooltipSection(icon, label, 'not current', progressBar(0), [reset])
+    return tooltipSection(label, note, 'No reading since the reset', progressBar(0))
   }
 
   const remaining = percentLeft(limit)
-  const bar = progressBar(remaining, getWindowLevel(limit, thresholds, now))
-  const details = limit.resetsAt
-    ? [escapeMarkdown(`Resets in ${formatCountdown(limit.resetsAt, now)} · ${resetFull.format(limit.resetsAt)}`)]
-    : []
+  const note = limit.resetsAt ? escapeMarkdown(`Resets ${formatReset(limit.resetsAt)}`) : null
 
-  return tooltipSection(icon, label, `${remaining}% left`, bar, details)
+  return tooltipSection(label, note, `${remaining}% left`, progressBar(remaining, getWindowLevel(limit, thresholds, now)))
 }
 
 /**
  * Build a tool's hover tooltip as Markdown with HTML: a large heading, then context and each window
  * in sections divided by rules, each with a progress bar, and the reading details at the bottom.
  *
- * Render it with `supportHtml` and `supportThemeIcons` on.
+ * Render it with `supportHtml` on.
  * @param {string} name - The tool's full name.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
@@ -361,15 +338,13 @@ function buildTooltip(name, usage, thresholds, now) {
 
   if (usage.limitsUpdatedAt) footer.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
 
-  footer.push(`Click to open ${escapeMarkdown(name)}.`)
-
   return [
     header.join('\n\n'),
     contextSection(session),
     limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
     limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),
     footer.map(line => dim(`<small>${line}</small>`)).join('  \n'),
-  ].join('\n\n---\n\n')
+  ].filter(Boolean).join('\n\n---\n\n')
 }
 
 module.exports = {

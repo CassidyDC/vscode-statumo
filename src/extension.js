@@ -133,7 +133,7 @@ function isEnabled(tool) {
 const gap = '\u2002'
 
 /**
- * Wrap tooltip Markdown so it renders its icons and the sanitized HTML of its progress bars, without running commands.
+ * Wrap tooltip Markdown so it renders the sanitized HTML of its progress bars, without running commands.
  * @param {string} markdown - The tooltip's Markdown.
  * @returns {vscode.MarkdownString} The tooltip.
  */
@@ -142,7 +142,6 @@ function toTooltip(markdown) {
 
   tooltip.isTrusted = false
   tooltip.supportHtml = true
-  tooltip.supportThemeIcons = true
 
   return tooltip
 }
