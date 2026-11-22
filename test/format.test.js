@@ -69,7 +69,7 @@ test('rounds rings to the nearest step, keeping partial values off empty and ful
   assert.equal(ringIcon('7d', 61), '$(statumo-7d-60)')
 })
 
-test('dashes a window whose reset has passed', () => {
+test('empties the ring of a window whose reset has passed', () => {
   const usage = makeUsage({
     limits: {
       fiveHour: { percentUsed: 90, resetsAt: new Date(2026, 10, 22, 9, 0) },
@@ -78,9 +78,9 @@ test('dashes a window whose reset has passed', () => {
   })
   const segments = buildSegments(usage, now)
 
-  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0) —', '$(statumo-7d-60) 61%'])
+  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-60) 61%'])
   assert.match(buildTooltip('Codex', usage, now), /5h limit: reset Sun, Nov 22, 09:00, no reading since/)
-  assert.equal(segments.windows[0].value, '—')
+  assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
 })

@@ -77,8 +77,8 @@ function formatTokens(tokens) {
  * One rate-limit window's part of the status bar.
  * @typedef {object} WindowSegment
  * @property {'fiveHour' | 'sevenDay'} key - Which window.
- * @property {string} text - The window's ring icon and percent left, such as `$(statumo-5h-85) 84%`.
- * @property {string} value - The percent left, such as `84%`, or a dash when unknown or stale.
+ * @property {string} text - The window's ring icon and percent left, such as `$(statumo-5h-85) 84%`, or the empty ring alone when unknown or stale.
+ * @property {string | null} value - The percent left, such as `84%`, or null when unknown or stale.
  * @property {boolean} isStale - Whether the reading predates the window's reset.
  * @property {import('./usage').LimitReading | null} limit - The window's reading.
  */
@@ -94,7 +94,7 @@ function formatTokens(tokens) {
 function buildWindowSegment(key, ring, limit, now) {
   const isStale = isLimitStale(limit, now)
 
-  if (!limit || isStale) return { key, text: `${ringIcon(ring, null)} ${dash}`, value: dash, isStale, limit }
+  if (!limit || isStale) return { key, text: ringIcon(ring, null), value: null, isStale, limit }
 
   const remaining = percentLeft(limit)
 
