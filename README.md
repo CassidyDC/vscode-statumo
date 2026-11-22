@@ -1,18 +1,31 @@
 # Claude Code Usage
 
-**Usage** is a Claude Code mod that displays a plain-text usage line above the prompt when the graphical VS Code panel is the session's only display surface.
+**Usage** is a Claude Code mod that records each session's live usage in a small JSON file, so the [Statumo](https://marketplace.visualstudio.com/items?itemName=jacobcassidy.statumo) VS Code extension can show it in the editor's status bar.
 
-`Context <used>/<window>, x% used | 5h x% left, resets HH:mm | 7d x% left, resets Mon D | session title | git-branch`
+The mod writes one file per session to `~/.claude/usage/sessions/<session-id>.json`, or under your `CLAUDE_CONFIG_DIR` when you set one.
 
-Token counts use `k` for thousands and `m` for millions, as in `48.3k/1m`.
+```json
+{
+  "version": 1,
+  "tool": "claude-code",
+  "sessionId": "8f0c…",
+  "cwd": "/path/to/project",
+  "title": "Refactor parser",
+  "context": { "tokens": 48300, "window": 1000000, "percent": 5 },
+  "rateLimits": {
+    "fiveHour": { "percentUsed": 16, "resetsAt": "2026-11-22T14:30:00.000Z" },
+    "sevenDay": { "percentUsed": 39, "resetsAt": "2026-11-27T09:00:00.000Z" }
+  },
+  "endedAt": null,
+  "updatedAt": "2026-11-22T10:12:04.511Z"
+}
+```
 
-The line updates after turns and as Claude reports changes to plan limits. It checks the current Git worktree and saved session title every 10 seconds while the panel is attached. Reset times and dates use the local timezone.
+The file updates after turns and as Claude reports changes to plan limits. The mod checks the saved session title and project root every 10 seconds and rewrites the file only when one changes. A value Claude hasn't reported is `null`. When the session ends, the mod sets `endedAt` and leaves the file in place.
 
-A dash marks a reading Claude hasn't reported or a branch the mod couldn't read. A new session shows **Untitled** until Claude saves a title or summary.
+## Install
 
-## Install in VS Code
-
-Use Claude Code for VS Code 2.1.299 or later. Sessions that run without feature flags require 2.1.304 or later.
+Use Claude Code 2.1.304 or later. Install the mod wherever you run Claude Code, whether in the VS Code panel or a terminal.
 
 From the Usage checkout, register its marketplace once. Claude Code loads the mod from this checkout, so keep it at the registered path.
 
@@ -42,9 +55,9 @@ If you're switching from a local install, run this from that project's root afte
 claude plugin uninstall usage@code-usage-local --scope local --keep-data
 ```
 
-### Open the Claude Code panel
+### Update an existing install
 
-Open a project in VS Code, dock the graphical Claude Code panel in the Secondary Side Bar, and start a new local conversation. Look for **Context** in the Usage status line. The line follows the Claude Code panel when you move it.
+After pulling a new version, run `claude plugin marketplace update code-usage-local`, then start a new Claude Code session.
 
 ### Migrate from the old plugin name
 
@@ -53,5 +66,3 @@ If you installed `code-usage-preview` in a project, run `claude plugin marketpla
 ## Validation
 
 For validation, run `claude plugin validate ./.claude-plugin/plugin.json --strict`.
-
-[Claude Code mod layout in VS Code](https://code.claude.com/docs/en/plugins/mods/interface#draw-in-the-vs-code-extension)

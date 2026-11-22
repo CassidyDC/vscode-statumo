@@ -1,104 +1,120 @@
 import { readSessionTitle } from './session-title.js'
 
-const resetTime = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-})
-const resetDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
+const formatVersion = 1
+const transcriptLayout = /^(.*)[\\/]projects[\\/][^\\/]+[\\/][^\\/]+$/
 
-function formatTokens(tokens) {
-  if (!Number.isFinite(tokens)) return '—'
+function readLimit(limits, kind) {
+  const limit = limits.find(entry => entry.kind === kind)
+  if (!Number.isFinite(limit?.percentUsed)) return null
 
-  const thousands = Math.round(tokens / 100) / 10
-  if (thousands < 1000) return `${thousands}k`
-
-  return `${Math.round(tokens / 100_000) / 10}m`
+  return {
+    percentUsed: limit.percentUsed,
+    resetsAt: typeof limit.resetsAt === 'string' ? limit.resetsAt : null,
+  }
 }
 
-function formatContext(context) {
-  const tokens = `${formatTokens(context?.tokens)}/${formatTokens(context?.window)}`
-  const percent = Number.isFinite(context?.percent) ? `, ${context.percent}% used` : ''
-  return `Context ${tokens}${percent}`
+function readContext(context) {
+  const number = value => (Number.isFinite(value) ? value : null)
+  return {
+    tokens: number(context?.tokens),
+    window: number(context?.window),
+    percent: number(context?.percent),
+  }
 }
 
-function formatLimit(label, limit, formatter) {
-  if (!Number.isFinite(limit?.percentUsed)) return `${label} —`
-
-  const remaining = Math.max(0, Math.min(100, Math.round((100 - limit.percentUsed) * 10) / 10))
-  const reset = typeof limit.resetsAt === 'string' ? new Date(limit.resetsAt) : undefined
-  const resetText = Number.isFinite(reset?.getTime()) ? `, resets ${formatter.format(reset)}` : ''
-  return `${label} ${remaining}% left${resetText}`
-}
-
-async function readBranch($) {
-  const cwd = await $.session.root()
-  const { exitCode, stdout } = await $.process.run(
-    ['git', 'branch', '--show-current'],
-    { cwd, timeoutMs: 2000 },
-  )
-  if (exitCode === 0) return stdout.trim() || 'Detached HEAD'
+// Session files sit beside `projects/` in the Claude config folder, so a custom
+// CLAUDE_CONFIG_DIR is followed without reading the environment.
+async function resolveOutputPath($) {
+  const [{ transcriptPath }, id] = await Promise.all([$.session.info(), $.session.id()])
+  const match = transcriptLayout.exec(transcriptPath ?? '')
+  if (match && id) return `${match[1]}/usage/sessions/${id}.json`
 }
 
 let timer
 let transcript
+let outputPath
+let snapshot
 let revision = 0
 
-function clearStatus($) {
-  timer?.cancel()
-  timer = undefined
-  $.ui.status(undefined)
-}
-
-async function refresh($) {
+async function publish($, { isObserved }) {
   const current = ++revision
-  const surfaces = await $.session.surfaces()
-  if (current !== revision) return
+  outputPath ??= await resolveOutputPath($)
+  if (!outputPath) return
 
-  // Status lines are shared across attached surfaces.
-  if (surfaces.length !== 1 || surfaces[0] !== 'vscode') {
-    clearStatus($)
-    return
-  }
-
-  // Git and saved titles can change while the conversation is idle.
-  timer ??= $.clock.every(10_000, () => { void refresh($).catch(() => {}) })
-  const [usage, branch, metadata] = await Promise.all([
+  const [usage, metadata, root, sessionId] = await Promise.all([
     $.session.usage().catch(() => undefined),
-    readBranch($).catch(() => undefined),
     readSessionTitle($, transcript).catch(() => ({})),
+    $.session.root(),
+    $.session.id(),
   ])
   if (current !== revision) return
 
   transcript = metadata.cursor
   const limits = usage?.rateLimits ?? []
   const title = metadata.title?.replace(/[\s\u0000-\u001f\u007f-\u009f]+/g, ' ').trim()
-  $.ui.status([
-    formatContext(usage?.context),
-    formatLimit('5h', limits.find(limit => limit.kind === 'five_hour'), resetTime),
-    formatLimit('7d', limits.find(limit => limit.kind === 'seven_day'), resetDate),
-    title || 'Untitled',
-    branch || '—',
-  ].join(' | '))
+  const fields = {
+    version: formatVersion,
+    tool: 'claude-code',
+    sessionId,
+    cwd: root,
+    title: title || null,
+    context: readContext(usage?.context),
+    rateLimits: {
+      fiveHour: readLimit(limits, 'five_hour'),
+      sevenDay: readLimit(limits, 'seven_day'),
+    },
+    endedAt: null,
+  }
+
+  // Timer passes only rewrite the file when something changed, so `updatedAt`
+  // keeps saying when Claude last reported usage or the session last changed.
+  const isChanged = JSON.stringify(fields) !== JSON.stringify(snapshot?.fields)
+  if (!isObserved && !isChanged) return
+
+  snapshot = { fields, updatedAt: new Date().toISOString() }
+  await write($, snapshot)
 }
 
-async function syncStatus($, event, next) {
-  await refresh($)
+function write($, { fields, updatedAt }) {
+  return $.fs.write(outputPath, `${JSON.stringify({ ...fields, updatedAt }, null, 2)}\n`)
+}
+
+function startTimer($) {
+  // Saved titles and the project root can change while the conversation is idle.
+  timer ??= $.clock.every(10_000, () => {
+    void publish($, { isObserved: false }).catch(() => {})
+  })
+}
+
+async function observe($, event, next) {
+  startTimer($)
+  await publish($, { isObserved: true }).catch(() => {})
+  return next(event)
+}
+
+async function end($, event, next) {
+  revision += 1
+  timer?.cancel()
+  timer = undefined
+
+  if (outputPath && snapshot) {
+    const endedAt = new Date().toISOString()
+    snapshot = { fields: { ...snapshot.fields, endedAt }, updatedAt: endedAt }
+    await write($, snapshot).catch(() => {})
+  }
+
+  transcript = undefined
+  outputPath = undefined
+  snapshot = undefined
   return next(event)
 }
 
 export function register(on) {
-  on('session.start', syncStatus)
-  on('session.attach', syncStatus)
-  on('session.detach', syncStatus)
-  on('session.measure', syncStatus)
-  on('session.end', ($, event, next) => {
-    revision += 1
-    transcript = undefined
-    clearStatus($)
-    return next(event)
-  })
+  on('session.start', observe)
+  on('session.attach', observe)
+  on('session.measure', observe)
+  on('session.end', end)
   on('classic.SessionStart', ($, event, next) =>
-    event.source === 'startup' ? next(event) : syncStatus($, event, next),
+    event.source === 'startup' ? next(event) : observe($, event, next),
   )
 }

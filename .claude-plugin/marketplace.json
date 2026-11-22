@@ -8,7 +8,7 @@
     {
       "name": "usage",
       "source": "./",
-      "description": "Show live context usage, remaining rate limits, Git branch, and session title in Claude Code for VS Code."
+      "description": "Write live Claude Code context usage, rate limits, and session titles for the Statumo VS Code status bar."
     }
   ]
 }
