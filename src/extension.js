@@ -10,7 +10,7 @@ const path = require('node:path')
 const vscode = require('vscode')
 const { pruneClaudeSessions, readClaudeUsage } = require('./claude')
 const { readCodexUsage } = require('./codex')
-const { buildSegments, buildTooltip, buildWindowTooltip, getWindowLevel, windowNames } = require('./format')
+const { buildSegments, buildTooltip, buildWindowTooltip, getToolLevel, getWindowLevel, windowNames } = require('./format')
 const { expandHome } = require('./paths')
 
 /**
@@ -45,6 +45,7 @@ const pruneIntervalMs = 86_400_000
  * @typedef {object} Tool
  * @property {'claude' | 'codex'} id - The tool's settings key.
  * @property {string} label - The tool's short name, which starts its status bar items.
+ * @property {boolean} isCombined - Whether the tool shows as one item instead of one item per part.
  * @property {string} name - The tool's full name.
  * @property {number} priority - The tool's status bar priority; higher sits further left.
  * @property {string} openCommand - The Statumo command that opens the tool.
@@ -59,6 +60,7 @@ const tools = [
   {
     id: 'claude',
     label: 'Claude',
+    isCombined: false,
     name: 'Claude Code',
     priority: 101,
     openCommand: 'statumo.openClaude',
@@ -67,6 +69,7 @@ const tools = [
   {
     id: 'codex',
     label: 'Codex',
+    isCombined: true,
     name: 'Codex',
     priority: 100,
     openCommand: 'statumo.openCodex',
@@ -129,6 +132,13 @@ const itemParts = [
  */
 
 /**
+ * Separates the parts of a combined item: two en spaces, about the gap between separate items.
+ * VS Code would collapse repeated plain spaces.
+ * @type {string}
+ */
+const combinedGap = '\u2002\u2002'
+
+/**
  * Wrap tooltip Markdown so it renders without running commands or HTML.
  * @param {string} markdown - The tooltip's Markdown.
  * @returns {vscode.MarkdownString} The tooltip.
@@ -151,6 +161,32 @@ function hideAll(items) {
 }
 
 /**
+ * Draw a tool's usage on one item: its name, then context and each window.
+ *
+ * The item takes the warning or error color of its lower window, and its tooltip has the full breakdown.
+ * @param {vscode.StatusBarItem} item - The tool's item.
+ * @param {Tool} tool - The tool.
+ * @param {import('./usage').ToolUsage} usage - The tool's usage.
+ * @param {ReturnType<typeof buildSegments>} segments - The tool's status bar segments.
+ * @param {Settings} settings - The current settings.
+ * @param {Date} now - The current time.
+ */
+function renderCombined(item, tool, usage, segments, settings, now) {
+  const level = getToolLevel(usage.limits, settings, now)
+  const parts = [
+    `context ${segments.context.value} used`,
+    ...segments.windows.map(window => `${windowNames[window.key]} ${window.value} left`),
+  ]
+
+  item.text = [tool.label, segments.context.text, ...segments.windows.map(window => window.text)].join(combinedGap)
+  item.tooltip = toTooltip(buildTooltip(tool.name, usage, now))
+  item.backgroundColor = level ? new vscode.ThemeColor(`statusBarItem.${level}Background`) : undefined
+  item.color = level ? new vscode.ThemeColor(`statusBarItem.${level}Foreground`) : undefined
+  item.accessibilityInformation = { label: `${tool.name} ${parts.join(', ')}` }
+  item.show()
+}
+
+/**
  * Draw a tool's usage on its items, or hide them when there's nothing to show.
  * @param {Map<ItemPart, vscode.StatusBarItem>} items - The tool's items.
  * @param {Tool} tool - The tool.
@@ -165,6 +201,12 @@ function render(items, tool, usage, settings, now) {
   }
 
   const segments = buildSegments(usage, now)
+
+  if (tool.isCombined) {
+    renderCombined(items.get('context'), tool, usage, segments, settings, now)
+    return
+  }
+
   const contextItem = items.get('context')
 
   contextItem.tooltip = toTooltip(buildTooltip(tool.name, usage, now))
@@ -220,7 +262,9 @@ function activate(context) {
   for (const tool of tools) {
     const toolItems = new Map()
 
-    itemParts.forEach(({ part, name }, index) => {
+    const parts = tool.isCombined ? itemParts.filter(({ part }) => part === 'context') : itemParts
+
+    parts.forEach(({ part, name }, index) => {
       const id = part === 'context' ? `statumo.${tool.id}` : `statumo.${tool.id}.${part}`
       const priority = tool.priority + (itemParts.length - index) / 10
       const item = vscode.window.createStatusBarItem(id, vscode.StatusBarAlignment.Right, priority)

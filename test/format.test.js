@@ -7,7 +7,7 @@
 
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
-const { buildSegments, buildTooltip, buildWindowTooltip, formatTokens, getWindowLevel } = require('../src/format')
+const { buildSegments, buildTooltip, buildWindowTooltip, formatTokens, getToolLevel, getWindowLevel } = require('../src/format')
 const { ringIcon, ringStep } = require('../src/rings')
 
 /**
@@ -99,6 +99,9 @@ test('warns and errors per window', () => {
   assert.equal(getWindowLevel(limit(75), thresholds, now), 'warning')
   assert.equal(getWindowLevel(limit(95), thresholds, now), 'error')
   assert.equal(getWindowLevel(null, thresholds, now), null)
+  assert.equal(getToolLevel({ fiveHour: limit(95), sevenDay: limit(80) }, thresholds, now), 'error')
+  assert.equal(getToolLevel({ fiveHour: limit(10), sevenDay: limit(80) }, thresholds, now), 'warning')
+  assert.equal(getToolLevel({ fiveHour: null, sevenDay: limit(10) }, thresholds, now), null)
 })
 
 test('formats token counts in thousands and millions', () => {
@@ -117,6 +120,7 @@ test('escapes session titles in the tooltip', () => {
   assert.match(tooltip, /\\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*/)
   assert.match(tooltip, /Context: 48\\\.3k \/ 400k · 12% used/)
   assert.match(tooltip, /Plan: Plus/)
+  assert.match(tooltip, /5h limit: 84% left, resets in 4 h 30 min \\\(Sun, Nov 22, 14:30\\\)/)
 })
 
 test('shows when each window resets in its own tooltip', () => {

@@ -112,7 +112,9 @@ function formatLimitLong(limit, now) {
 
   if (isLimitStale(limit, now)) return `reset ${resetFull.format(limit.resetsAt)}, no reading since`
 
-  const reset = limit.resetsAt ? `, resets ${resetFull.format(limit.resetsAt)}` : ''
+  const reset = limit.resetsAt
+    ? `, resets in ${formatCountdown(limit.resetsAt, now)} (${resetFull.format(limit.resetsAt)})`
+    : ''
 
   return `${percentLeft(limit)}% left${reset}`
 }
@@ -216,6 +218,23 @@ function getWindowLevel(limit, { warningThreshold, errorThreshold }, now) {
 }
 
 /**
+ * Decide a tool's warning level from the lower of its two windows.
+ * @param {import('./usage').ToolUsage['limits']} limits - The tool's windows.
+ * @param {object} thresholds - Percent-left thresholds.
+ * @param {number} thresholds.warningThreshold - At or below this, warn.
+ * @param {number} thresholds.errorThreshold - At or below this, show an error.
+ * @param {Date} now - The current time.
+ * @returns {'error' | 'warning' | null} The more urgent window's level, or null when neither is low.
+ */
+function getToolLevel(limits, thresholds, now) {
+  const levels = [getWindowLevel(limits.fiveHour, thresholds, now), getWindowLevel(limits.sevenDay, thresholds, now)]
+
+  if (levels.includes('error')) return 'error'
+  if (levels.includes('warning')) return 'warning'
+  return null
+}
+
+/**
  * Build a tool's hover tooltip as Markdown.
  * @param {string} name - The tool's full name.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
@@ -294,4 +313,13 @@ function buildWindowTooltip(name, usage, key, now) {
   return lines.join('  \n')
 }
 
-module.exports = { buildSegments, buildTooltip, buildWindowTooltip, escapeMarkdown, formatTokens, getWindowLevel, windowNames }
+module.exports = {
+  buildSegments,
+  buildTooltip,
+  buildWindowTooltip,
+  escapeMarkdown,
+  formatTokens,
+  getToolLevel,
+  getWindowLevel,
+  windowNames,
+}
