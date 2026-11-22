@@ -52,6 +52,21 @@ const pruneIntervalMs = 86_400_000
  */
 
 /**
+ * The status bar priority Statumo's items sit at, just left of Copilot's 100.1 and the editor status items.
+ *
+ * Each tool sits a tiny step above this, off the round numbers other items use, with the tools a
+ * step apart, so no other item's priority falls between them and they stay side by side.
+ * @type {number}
+ */
+const basePriority = 101
+
+/**
+ * The gap between neighboring tools' priorities.
+ * @type {number}
+ */
+const priorityStep = 0.00001
+
+/**
  * The tools Statumo shows, left to right.
  * @type {Tool[]}
  */
@@ -60,7 +75,7 @@ const tools = [
     id: 'claude',
     label: 'Claude',
     name: 'Claude Code',
-    priority: 101,
+    priority: basePriority + 2 * priorityStep,
     openCommand: 'statumo.openClaude',
     read: (settings, folders) => readClaudeUsage({ configDirectory: settings.claudeDirectory, folders }),
   },
@@ -68,7 +83,7 @@ const tools = [
     id: 'codex',
     label: 'Codex',
     name: 'Codex',
-    priority: 100,
+    priority: basePriority + priorityStep,
     openCommand: 'statumo.openCodex',
     read: (settings, folders, now) => readCodexUsage({ homeDirectory: settings.codexDirectory, folders, now }),
   },
