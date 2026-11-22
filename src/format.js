@@ -389,8 +389,8 @@ function limitSection(key, limit, thresholds, now) {
 }
 
 /**
- * Build the tooltip's footer lines: the plan, the session's title and folder, and one line with when
- * the session and limits were last updated, separated by a dot, or a single age when both read the same.
+ * Build the tooltip's footer lines: the plan, the session's title and folder, and one line with the
+ * session's last activity, or when it ended, and when the limits were read, separated by a dot.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string[]} The lines, already escaped.
@@ -398,21 +398,14 @@ function limitSection(key, limit, thresholds, now) {
 function footerLines(usage, now) {
   const { session } = usage
   const lines = []
-  const sessionAge = session ? formatAge(session.updatedAt, now) : null
-  const limitsAge = usage.limitsUpdatedAt ? formatAge(usage.limitsUpdatedAt, now) : null
+  const ages = []
 
   if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
   if (session?.title) lines.push(`Chat Title: ${escapeMarkdown(session.title)}`)
   if (session?.cwd) lines.push(`Session: ${escapeMarkdown(truncatePath(tildify(session.cwd)))}`)
-
-  if (sessionAge && sessionAge === limitsAge && !session.isEnded) {
-    lines.push(`Updated: ${sessionAge}`)
-  } else {
-    const ages = []
-    if (sessionAge) ages.push(`Session ${session.isEnded ? 'ended ' : ''}${sessionAge}`)
-    if (limitsAge) ages.push(`Limits ${limitsAge}`)
-    if (ages.length) lines.push(`Updated: ${ages.join(' · ')}`)
-  }
+  if (session) ages.push(`${session.isEnded ? 'Ended' : 'Last activity'} ${formatAge(session.updatedAt, now)}`)
+  if (usage.limitsUpdatedAt) ages.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
+  if (ages.length) lines.push(ages.join(' · '))
 
   return lines
 }
