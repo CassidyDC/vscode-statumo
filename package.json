@@ -66,6 +66,447 @@
           "fontPath": "./images/statumo-icons.woff",
           "fontCharacter": "\\E002"
         }
+      },
+      "statumo-cx-0": {
+        "description": "Context ring at 0%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E100"
+        }
+      },
+      "statumo-cx-5": {
+        "description": "Context ring at 5%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E101"
+        }
+      },
+      "statumo-cx-10": {
+        "description": "Context ring at 10%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E102"
+        }
+      },
+      "statumo-cx-15": {
+        "description": "Context ring at 15%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E103"
+        }
+      },
+      "statumo-cx-20": {
+        "description": "Context ring at 20%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E104"
+        }
+      },
+      "statumo-cx-25": {
+        "description": "Context ring at 25%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E105"
+        }
+      },
+      "statumo-cx-30": {
+        "description": "Context ring at 30%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E106"
+        }
+      },
+      "statumo-cx-35": {
+        "description": "Context ring at 35%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E107"
+        }
+      },
+      "statumo-cx-40": {
+        "description": "Context ring at 40%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E108"
+        }
+      },
+      "statumo-cx-45": {
+        "description": "Context ring at 45%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E109"
+        }
+      },
+      "statumo-cx-50": {
+        "description": "Context ring at 50%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E10A"
+        }
+      },
+      "statumo-cx-55": {
+        "description": "Context ring at 55%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E10B"
+        }
+      },
+      "statumo-cx-60": {
+        "description": "Context ring at 60%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E10C"
+        }
+      },
+      "statumo-cx-65": {
+        "description": "Context ring at 65%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E10D"
+        }
+      },
+      "statumo-cx-70": {
+        "description": "Context ring at 70%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E10E"
+        }
+      },
+      "statumo-cx-75": {
+        "description": "Context ring at 75%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E10F"
+        }
+      },
+      "statumo-cx-80": {
+        "description": "Context ring at 80%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E110"
+        }
+      },
+      "statumo-cx-85": {
+        "description": "Context ring at 85%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E111"
+        }
+      },
+      "statumo-cx-90": {
+        "description": "Context ring at 90%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E112"
+        }
+      },
+      "statumo-cx-95": {
+        "description": "Context ring at 95%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E113"
+        }
+      },
+      "statumo-cx-100": {
+        "description": "Context ring at 100%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E114"
+        }
+      },
+      "statumo-5h-0": {
+        "description": "5-hour limit ring at 0%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E120"
+        }
+      },
+      "statumo-5h-5": {
+        "description": "5-hour limit ring at 5%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E121"
+        }
+      },
+      "statumo-5h-10": {
+        "description": "5-hour limit ring at 10%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E122"
+        }
+      },
+      "statumo-5h-15": {
+        "description": "5-hour limit ring at 15%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E123"
+        }
+      },
+      "statumo-5h-20": {
+        "description": "5-hour limit ring at 20%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E124"
+        }
+      },
+      "statumo-5h-25": {
+        "description": "5-hour limit ring at 25%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E125"
+        }
+      },
+      "statumo-5h-30": {
+        "description": "5-hour limit ring at 30%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E126"
+        }
+      },
+      "statumo-5h-35": {
+        "description": "5-hour limit ring at 35%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E127"
+        }
+      },
+      "statumo-5h-40": {
+        "description": "5-hour limit ring at 40%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E128"
+        }
+      },
+      "statumo-5h-45": {
+        "description": "5-hour limit ring at 45%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E129"
+        }
+      },
+      "statumo-5h-50": {
+        "description": "5-hour limit ring at 50%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E12A"
+        }
+      },
+      "statumo-5h-55": {
+        "description": "5-hour limit ring at 55%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E12B"
+        }
+      },
+      "statumo-5h-60": {
+        "description": "5-hour limit ring at 60%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E12C"
+        }
+      },
+      "statumo-5h-65": {
+        "description": "5-hour limit ring at 65%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E12D"
+        }
+      },
+      "statumo-5h-70": {
+        "description": "5-hour limit ring at 70%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E12E"
+        }
+      },
+      "statumo-5h-75": {
+        "description": "5-hour limit ring at 75%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E12F"
+        }
+      },
+      "statumo-5h-80": {
+        "description": "5-hour limit ring at 80%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E130"
+        }
+      },
+      "statumo-5h-85": {
+        "description": "5-hour limit ring at 85%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E131"
+        }
+      },
+      "statumo-5h-90": {
+        "description": "5-hour limit ring at 90%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E132"
+        }
+      },
+      "statumo-5h-95": {
+        "description": "5-hour limit ring at 95%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E133"
+        }
+      },
+      "statumo-5h-100": {
+        "description": "5-hour limit ring at 100%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E134"
+        }
+      },
+      "statumo-7d-0": {
+        "description": "7-day limit ring at 0%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E140"
+        }
+      },
+      "statumo-7d-5": {
+        "description": "7-day limit ring at 5%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E141"
+        }
+      },
+      "statumo-7d-10": {
+        "description": "7-day limit ring at 10%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E142"
+        }
+      },
+      "statumo-7d-15": {
+        "description": "7-day limit ring at 15%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E143"
+        }
+      },
+      "statumo-7d-20": {
+        "description": "7-day limit ring at 20%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E144"
+        }
+      },
+      "statumo-7d-25": {
+        "description": "7-day limit ring at 25%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E145"
+        }
+      },
+      "statumo-7d-30": {
+        "description": "7-day limit ring at 30%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E146"
+        }
+      },
+      "statumo-7d-35": {
+        "description": "7-day limit ring at 35%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E147"
+        }
+      },
+      "statumo-7d-40": {
+        "description": "7-day limit ring at 40%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E148"
+        }
+      },
+      "statumo-7d-45": {
+        "description": "7-day limit ring at 45%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E149"
+        }
+      },
+      "statumo-7d-50": {
+        "description": "7-day limit ring at 50%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E14A"
+        }
+      },
+      "statumo-7d-55": {
+        "description": "7-day limit ring at 55%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E14B"
+        }
+      },
+      "statumo-7d-60": {
+        "description": "7-day limit ring at 60%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E14C"
+        }
+      },
+      "statumo-7d-65": {
+        "description": "7-day limit ring at 65%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E14D"
+        }
+      },
+      "statumo-7d-70": {
+        "description": "7-day limit ring at 70%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E14E"
+        }
+      },
+      "statumo-7d-75": {
+        "description": "7-day limit ring at 75%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E14F"
+        }
+      },
+      "statumo-7d-80": {
+        "description": "7-day limit ring at 80%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E150"
+        }
+      },
+      "statumo-7d-85": {
+        "description": "7-day limit ring at 85%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E151"
+        }
+      },
+      "statumo-7d-90": {
+        "description": "7-day limit ring at 90%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E152"
+        }
+      },
+      "statumo-7d-95": {
+        "description": "7-day limit ring at 95%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E153"
+        }
+      },
+      "statumo-7d-100": {
+        "description": "7-day limit ring at 100%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E154"
+        }
       }
     },
     "configuration": {

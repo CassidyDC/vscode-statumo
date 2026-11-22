@@ -167,8 +167,8 @@ function render(items, tool, usage, settings, now) {
 
   for (const item of items.values()) item.tooltip = tooltip
 
-  contextItem.text = `${tool.icon} ${segments.context}`
-  contextItem.accessibilityInformation = { label: `${tool.name} context ${segments.context.slice(3)} used` }
+  contextItem.text = `${tool.icon} ${segments.context.text}`
+  contextItem.accessibilityInformation = { label: `${tool.name} context ${segments.context.value} used` }
   contextItem.show()
 
   for (const window of segments.windows) {
@@ -181,7 +181,7 @@ function render(items, tool, usage, settings, now) {
     limitItem.text = window.text
     limitItem.backgroundColor = background
     limitItem.color = foreground ?? (window.isStale ? new vscode.ThemeColor('disabledForeground') : undefined)
-    limitItem.accessibilityInformation = { label: `${tool.name} ${windowNames[window.key]} ${window.text.slice(3)} left` }
+    limitItem.accessibilityInformation = { label: `${tool.name} ${windowNames[window.key]} ${window.value} left` }
     limitItem.show()
 
     if (!window.reset) {

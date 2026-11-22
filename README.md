@@ -3,13 +3,13 @@
 Statumo shows how much context and rate limit you have left in Claude Code and Codex, right in the VS Code status bar.
 
 ```text
-[Claude logo] cx 12%  5h 84%  14:30  7d 61%  Nov 27    [OpenAI logo] cx 41%  5h 16%  16:03  7d 80%  Nov 27
+[Claude logo] (layers) 12%  (clock) 84%  14:30  (calendar) 61%  Nov 27    [OpenAI logo] (layers) 41%  (clock) 16%  16:03  (calendar) 80%  Nov 27
 ```
 
-Each tool is marked by its logo, Claude or OpenAI, and shows:
+Each tool is marked by its logo, Claude or OpenAI, and shows three percents, each led by a ring that fills to match it in 5% steps:
 
-- **cx** is how much of the current session's context window is used.
-- **5h** and **7d** are how much of each rate-limit window is left, followed by when it resets in a dimmer color.
+- **Context** (layers in the ring) is how much of the current session's context window is used.
+- **5-hour limit** (clock) and **7-day limit** (calendar) are how much of each rate-limit window is left, followed by when it resets in a dimmer color.
 
 VS Code draws each status bar item in a single color, so each part is its own item. Right-click the status bar to hide any of them, such as the reset times.
 
@@ -17,9 +17,9 @@ Hover over an item for the full breakdown: the session title, token counts, exac
 
 ## What each item follows
 
-- **Context** comes from the most recently active session whose working folder is in the current VS Code workspace. Until a tool has a session here, context shows `—`.
+- **Context** comes from the most recently active session whose working folder is in the current VS Code workspace. Until a tool has a session here, context shows an empty ring and `—`.
 - **Rate limits** belong to your account, so they come from the most recent reading in any session.
-- When a window's reset time passes with no newer reading, it shows `—` in a faded color until the tool reports again.
+- When a window's reset time passes with no newer reading, it shows an empty ring and `—` in a faded color until the tool reports again.
 - A window and its reset time turn the warning color when it has 25% or less left, and the error color at 10% or less. Both thresholds are settings.
 
 A tool's items stay hidden until it has written any usage on this machine.
@@ -74,7 +74,7 @@ Statumo only reads files on your machine and makes no network requests. Session 
 
 ## Development
 
-Run the tests with `npm test`. The logos in the status bar come from an icon font built from `images/logos/` by `npm run build:icons`. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`.
+Run the tests with `npm test`. The logos and progress rings in the status bar come from an icon font that `npm run build:icons` builds from `images/logos/` and the ring shapes drawn in `scripts/build-icons.js`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`.
 
 The Usage mod for Claude Code lives in `claude-mod/` and stays out of the extension package. Its [README](claude-mod/README.md) documents the session file format Statumo reads and how to validate the mod.
 

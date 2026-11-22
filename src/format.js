@@ -6,6 +6,7 @@
 'use strict'
 
 const os = require('node:os')
+const { ringIcon } = require('./rings')
 
 /**
  * Formats a 5-hour reset as a 24-hour time, such as `14:30`.
@@ -76,7 +77,8 @@ function formatTokens(tokens) {
  * One rate-limit window's part of the status bar.
  * @typedef {object} WindowSegment
  * @property {'fiveHour' | 'sevenDay'} key - Which window.
- * @property {string} text - The window's label and percent left, such as `5h 84%`.
+ * @property {string} text - The window's ring icon and percent left, such as `$(statumo-5h-85) 84%`.
+ * @property {string} value - The percent left, such as `84%`, or a dash when unknown or stale.
  * @property {string | null} reset - When it resets, such as `14:30`, or null when unknown or stale.
  * @property {boolean} isStale - Whether the reading predates the window's reset.
  * @property {import('./usage').LimitReading | null} limit - The window's reading.
@@ -85,20 +87,23 @@ function formatTokens(tokens) {
 /**
  * Build one window's segment.
  * @param {'fiveHour' | 'sevenDay'} key - Which window.
- * @param {string} label - The window's label.
+ * @param {import('./rings').RingKind} ring - The window's ring.
  * @param {import('./usage').LimitReading | null} limit - The window's reading.
  * @param {Intl.DateTimeFormat} formatter - Formats the reset.
  * @param {Date} now - The current time.
  * @returns {WindowSegment} The segment.
  */
-function buildWindowSegment(key, label, limit, formatter, now) {
+function buildWindowSegment(key, ring, limit, formatter, now) {
   const isStale = isLimitStale(limit, now)
 
-  if (!limit || isStale) return { key, text: `${label} ${dash}`, reset: null, isStale, limit }
+  if (!limit || isStale) return { key, text: `${ringIcon(ring, null)} ${dash}`, value: dash, reset: null, isStale, limit }
+
+  const remaining = percentLeft(limit)
 
   return {
     key,
-    text: `${label} ${percentLeft(limit)}%`,
+    text: `${ringIcon(ring, remaining)} ${remaining}%`,
+    value: `${remaining}%`,
     reset: limit.resetsAt ? formatter.format(limit.resetsAt) : null,
     isStale,
     limit,
@@ -157,19 +162,29 @@ function tildify(value) {
 }
 
 /**
- * Build a tool's status bar segments: context used, then each window's percent left and reset.
+ * The context part of the status bar.
+ * @typedef {object} ContextSegment
+ * @property {string} text - The context ring icon and percent used, such as `$(statumo-cx-10) 12%`.
+ * @property {string} value - The percent used, such as `12%`, or a dash when unknown.
+ */
+
+/**
+ * Build a tool's status bar segments: context used, then each window's percent left and reset,
+ * each percent led by a ring that fills to match it.
  *
  * VS Code draws each status bar item in one color, so the reset times are separate
  * items that can be dimmed.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
- * @returns {{ context: string, windows: WindowSegment[] }} The context text, such as `cx 12%`, and the windows.
+ * @returns {{ context: ContextSegment, windows: WindowSegment[] }} The context and the windows.
  */
 function buildSegments(usage, now) {
   const percent = usage.session?.context?.percent ?? null
+  const used = percent === null ? null : Math.round(percent)
+  const value = used === null ? dash : `${used}%`
 
   return {
-    context: percent === null ? `cx ${dash}` : `cx ${Math.round(percent)}%`,
+    context: { text: `${ringIcon('cx', used)} ${value}`, value },
     windows: [
       buildWindowSegment('fiveHour', '5h', usage.limits.fiveHour, resetTime, now),
       buildWindowSegment('sevenDay', '7d', usage.limits.sevenDay, resetDate, now),

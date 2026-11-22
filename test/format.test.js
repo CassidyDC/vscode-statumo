@@ -1,6 +1,6 @@
 /**
  * Status text formatting tests.
- * @file Check the status bar segments, per-window warning levels, staleness, and tooltip escaping.
+ * @file Check the status bar segments, progress rings, per-window warning levels, staleness, and tooltip escaping.
  */
 
 'use strict'
@@ -8,6 +8,7 @@
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
 const { buildSegments, buildTooltip, formatTokens, getWindowLevel } = require('../src/format')
+const { ringIcon, ringStep } = require('../src/rings')
 
 /**
  * A fixed current time for every test.
@@ -45,15 +46,33 @@ function makeUsage(overrides = {}) {
  * @returns {string[]} The texts, left to right.
  */
 function texts(segments) {
-  return [segments.context, ...segments.windows.flatMap(window => [window.text, window.reset])].filter(Boolean)
+  return [segments.context.text, ...segments.windows.flatMap(window => [window.text, window.reset])].filter(Boolean)
 }
 
 test('builds segments with context used, limits left, and resets apart', () => {
-  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['cx 12%', '5h 84%', '14:30', '7d 61%', 'Nov 27'])
+  assert.deepEqual(texts(buildSegments(makeUsage(), now)), [
+    '$(statumo-cx-10) 12%',
+    '$(statumo-5h-85) 84%',
+    '14:30',
+    '$(statumo-7d-60) 61%',
+    'Nov 27',
+  ])
 })
 
-test('dashes context when the workspace has no session', () => {
-  assert.equal(buildSegments(makeUsage({ session: null }), now).context, 'cx —')
+test('dashes context with an empty ring when the workspace has no session', () => {
+  assert.deepEqual(buildSegments(makeUsage({ session: null }), now).context, { text: '$(statumo-cx-0) —', value: '—' })
+})
+
+test('rounds rings to the nearest step, keeping partial values off empty and full', () => {
+  assert.equal(ringStep(null), 0)
+  assert.equal(ringStep(0), 0)
+  assert.equal(ringStep(1), 5)
+  assert.equal(ringStep(42), 40)
+  assert.equal(ringStep(43), 45)
+  assert.equal(ringStep(99), 95)
+  assert.equal(ringStep(100), 100)
+  assert.equal(ringStep(130), 100)
+  assert.equal(ringIcon('7d', 61), '$(statumo-7d-60)')
 })
 
 test('dashes a window whose reset has passed and drops its reset', () => {
@@ -65,7 +84,8 @@ test('dashes a window whose reset has passed and drops its reset', () => {
   })
   const segments = buildSegments(usage, now)
 
-  assert.deepEqual(texts(segments), ['cx 12%', '5h —', '7d 61%', 'Nov 27'])
+  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0) —', '$(statumo-7d-60) 61%', 'Nov 27'])
+  assert.equal(segments.windows[0].value, '—')
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
 })
