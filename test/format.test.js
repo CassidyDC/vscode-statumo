@@ -85,7 +85,7 @@ test('empties the ring of a window whose reset has passed', () => {
   const segments = buildSegments(usage, now)
 
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-40) 39%'])
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/b><\/small>&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\s+.*No reading since the reset/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /\*\*5-hour limit\*\*&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\n\n.*No reading since the reset/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -116,7 +116,7 @@ test('formats token counts in thousands and millions', () => {
   assert.equal(formatTokens(null), '—')
 })
 
-test('lays out each tooltip section as label and note, bold amount, then bar', () => {
+test('lays out each tooltip section as label and note, heading-sized amount, then bar', () => {
   const usage = makeUsage({ plan: 'Plus' })
 
   usage.session.title = 'Fix [link](https://example.com) *now*'
@@ -125,10 +125,10 @@ test('lays out each tooltip section as label and note, bold amount, then bar', (
   const sections = tooltip.split('\n\n---\n\n')
 
   assert.equal(sections.length, 5)
-  assert.equal(sections[0], '### Codex \\- Statumo')
-  assert.match(sections[1], /^<small><b>Context<\/b><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
-  assert.match(sections[2], /^<small><b>5-hour limit<\/b><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(in 4h 30m\\\).*\s+\*\*16%\*\* .*used/)
-  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(in 4d 23h\\\).*\s+\*\*39%\*\* .*used/)
+  assert.equal(sections[0], '## Codex \\- Statumo')
+  assert.match(sections[1], /^\*\*Context\*\*&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\n\n### 12% .*used.*\n\n<span/)
+  assert.match(sections[2], /^\*\*5-hour limit\*\*&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(in 4h 30m\\\).*\n\n### 16% .*used/)
+  assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(in 4d 23h\\\).*\n\n### 39% .*used/)
   assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
 })
 

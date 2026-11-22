@@ -305,36 +305,28 @@ function progressBar(percent, level = null) {
 }
 
 /**
- * Shrink text a step and show it in the theme's dimmer description color.
- * @param {string} text - The escaped text.
- * @returns {string} The text's HTML.
- */
-function fine(text) {
-  return dim(`<small>${text}</small>`)
-}
-
-/**
- * Format a section's amount: a bold percent followed by a fine word.
+ * Format a section's amount as a heading, the only way a hover shows text larger than normal:
+ * the percent, then a smaller dimmed word.
  * @param {number} percent - The percent.
  * @param {string} word - What the percent measures, such as `used`.
  * @returns {string} The amount's Markdown.
  */
 function amount(percent, word) {
-  return `**${percent}%** ${fine(word)}`
+  return `### ${percent}% ${dim(`<small>${word}</small>`)}`
 }
 
 /**
- * Build one tooltip section: a small bold label and fine note, the amount, then an optional bar.
+ * Build one tooltip section: a bold label and dimmed note, the amount, then an optional bar.
  * @param {string} label - The section's label.
  * @param {string | null} note - The note after the label, already escaped, or null for none.
- * @param {string} value - The section's amount or status, as Markdown.
+ * @param {string} value - The section's amount, or a dimmed status, as Markdown.
  * @param {string | null} bar - The section's progress bar, or null for none.
  * @returns {string} The section's Markdown.
  */
 function tooltipSection(label, note, value, bar) {
-  const heading = `<small><b>${label}</b></small>${note ? `&nbsp;&nbsp;${fine(note)}` : ''}`
+  const heading = `**${label}**${note ? `&nbsp;&nbsp;${dim(note)}` : ''}`
 
-  return [heading, value, bar].filter(Boolean).join('  \n')
+  return [heading, value, bar].filter(Boolean).join('\n\n')
 }
 
 /**
@@ -343,13 +335,13 @@ function tooltipSection(label, note, value, bar) {
  * @returns {string} The section's Markdown.
  */
 function contextSection(session) {
-  if (!session) return tooltipSection('Context', null, fine('No session in this workspace yet'), null)
-  if (!session.context) return tooltipSection('Context', null, fine('Not reported yet'), null)
+  if (!session) return tooltipSection('Context', null, dim('No session in this workspace yet'), null)
+  if (!session.context) return tooltipSection('Context', null, dim('Not reported yet'), null)
 
   const { tokens = null, window = null, percent = null } = session.context
   const note = escapeMarkdown(`${formatTokens(tokens)} / ${formatTokens(window)} tokens`)
 
-  if (percent === null) return tooltipSection('Context', note, fine('Unknown'), null)
+  if (percent === null) return tooltipSection('Context', note, dim('Unknown'), null)
 
   return tooltipSection('Context', note, amount(Math.round(percent), 'used'), progressBar(percent))
 }
@@ -365,12 +357,12 @@ function contextSection(session) {
 function limitSection(key, limit, thresholds, now) {
   const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
 
-  if (!limit) return tooltipSection(label, null, fine('Not reported yet'), null)
+  if (!limit) return tooltipSection(label, null, dim('Not reported yet'), null)
 
   if (isLimitStale(limit, now)) {
     const note = escapeMarkdown(`Reset ${shortDate.format(limit.resetsAt)} at ${clockTime.format(limit.resetsAt)}`)
 
-    return tooltipSection(label, note, fine('No reading since the reset'), progressBar(0))
+    return tooltipSection(label, note, dim('No reading since the reset'), progressBar(0))
   }
 
   const used = percentUsed(limit)
@@ -419,7 +411,7 @@ function footerLines(usage, now) {
  */
 function buildTooltip(name, usage, thresholds, now) {
   return [
-    `### ${escapeMarkdown(`${name} - Statumo`)}`,
+    `## ${escapeMarkdown(`${name} - Statumo`)}`,
     contextSection(usage.session),
     limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
     limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),
