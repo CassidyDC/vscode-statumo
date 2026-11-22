@@ -102,24 +102,6 @@ function buildWindowSegment(key, ring, limit, now) {
 }
 
 /**
- * Format one window for the tooltip.
- * @param {import('./usage').LimitReading | null} limit - The window's reading.
- * @param {Date} now - The current time.
- * @returns {string} The window's description.
- */
-function formatLimitLong(limit, now) {
-  if (!limit) return 'not reported yet'
-
-  if (isLimitStale(limit, now)) return `reset ${resetFull.format(limit.resetsAt)}, no reading since`
-
-  const reset = limit.resetsAt
-    ? `, resets in ${formatCountdown(limit.resetsAt, now)} (${resetFull.format(limit.resetsAt)})`
-    : ''
-
-  return `${percentLeft(limit)}% left${reset}`
-}
-
-/**
  * Format how long until something happens.
  * @param {Date} date - When it happens.
  * @param {Date} now - The current time.
@@ -235,48 +217,159 @@ function getToolLevel(limits, thresholds, now) {
 }
 
 /**
- * Build a tool's hover tooltip as Markdown.
+ * How many cells wide a tooltip progress bar is.
+ * @type {number}
+ */
+const barCells = 80
+
+/**
+ * Theme colors for a progress bar's fill, by warning level.
+ * @type {Record<'normal' | 'warning' | 'error', string>}
+ */
+const barFills = {
+  normal: 'var(--vscode-progressBar-background)',
+  warning: 'var(--vscode-editorWarning-foreground)',
+  error: 'var(--vscode-editorError-foreground)',
+}
+
+/**
+ * Theme color for the unfilled part of a progress bar.
+ * @type {string}
+ */
+const barTrack = 'var(--vscode-scrollbarSlider-background)'
+
+/**
+ * Show escaped text in the theme's dimmer description color.
+ * @param {string} text - The escaped text.
+ * @returns {string} The text's HTML.
+ */
+function dim(text) {
+  return `<span style="color:var(--vscode-descriptionForeground);">${text}</span>`
+}
+
+/**
+ * Draw a progress bar as HTML the hover sanitizer keeps: shrunken non-breaking spaces on theme-colored spans.
+ * @param {number} percent - How full the bar is, from 0 to 100.
+ * @param {'error' | 'warning' | null} [level] - The warning level that colors the fill.
+ * @returns {string} The bar's HTML.
+ */
+function progressBar(percent, level = null) {
+  const filled = Math.round((Math.max(0, Math.min(100, percent)) / 100) * barCells)
+
+  /**
+   * Draw one colored run of cells.
+   * @param {string} color - The run's background color.
+   * @param {number} cells - How many cells the run spans.
+   * @returns {string} The run's HTML, or nothing when it spans no cells.
+   */
+  const run = (color, cells) => cells
+    ? `<span style="background-color:${color};display:inline-block;border-radius:2px;">${'&nbsp;'.repeat(cells)}</span>`
+    : ''
+
+  return `<small><small>${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}</small></small>`
+}
+
+/**
+ * Build one tooltip section: a heading line with a codicon, then optional bar and detail lines.
+ * @param {string} icon - The codicon name.
+ * @param {string} label - The section's label.
+ * @param {string} value - The section's value, such as `84% left`.
+ * @param {string | null} bar - The section's progress bar, or null for none.
+ * @param {string[]} details - Detail lines, already escaped.
+ * @returns {string} The section's Markdown.
+ */
+function tooltipSection(icon, label, value, bar, details) {
+  const lines = [`$(${icon}) **${label}** · ${value}`]
+
+  if (bar) lines.push(bar)
+
+  lines.push(...details.map(detail => `<small>${detail}</small>`))
+
+  return lines.join('  \n')
+}
+
+/**
+ * Build the tooltip section for the session's context.
+ * @param {import('./usage').SessionReading | null} session - The workspace's session.
+ * @returns {string} The section's Markdown.
+ */
+function contextSection(session) {
+  if (!session) return tooltipSection('layers', 'Context', 'no session', null, ['No session in this workspace yet'])
+  if (!session.context) return tooltipSection('layers', 'Context', 'not reported', null, ['Not reported yet'])
+
+  const { tokens = null, window = null, percent = null } = session.context
+  const value = percent === null ? 'unknown' : `${Math.round(percent)}% used`
+  const bar = percent === null ? null : progressBar(percent)
+
+  return tooltipSection('layers', 'Context', value, bar, [escapeMarkdown(`${formatTokens(tokens)} / ${formatTokens(window)} tokens`)])
+}
+
+/**
+ * Build the tooltip section for one rate-limit window.
+ * @param {'fiveHour' | 'sevenDay'} key - Which window.
+ * @param {import('./usage').LimitReading | null} limit - The window's reading.
+ * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
+ * @param {Date} now - The current time.
+ * @returns {string} The section's Markdown.
+ */
+function limitSection(key, limit, thresholds, now) {
+  const icon = key === 'fiveHour' ? 'clock' : 'calendar'
+  const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
+
+  if (!limit) return tooltipSection(icon, label, 'not reported', null, ['Not reported yet'])
+
+  if (isLimitStale(limit, now)) {
+    const reset = escapeMarkdown(`Reset ${resetFull.format(limit.resetsAt)}, no reading since`)
+
+    return tooltipSection(icon, label, 'not current', progressBar(0), [reset])
+  }
+
+  const remaining = percentLeft(limit)
+  const bar = progressBar(remaining, getWindowLevel(limit, thresholds, now))
+  const details = limit.resetsAt
+    ? [escapeMarkdown(`Resets in ${formatCountdown(limit.resetsAt, now)} · ${resetFull.format(limit.resetsAt)}`)]
+    : []
+
+  return tooltipSection(icon, label, `${remaining}% left`, bar, details)
+}
+
+/**
+ * Build a tool's hover tooltip as Markdown with HTML: a large heading, then context and each window
+ * in sections divided by rules, each with a progress bar, and the reading details at the bottom.
+ *
+ * Render it with `supportHtml` and `supportThemeIcons` on.
  * @param {string} name - The tool's full name.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
+ * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
  * @param {Date} now - The current time.
  * @returns {string} The tooltip's Markdown.
  */
-function buildTooltip(name, usage, now) {
+function buildTooltip(name, usage, thresholds, now) {
   const { session } = usage
-  const title = session?.title ? ` · ${escapeMarkdown(session.title)}` : ''
-  const lines = [`**${escapeMarkdown(name)}**${title}`, '']
+  const header = [`### ${escapeMarkdown(name)}`]
+  const footer = []
 
-  if (session) {
-    const { tokens = null, window = null, percent = null } = session.context ?? {}
-    const used = percent === null ? '' : ` · ${Math.round(percent)}% used`
-    const context = session.context ? `${formatTokens(tokens)} / ${formatTokens(window)}${used}` : 'not reported yet'
-
-    lines.push(`Context: ${escapeMarkdown(context)}`)
-  } else {
-    lines.push('Context: no session in this workspace yet')
-  }
-
-  lines.push(
-    `5h limit: ${escapeMarkdown(formatLimitLong(usage.limits.fiveHour, now))}`,
-    `7d limit: ${escapeMarkdown(formatLimitLong(usage.limits.sevenDay, now))}`,
-  )
-
-  if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
-
-  lines.push('')
+  if (session?.title) header.push(dim(escapeMarkdown(session.title)))
+  if (usage.plan) footer.push(`Plan: ${escapeMarkdown(usage.plan)}`)
 
   if (session) {
     const state = session.isEnded ? 'ended' : 'updated'
     const folder = session.cwd ? `${escapeMarkdown(tildify(session.cwd))}, ` : ''
 
-    lines.push(`Session: ${folder}${state} ${formatAge(session.updatedAt, now)}`)
+    footer.push(`Session: ${folder}${state} ${formatAge(session.updatedAt, now)}`)
   }
 
-  if (usage.limitsUpdatedAt) lines.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
+  if (usage.limitsUpdatedAt) footer.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
 
-  lines.push('', `Click to open ${escapeMarkdown(name)}.`)
+  footer.push(`Click to open ${escapeMarkdown(name)}.`)
 
-  return lines.join('  \n')
+  return [
+    header.join('\n\n'),
+    contextSection(session),
+    limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
+    limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),
+    footer.map(line => dim(`<small>${line}</small>`)).join('  \n'),
+  ].join('\n\n---\n\n')
 }
 
 module.exports = {

@@ -133,7 +133,7 @@ function isEnabled(tool) {
 const gap = '\u2002'
 
 /**
- * Wrap tooltip Markdown so it renders without running commands or HTML.
+ * Wrap tooltip Markdown so it renders its icons and the sanitized HTML of its progress bars, without running commands.
  * @param {string} markdown - The tooltip's Markdown.
  * @returns {vscode.MarkdownString} The tooltip.
  */
@@ -141,7 +141,8 @@ function toTooltip(markdown) {
   const tooltip = new vscode.MarkdownString(markdown)
 
   tooltip.isTrusted = false
-  tooltip.supportHtml = false
+  tooltip.supportHtml = true
+  tooltip.supportThemeIcons = true
 
   return tooltip
 }
@@ -171,7 +172,7 @@ function render(item, tool, usage, settings, now) {
   ]
 
   item.text = [tool.label, segments.context.text, ...segments.windows.map(window => window.text)].join(gap)
-  item.tooltip = toTooltip(buildTooltip(tool.name, usage, now))
+  item.tooltip = toTooltip(buildTooltip(tool.name, usage, settings, now))
   item.backgroundColor = level ? new vscode.ThemeColor(`statusBarItem.${level}Background`) : undefined
   item.color = level ? new vscode.ThemeColor(`statusBarItem.${level}Foreground`) : undefined
   item.accessibilityInformation = { label: `${tool.name} ${parts.join(', ')}` }

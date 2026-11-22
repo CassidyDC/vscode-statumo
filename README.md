@@ -11,7 +11,7 @@ Each tool is one status bar item that starts with its name, Claude or Codex, and
 - **Context** (layers in the ring) is how much of the current session's context window is used.
 - **5-hour limit** (clock) and **7-day limit** (calendar) are how much of each rate-limit window is left.
 
-Hover over an item for the full breakdown: the session title, token counts, when each limit resets as both a countdown and an exact time, your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
+Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets as both a countdown and an exact time, your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
 
 ## What each part follows
 

@@ -17,6 +17,12 @@ const { ringIcon, ringStep } = require('../src/rings')
 const now = new Date(2026, 10, 22, 10, 0)
 
 /**
+ * The default warning and error thresholds.
+ * @type {{ warningThreshold: number, errorThreshold: number }}
+ */
+const thresholds = { warningThreshold: 25, errorThreshold: 10 }
+
+/**
  * Build a usage reading with a session and both windows.
  * @param {object} [overrides] - Fields to replace.
  * @returns {import('../src/usage').ToolUsage} The usage.
@@ -79,7 +85,7 @@ test('empties the ring of a window whose reset has passed', () => {
   const segments = buildSegments(usage, now)
 
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-60) 61%'])
-  assert.match(buildTooltip('Codex', usage, now), /5h limit: reset Sun, Nov 22, 09:00, no reading since/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit\*\* · not current[\s\S]*Reset Sun, Nov 22, 09:00, no reading since/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -115,11 +121,34 @@ test('escapes session titles in the tooltip', () => {
 
   usage.session.title = 'Fix [link](https://example.com) *now*'
 
-  const tooltip = buildTooltip('Codex', usage, now)
+  const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
   assert.match(tooltip, /\\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*/)
-  assert.match(tooltip, /Context: 48\\\.3k \/ 400k · 12% used/)
+  assert.match(tooltip, /\$\(layers\) \*\*Context\*\* · 12% used/)
+  assert.match(tooltip, /48\\\.3k \/ 400k tokens/)
   assert.match(tooltip, /Plan: Plus/)
-  assert.match(tooltip, /7d limit: 61% left, resets in 4 d 23 h/)
-  assert.match(tooltip, /5h limit: 84% left, resets in 4 h 30 min \\\(Sun, Nov 22, 14:30\\\)/)
+  assert.match(tooltip, /\$\(clock\) \*\*5-hour limit\*\* · 84% left[\s\S]*Resets in 4 h 30 min · Sun, Nov 22, 14:30/)
+  assert.match(tooltip, /\$\(calendar\) \*\*7-day limit\*\* · 61% left[\s\S]*Resets in 4 d 23 h · Fri, Nov 27, 09:00/)
+  assert.equal(tooltip.split('\n\n---\n\n').length, 5)
+})
+
+test('escapes HTML in session titles so only the progress bars are HTML', () => {
+  const usage = makeUsage()
+
+  usage.session.title = '<img src=x onerror=alert(1)>'
+
+  assert.doesNotMatch(buildTooltip('Codex', usage, thresholds, now), /(?<!\\)<img/)
+})
+
+test('draws progress bars from theme colors, coloring low windows', () => {
+  const usage = makeUsage({
+    limits: {
+      fiveHour: { percentUsed: 95, resetsAt: new Date(2026, 10, 22, 14, 30) },
+      sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
+    },
+  })
+  const tooltip = buildTooltip('Codex', usage, thresholds, now)
+
+  assert.match(tooltip, /background-color:var\(--vscode-editorError-foreground\);display:inline-block;border-radius:2px;">(&nbsp;){4}</)
+  assert.match(tooltip, /background-color:var\(--vscode-progressBar-background\);display:inline-block;border-radius:2px;">(&nbsp;){10}</)
 })
