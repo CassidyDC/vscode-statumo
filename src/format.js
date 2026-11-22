@@ -402,7 +402,7 @@ function footerLines(usage, now) {
 
   if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
   if (session?.title) lines.push(`Chat Title: ${escapeMarkdown(session.title)}`)
-  if (session?.cwd) lines.push(`Session: ${escapeMarkdown(truncatePath(tildify(session.cwd)))}`)
+  if (session?.cwd) lines.push(`Folder: ${escapeMarkdown(truncatePath(tildify(session.cwd)))}`)
   if (session) ages.push(`${session.isEnded ? 'Ended' : 'Last activity'} ${formatAge(session.updatedAt, now)}`)
   if (usage.limitsUpdatedAt) ages.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
   if (ages.length) lines.push(ages.join(' · '))

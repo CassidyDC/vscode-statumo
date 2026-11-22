@@ -129,7 +129,7 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
   assert.match(sections[1], /^<table width="100%"><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><\/table>\n\n## 12% .*used.*\n\n<small><small><span/)
   assert.match(sections[2], /^<table width="100%"><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/table>\n\n## 16% .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/table>\n\n## 39% .*used/)
-  assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Last activity 2m ago · Limits read 2m ago/)
+  assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Folder: \/work\/project.*\s+.*Last activity 2m ago · Limits read 2m ago/)
 })
 
 test('shows the last activity and when the limits were read on one line', () => {
