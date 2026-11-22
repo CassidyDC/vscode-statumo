@@ -173,8 +173,8 @@ function tildify(value) {
 /**
  * The context part of the status bar.
  * @typedef {object} ContextSegment
- * @property {string} text - The context ring icon and percent used, such as `$(statumo-cx-10) 12%`.
- * @property {string} value - The percent used, such as `12%`, or a dash when unknown.
+ * @property {string} text - The context ring icon and percent used, such as `$(statumo-cx-10) 12%`, or the empty ring alone when unknown.
+ * @property {string | null} value - The percent used, such as `12%`, or null when unknown.
  */
 
 /**
@@ -187,10 +187,10 @@ function tildify(value) {
 function buildSegments(usage, now) {
   const percent = usage.session?.context?.percent ?? null
   const used = percent === null ? null : Math.round(percent)
-  const value = used === null ? dash : `${used}%`
+  const value = used === null ? null : `${used}%`
 
   return {
-    context: { text: `${ringIcon('cx', used)} ${value}`, value },
+    context: { text: value === null ? ringIcon('cx', null) : `${ringIcon('cx', used)} ${value}`, value },
     windows: [
       buildWindowSegment('fiveHour', '5h', usage.limits.fiveHour, now),
       buildWindowSegment('sevenDay', '7d', usage.limits.sevenDay, now),

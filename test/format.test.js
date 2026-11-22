@@ -53,8 +53,8 @@ test('builds segments with context used and limits left', () => {
   assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['$(statumo-cx-10) 12%', '$(statumo-5h-85) 84%', '$(statumo-7d-60) 61%'])
 })
 
-test('dashes context with an empty ring when the workspace has no session', () => {
-  assert.deepEqual(buildSegments(makeUsage({ session: null }), now).context, { text: '$(statumo-cx-0) —', value: '—' })
+test('shows only an empty context ring when the workspace has no session', () => {
+  assert.deepEqual(buildSegments(makeUsage({ session: null }), now).context, { text: '$(statumo-cx-0)', value: null })
 })
 
 test('rounds rings to the nearest step, keeping partial values off empty and full', () => {

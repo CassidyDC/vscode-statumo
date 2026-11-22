@@ -166,7 +166,7 @@ function render(item, tool, usage, settings, now) {
   const segments = buildSegments(usage, now)
   const level = getToolLevel(usage.limits, settings, now)
   const parts = [
-    `context ${segments.context.value} used`,
+    segments.context.value === null ? 'no context yet' : `context ${segments.context.value} used`,
     ...segments.windows.map(window => `${windowNames[window.key]} ${window.value} left`),
   ]
 
