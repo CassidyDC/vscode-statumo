@@ -1,0 +1,6 @@
+.gitignore
+.vscodeignore
+AGENTS.md
+images/icon.svg
+test/**
+*.vsix

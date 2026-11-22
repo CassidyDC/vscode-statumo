@@ -1,0 +1,112 @@
+{
+  "name": "statumo",
+  "displayName": "Statumo",
+  "description": "See Claude Code and Codex context use and rate limits in the VS Code status bar.",
+  "version": "0.1.0",
+  "publisher": "jacobcassidy",
+  "license": "MIT",
+  "author": {
+    "name": "Jacob Cassidy",
+    "email": "hello@jacobcassidy.com",
+    "url": "https://jacobcassidy.com"
+  },
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1b1f2a",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "codex",
+    "rate limit",
+    "status bar",
+    "usage"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "statumo.refresh",
+        "title": "Refresh Usage",
+        "category": "Statumo"
+      },
+      {
+        "command": "statumo.openClaude",
+        "title": "Open Claude Code",
+        "category": "Statumo"
+      },
+      {
+        "command": "statumo.openCodex",
+        "title": "Open Codex",
+        "category": "Statumo"
+      }
+    ],
+    "configuration": {
+      "title": "Statumo",
+      "properties": {
+        "statumo.warningThreshold": {
+          "type": "number",
+          "default": 25,
+          "minimum": 0,
+          "maximum": 100,
+          "markdownDescription": "Show an item with the warning background when either rate-limit window has this percent or less left."
+        },
+        "statumo.errorThreshold": {
+          "type": "number",
+          "default": 10,
+          "minimum": 0,
+          "maximum": 100,
+          "markdownDescription": "Show an item with the error background when either rate-limit window has this percent or less left."
+        },
+        "statumo.claude.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the Claude Code item."
+        },
+        "statumo.claude.configDirectory": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "The Claude Code config folder the Usage mod writes to. Leave empty to use `CLAUDE_CONFIG_DIR`, or `~/.claude` when that isn't set."
+        },
+        "statumo.claude.clickCommand": {
+          "type": "string",
+          "default": "claude-vscode.focus",
+          "markdownDescription": "The command to run when you click the Claude Code item. Leave empty to do nothing."
+        },
+        "statumo.codex.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the Codex item."
+        },
+        "statumo.codex.homeDirectory": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "The Codex home folder. Leave empty to use `CODEX_HOME`, or `~/.codex` when that isn't set."
+        },
+        "statumo.codex.clickCommand": {
+          "type": "string",
+          "default": "chatgpt.openSidebar",
+          "markdownDescription": "The command to run when you click the Codex item. Leave empty to do nothing."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "vsce package",
+    "test": "node --test",
+    "install:local": "vsce package --out statumo.vsix && code --install-extension statumo.vsix --force"
+  }
+}
