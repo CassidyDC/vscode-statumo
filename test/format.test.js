@@ -1,13 +1,13 @@
 /**
  * Status text formatting tests.
- * @file Check the status bar segments, progress rings, per-window warning levels, staleness, and tooltip escaping.
+ * @file Check the status bar segments, progress rings, per-window warning levels, staleness, and tooltips.
  */
 
 'use strict'
 
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
-const { buildSegments, buildTooltip, formatTokens, getWindowLevel } = require('../src/format')
+const { buildSegments, buildTooltip, buildWindowTooltip, formatTokens, getWindowLevel } = require('../src/format')
 const { ringIcon, ringStep } = require('../src/rings')
 
 /**
@@ -41,22 +41,16 @@ function makeUsage(overrides = {}) {
 }
 
 /**
- * Reduce segments to their visible text, dropping missing resets.
+ * Reduce segments to their visible text.
  * @param {ReturnType<typeof buildSegments>} segments - The segments.
  * @returns {string[]} The texts, left to right.
  */
 function texts(segments) {
-  return [segments.context.text, ...segments.windows.flatMap(window => [window.text, window.reset])].filter(Boolean)
+  return [segments.context.text, ...segments.windows.map(window => window.text)]
 }
 
-test('builds segments with context used, limits left, and resets apart', () => {
-  assert.deepEqual(texts(buildSegments(makeUsage(), now)), [
-    '$(statumo-cx-10) 12%',
-    '$(statumo-5h-85) 84%',
-    '14:30',
-    '$(statumo-7d-60) 61%',
-    'Nov 27',
-  ])
+test('builds segments with context used and limits left', () => {
+  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['$(statumo-cx-10) 12%', '$(statumo-5h-85) 84%', '$(statumo-7d-60) 61%'])
 })
 
 test('dashes context with an empty ring when the workspace has no session', () => {
@@ -75,7 +69,7 @@ test('rounds rings to the nearest step, keeping partial values off empty and ful
   assert.equal(ringIcon('7d', 61), '$(statumo-7d-60)')
 })
 
-test('dashes a window whose reset has passed and drops its reset', () => {
+test('dashes a window whose reset has passed', () => {
   const usage = makeUsage({
     limits: {
       fiveHour: { percentUsed: 90, resetsAt: new Date(2026, 10, 22, 9, 0) },
@@ -84,7 +78,8 @@ test('dashes a window whose reset has passed and drops its reset', () => {
   })
   const segments = buildSegments(usage, now)
 
-  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0) —', '$(statumo-7d-60) 61%', 'Nov 27'])
+  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0) —', '$(statumo-7d-60) 61%'])
+  assert.match(buildWindowTooltip('Codex', usage, 'fiveHour', now), /Reset Sun, Nov 22, 09:00, no reading since/)
   assert.equal(segments.windows[0].value, '—')
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -122,4 +117,15 @@ test('escapes session titles in the tooltip', () => {
   assert.match(tooltip, /\\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*/)
   assert.match(tooltip, /Context: 48\\\.3k \/ 400k · 12% used/)
   assert.match(tooltip, /Plan: Plus/)
+})
+
+test('shows when each window resets in its own tooltip', () => {
+  const usage = makeUsage()
+  const fiveHour = buildWindowTooltip('Claude Code', usage, 'fiveHour', now)
+
+  assert.match(fiveHour, /\*\*Claude Code\*\* · 5-hour limit/)
+  assert.match(fiveHour, /84% left/)
+  assert.match(fiveHour, /Resets in 4 h 30 min · Sun, Nov 22, 14:30/)
+  assert.match(buildWindowTooltip('Claude Code', usage, 'sevenDay', now), /Resets in 4 d 23 h · Fri, Nov 27, 09:00/)
+  assert.match(buildWindowTooltip('Claude Code', makeUsage({ limits: { fiveHour: null, sevenDay: null } }), 'sevenDay', now), /Not reported yet/)
 })

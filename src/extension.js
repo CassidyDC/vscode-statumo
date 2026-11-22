@@ -10,7 +10,7 @@ const path = require('node:path')
 const vscode = require('vscode')
 const { pruneClaudeSessions, readClaudeUsage } = require('./claude')
 const { readCodexUsage } = require('./codex')
-const { buildSegments, buildTooltip, getWindowLevel } = require('./format')
+const { buildSegments, buildTooltip, buildWindowTooltip, getWindowLevel, windowNames } = require('./format')
 const { expandHome } = require('./paths')
 
 /**
@@ -114,27 +114,33 @@ function isEnabled(tool) {
 /**
  * The status bar items that make up one tool, left to right, with their names in the status bar menu.
  *
- * Each item draws in one color, so reset times get items of their own to be dimmed.
+ * Each item draws in one color, so each limit gets an item of its own that can warn by itself.
  * @type {Array<{ part: ItemPart, name: string }>}
  */
 const itemParts = [
   { part: 'context', name: '' },
   { part: 'fiveHour', name: ' 5h limit' },
-  { part: 'fiveHourReset', name: ' 5h reset' },
   { part: 'sevenDay', name: ' 7d limit' },
-  { part: 'sevenDayReset', name: ' 7d reset' },
 ]
 
 /**
  * One of a tool's status bar items.
- * @typedef {'context' | 'fiveHour' | 'fiveHourReset' | 'sevenDay' | 'sevenDayReset'} ItemPart
+ * @typedef {'context' | 'fiveHour' | 'sevenDay'} ItemPart
  */
 
 /**
- * The full names of the windows, for screen readers.
- * @type {Record<'fiveHour' | 'sevenDay', string>}
+ * Wrap tooltip Markdown so it renders without running commands or HTML.
+ * @param {string} markdown - The tooltip's Markdown.
+ * @returns {vscode.MarkdownString} The tooltip.
  */
-const windowNames = { fiveHour: '5-hour limit', sevenDay: '7-day limit' }
+function toTooltip(markdown) {
+  const tooltip = new vscode.MarkdownString(markdown)
+
+  tooltip.isTrusted = false
+  tooltip.supportHtml = false
+
+  return tooltip
+}
 
 /**
  * Hide every item of a tool.
@@ -159,14 +165,9 @@ function render(items, tool, usage, settings, now) {
   }
 
   const segments = buildSegments(usage, now)
-  const tooltip = new vscode.MarkdownString(buildTooltip(tool.name, usage, now))
   const contextItem = items.get('context')
 
-  tooltip.isTrusted = false
-  tooltip.supportHtml = false
-
-  for (const item of items.values()) item.tooltip = tooltip
-
+  contextItem.tooltip = toTooltip(buildTooltip(tool.name, usage, now))
   contextItem.text = `${tool.icon} ${segments.context.text}`
   contextItem.accessibilityInformation = { label: `${tool.name} context ${segments.context.value} used` }
   contextItem.show()
@@ -176,24 +177,13 @@ function render(items, tool, usage, settings, now) {
     const background = level ? new vscode.ThemeColor(`statusBarItem.${level}Background`) : undefined
     const foreground = level ? new vscode.ThemeColor(`statusBarItem.${level}Foreground`) : undefined
     const limitItem = items.get(window.key)
-    const resetItem = items.get(`${window.key}Reset`)
 
     limitItem.text = window.text
+    limitItem.tooltip = toTooltip(buildWindowTooltip(tool.name, usage, window.key, now))
     limitItem.backgroundColor = background
     limitItem.color = foreground ?? (window.isStale ? new vscode.ThemeColor('disabledForeground') : undefined)
     limitItem.accessibilityInformation = { label: `${tool.name} ${windowNames[window.key]} ${window.value} left` }
     limitItem.show()
-
-    if (!window.reset) {
-      resetItem.hide()
-      continue
-    }
-
-    resetItem.text = window.reset
-    resetItem.backgroundColor = background
-    resetItem.color = foreground ?? new vscode.ThemeColor('descriptionForeground')
-    resetItem.accessibilityInformation = { label: `resets ${window.reset}` }
-    resetItem.show()
   }
 }
 

@@ -3,24 +3,24 @@
 Statumo shows how much context and rate limit you have left in Claude Code and Codex, right in the VS Code status bar.
 
 ```text
-[Claude logo] (layers) 12%  (clock) 84%  14:30  (calendar) 61%  Nov 27    [OpenAI logo] (layers) 41%  (clock) 16%  16:03  (calendar) 80%  Nov 27
+[Claude logo] (layers) 12%  (clock) 84%  (calendar) 61%    [OpenAI logo] (layers) 41%  (clock) 16%  (calendar) 80%
 ```
 
 Each tool is marked by its logo, Claude or OpenAI, and shows three percents, each led by a ring that fills to match it in 5% steps:
 
 - **Context** (layers in the ring) is how much of the current session's context window is used.
-- **5-hour limit** (clock) and **7-day limit** (calendar) are how much of each rate-limit window is left, followed by when it resets in a dimmer color.
+- **5-hour limit** (clock) and **7-day limit** (calendar) are how much of each rate-limit window is left.
 
-VS Code draws each status bar item in a single color, so each part is its own item. Right-click the status bar to hide any of them, such as the reset times.
+Each part is its own status bar item, so a low limit can turn the warning color by itself. Right-click the status bar to hide any of them.
 
-Hover over an item for the full breakdown: the session title, token counts, exact reset times, your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel.
+Hover over a limit to see when it resets, both as a countdown and as an exact time. Hover over the context for the full breakdown: the session title, token counts, exact reset times, your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel.
 
 ## What each item follows
 
 - **Context** comes from the most recently active session whose working folder is in the current VS Code workspace. Until a tool has a session here, context shows an empty ring and `—`.
 - **Rate limits** belong to your account, so they come from the most recent reading in any session.
 - When a window's reset time passes with no newer reading, it shows an empty ring and `—` in a faded color until the tool reports again.
-- A window and its reset time turn the warning color when it has 25% or less left, and the error color at 10% or less. Both thresholds are settings.
+- A window turns the warning color when it has 25% or less left, and the error color at 10% or less. Both thresholds are settings.
 
 A tool's items stay hidden until it has written any usage on this machine.
 

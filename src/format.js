@@ -1,6 +1,6 @@
 /**
  * Status text formatting.
- * @file Turn usage readings into the status bar text, warning level, and hover tooltip.
+ * @file Turn usage readings into the status bar text, warning level, and hover tooltips.
  */
 
 'use strict'
@@ -9,16 +9,10 @@ const os = require('node:os')
 const { ringIcon } = require('./rings')
 
 /**
- * Formats a 5-hour reset as a 24-hour time, such as `14:30`.
+ * Formats an older reading's date, such as `Nov 27`.
  * @type {Intl.DateTimeFormat}
  */
-const resetTime = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-
-/**
- * Formats a 7-day reset as a short date, such as `Nov 27`.
- * @type {Intl.DateTimeFormat}
- */
-const resetDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
+const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
 
 /**
  * Formats a reset in the tooltip, such as `Thu, Nov 27, 09:00`.
@@ -38,6 +32,12 @@ const resetFull = new Intl.DateTimeFormat('en-US', {
  * @type {string}
  */
 const dash = '—'
+
+/**
+ * The full names of the rate-limit windows.
+ * @type {Record<'fiveHour' | 'sevenDay', string>}
+ */
+const windowNames = { fiveHour: '5-hour limit', sevenDay: '7-day limit' }
 
 /**
  * Whether a window's reset time has passed with no newer reading.
@@ -79,7 +79,6 @@ function formatTokens(tokens) {
  * @property {'fiveHour' | 'sevenDay'} key - Which window.
  * @property {string} text - The window's ring icon and percent left, such as `$(statumo-5h-85) 84%`.
  * @property {string} value - The percent left, such as `84%`, or a dash when unknown or stale.
- * @property {string | null} reset - When it resets, such as `14:30`, or null when unknown or stale.
  * @property {boolean} isStale - Whether the reading predates the window's reset.
  * @property {import('./usage').LimitReading | null} limit - The window's reading.
  */
@@ -89,25 +88,17 @@ function formatTokens(tokens) {
  * @param {'fiveHour' | 'sevenDay'} key - Which window.
  * @param {import('./rings').RingKind} ring - The window's ring.
  * @param {import('./usage').LimitReading | null} limit - The window's reading.
- * @param {Intl.DateTimeFormat} formatter - Formats the reset.
  * @param {Date} now - The current time.
  * @returns {WindowSegment} The segment.
  */
-function buildWindowSegment(key, ring, limit, formatter, now) {
+function buildWindowSegment(key, ring, limit, now) {
   const isStale = isLimitStale(limit, now)
 
-  if (!limit || isStale) return { key, text: `${ringIcon(ring, null)} ${dash}`, value: dash, reset: null, isStale, limit }
+  if (!limit || isStale) return { key, text: `${ringIcon(ring, null)} ${dash}`, value: dash, isStale, limit }
 
   const remaining = percentLeft(limit)
 
-  return {
-    key,
-    text: `${ringIcon(ring, remaining)} ${remaining}%`,
-    value: `${remaining}%`,
-    reset: limit.resetsAt ? formatter.format(limit.resetsAt) : null,
-    isStale,
-    limit,
-  }
+  return { key, text: `${ringIcon(ring, remaining)} ${remaining}%`, value: `${remaining}%`, isStale, limit }
 }
 
 /**
@@ -127,6 +118,22 @@ function formatLimitLong(limit, now) {
 }
 
 /**
+ * Format how long until something happens.
+ * @param {Date} date - When it happens.
+ * @param {Date} now - The current time.
+ * @returns {string} The wait, such as `4 h 30 min` or `2 d 5 h`.
+ */
+function formatCountdown(date, now) {
+  const minutes = Math.max(0, Math.ceil((date.getTime() - now.getTime()) / 60_000))
+  const days = Math.floor(minutes / 1440)
+  const hours = Math.floor((minutes % 1440) / 60)
+
+  if (days) return hours ? `${days} d ${hours} h` : `${days} d`
+  if (hours) return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`
+  return `${minutes} min`
+}
+
+/**
  * Format how long ago something happened.
  * @param {Date} date - When it happened.
  * @param {Date} now - The current time.
@@ -138,7 +145,7 @@ function formatAge(date, now) {
   if (seconds < 60) return 'just now'
   if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`
   if (seconds < 86_400) return `${Math.floor(seconds / 3600)} h ago`
-  return resetDate.format(date)
+  return shortDate.format(date)
 }
 
 /**
@@ -169,11 +176,8 @@ function tildify(value) {
  */
 
 /**
- * Build a tool's status bar segments: context used, then each window's percent left and reset,
+ * Build a tool's status bar segments: context used, then each window's percent left,
  * each percent led by a ring that fills to match it.
- *
- * VS Code draws each status bar item in one color, so the reset times are separate
- * items that can be dimmed.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {{ context: ContextSegment, windows: WindowSegment[] }} The context and the windows.
@@ -186,8 +190,8 @@ function buildSegments(usage, now) {
   return {
     context: { text: `${ringIcon('cx', used)} ${value}`, value },
     windows: [
-      buildWindowSegment('fiveHour', '5h', usage.limits.fiveHour, resetTime, now),
-      buildWindowSegment('sevenDay', '7d', usage.limits.sevenDay, resetDate, now),
+      buildWindowSegment('fiveHour', '5h', usage.limits.fiveHour, now),
+      buildWindowSegment('sevenDay', '7d', usage.limits.sevenDay, now),
     ],
   }
 }
@@ -256,4 +260,38 @@ function buildTooltip(name, usage, now) {
   return lines.join('  \n')
 }
 
-module.exports = { buildSegments, buildTooltip, escapeMarkdown, formatTokens, getWindowLevel }
+/**
+ * Build a rate-limit window's hover tooltip as Markdown: what's left and when it resets.
+ * @param {string} name - The tool's full name.
+ * @param {import('./usage').ToolUsage} usage - The tool's readings.
+ * @param {'fiveHour' | 'sevenDay'} key - Which window.
+ * @param {Date} now - The current time.
+ * @returns {string} The tooltip's Markdown.
+ */
+function buildWindowTooltip(name, usage, key, now) {
+  const limit = usage.limits[key]
+  const lines = [`**${escapeMarkdown(name)}** · ${windowNames[key]}`, '']
+
+  if (!limit) {
+    lines.push('Not reported yet')
+  } else if (isLimitStale(limit, now)) {
+    lines.push(`Reset ${escapeMarkdown(resetFull.format(limit.resetsAt))}, no reading since`)
+  } else {
+    lines.push(`${percentLeft(limit)}% left`)
+
+    if (limit.resetsAt) {
+      const reset = `Resets in ${formatCountdown(limit.resetsAt, now)} · ${resetFull.format(limit.resetsAt)}`
+      lines.push(escapeMarkdown(reset))
+    }
+  }
+
+  lines.push('')
+
+  if (usage.limitsUpdatedAt) lines.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
+
+  lines.push('', `Click to open ${escapeMarkdown(name)}.`)
+
+  return lines.join('  \n')
+}
+
+module.exports = { buildSegments, buildTooltip, buildWindowTooltip, escapeMarkdown, formatTokens, getWindowLevel, windowNames }
