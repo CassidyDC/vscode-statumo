@@ -10,7 +10,7 @@ const path = require('node:path')
 const vscode = require('vscode')
 const { pruneClaudeSessions, readClaudeUsage } = require('./claude')
 const { readCodexUsage } = require('./codex')
-const { buildSegments, buildTooltip, buildWindowTooltip, getToolLevel, getWindowLevel, windowNames } = require('./format')
+const { buildSegments, buildTooltip, getToolLevel, windowNames } = require('./format')
 const { expandHome } = require('./paths')
 
 /**
@@ -44,8 +44,7 @@ const pruneIntervalMs = 86_400_000
  * One tool's status bar item.
  * @typedef {object} Tool
  * @property {'claude' | 'codex'} id - The tool's settings key.
- * @property {string} label - The tool's short name, which starts its status bar items.
- * @property {boolean} isCombined - Whether the tool shows as one item instead of one item per part.
+ * @property {string} label - The tool's short name, which starts its status bar item.
  * @property {string} name - The tool's full name.
  * @property {number} priority - The tool's status bar priority; higher sits further left.
  * @property {string} openCommand - The Statumo command that opens the tool.
@@ -60,7 +59,6 @@ const tools = [
   {
     id: 'claude',
     label: 'Claude',
-    isCombined: false,
     name: 'Claude Code',
     priority: 101,
     openCommand: 'statumo.openClaude',
@@ -69,7 +67,6 @@ const tools = [
   {
     id: 'codex',
     label: 'Codex',
-    isCombined: true,
     name: 'Codex',
     priority: 100,
     openCommand: 'statumo.openCodex',
@@ -115,27 +112,10 @@ function isEnabled(tool) {
 }
 
 /**
- * The status bar items that make up one tool, left to right, with their names in the status bar menu.
- *
- * Each item draws in one color, so each limit gets an item of its own that can warn by itself.
- * @type {Array<{ part: ItemPart, name: string }>}
- */
-const itemParts = [
-  { part: 'context', name: '' },
-  { part: 'fiveHour', name: ' 5h limit' },
-  { part: 'sevenDay', name: ' 7d limit' },
-]
-
-/**
- * One of a tool's status bar items.
- * @typedef {'context' | 'fiveHour' | 'sevenDay'} ItemPart
- */
-
-/**
- * Separates the parts of a combined item: one en space, a little wider than a plain space.
+ * Separates the parts of an item: one en space, a little wider than a plain space.
  * @type {string}
  */
-const combinedGap = '\u2002'
+const gap = '\u2002'
 
 /**
  * Wrap tooltip Markdown so it renders without running commands or HTML.
@@ -152,80 +132,35 @@ function toTooltip(markdown) {
 }
 
 /**
- * Hide every item of a tool.
- * @param {Map<ItemPart, vscode.StatusBarItem>} items - The tool's items.
- */
-function hideAll(items) {
-  for (const item of items.values()) item.hide()
-}
-
-/**
- * Draw a tool's usage on one item: its name, then context and each window.
+ * Draw a tool's usage on its item, or hide it when there's nothing to show.
  *
- * The item takes the warning or error color of its lower window, and its tooltip has the full breakdown.
+ * The item shows the tool's name, then context and each window. It takes the warning or error
+ * color of its lower window, and its tooltip has the full breakdown.
  * @param {vscode.StatusBarItem} item - The tool's item.
  * @param {Tool} tool - The tool.
- * @param {import('./usage').ToolUsage} usage - The tool's usage.
- * @param {ReturnType<typeof buildSegments>} segments - The tool's status bar segments.
+ * @param {import('./usage').ToolUsage | null} usage - The tool's usage.
  * @param {Settings} settings - The current settings.
  * @param {Date} now - The current time.
  */
-function renderCombined(item, tool, usage, segments, settings, now) {
+function render(item, tool, usage, settings, now) {
+  if (!usage || !isEnabled(tool)) {
+    item.hide()
+    return
+  }
+
+  const segments = buildSegments(usage, now)
   const level = getToolLevel(usage.limits, settings, now)
   const parts = [
     `context ${segments.context.value} used`,
     ...segments.windows.map(window => `${windowNames[window.key]} ${window.value} left`),
   ]
 
-  item.text = [tool.label, segments.context.text, ...segments.windows.map(window => window.text)].join(combinedGap)
+  item.text = [tool.label, segments.context.text, ...segments.windows.map(window => window.text)].join(gap)
   item.tooltip = toTooltip(buildTooltip(tool.name, usage, now))
   item.backgroundColor = level ? new vscode.ThemeColor(`statusBarItem.${level}Background`) : undefined
   item.color = level ? new vscode.ThemeColor(`statusBarItem.${level}Foreground`) : undefined
   item.accessibilityInformation = { label: `${tool.name} ${parts.join(', ')}` }
   item.show()
-}
-
-/**
- * Draw a tool's usage on its items, or hide them when there's nothing to show.
- * @param {Map<ItemPart, vscode.StatusBarItem>} items - The tool's items.
- * @param {Tool} tool - The tool.
- * @param {import('./usage').ToolUsage | null} usage - The tool's usage.
- * @param {Settings} settings - The current settings.
- * @param {Date} now - The current time.
- */
-function render(items, tool, usage, settings, now) {
-  if (!usage || !isEnabled(tool)) {
-    hideAll(items)
-    return
-  }
-
-  const segments = buildSegments(usage, now)
-
-  if (tool.isCombined) {
-    renderCombined(items.get('context'), tool, usage, segments, settings, now)
-    return
-  }
-
-  const contextItem = items.get('context')
-
-  contextItem.tooltip = toTooltip(buildTooltip(tool.name, usage, now))
-  contextItem.text = `${tool.label} ${segments.context.text}`
-  contextItem.accessibilityInformation = { label: `${tool.name} context ${segments.context.value} used` }
-  contextItem.show()
-
-  for (const window of segments.windows) {
-    const level = getWindowLevel(window.limit, settings, now)
-    const background = level ? new vscode.ThemeColor(`statusBarItem.${level}Background`) : undefined
-    const foreground = level ? new vscode.ThemeColor(`statusBarItem.${level}Foreground`) : undefined
-    const limitItem = items.get(window.key)
-
-    limitItem.text = window.text
-    limitItem.tooltip = toTooltip(buildWindowTooltip(tool.name, usage, window.key, now))
-    limitItem.backgroundColor = background
-    limitItem.color = foreground ?? (window.isStale ? new vscode.ThemeColor('disabledForeground') : undefined)
-    limitItem.accessibilityInformation = { label: `${tool.name} ${windowNames[window.key]} ${window.value} left` }
-    limitItem.show()
-  }
 }
 
 /**
@@ -259,23 +194,12 @@ function activate(context) {
   let isRefreshQueued = false
 
   for (const tool of tools) {
-    const toolItems = new Map()
+    const item = vscode.window.createStatusBarItem(`statumo.${tool.id}`, vscode.StatusBarAlignment.Right, tool.priority)
 
-    const parts = tool.isCombined ? itemParts.filter(({ part }) => part === 'context') : itemParts
-
-    parts.forEach(({ part, name }, index) => {
-      const id = part === 'context' ? `statumo.${tool.id}` : `statumo.${tool.id}.${part}`
-      const priority = tool.priority + (itemParts.length - index) / 10
-      const item = vscode.window.createStatusBarItem(id, vscode.StatusBarAlignment.Right, priority)
-
-      item.name = `Statumo: ${tool.name}${name}`
-      item.command = tool.openCommand
-      toolItems.set(part, item)
-      context.subscriptions.push(item)
-    })
-
-    items.set(tool.id, toolItems)
-    context.subscriptions.push(vscode.commands.registerCommand(tool.openCommand, () => openTool(tool)))
+    item.name = `Statumo: ${tool.name}`
+    item.command = tool.openCommand
+    items.set(tool.id, item)
+    context.subscriptions.push(item, vscode.commands.registerCommand(tool.openCommand, () => openTool(tool)))
   }
 
   /**
@@ -299,15 +223,15 @@ function activate(context) {
         const now = new Date()
 
         await Promise.all(tools.map(async tool => {
-          const toolItems = items.get(tool.id)
+          const item = items.get(tool.id)
 
           if (!isEnabled(tool)) {
-            hideAll(toolItems)
+            item.hide()
             return
           }
 
           try {
-            render(toolItems, tool, await tool.read(settings, folders, now), settings, now)
+            render(item, tool, await tool.read(settings, folders, now), settings, now)
             lastErrors.delete(tool.id)
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error)

@@ -279,44 +279,9 @@ function buildTooltip(name, usage, now) {
   return lines.join('  \n')
 }
 
-/**
- * Build a rate-limit window's hover tooltip as Markdown: what's left and when it resets.
- * @param {string} name - The tool's full name.
- * @param {import('./usage').ToolUsage} usage - The tool's readings.
- * @param {'fiveHour' | 'sevenDay'} key - Which window.
- * @param {Date} now - The current time.
- * @returns {string} The tooltip's Markdown.
- */
-function buildWindowTooltip(name, usage, key, now) {
-  const limit = usage.limits[key]
-  const lines = [`**${escapeMarkdown(name)}** · ${windowNames[key]}`, '']
-
-  if (!limit) {
-    lines.push('Not reported yet')
-  } else if (isLimitStale(limit, now)) {
-    lines.push(`Reset ${escapeMarkdown(resetFull.format(limit.resetsAt))}, no reading since`)
-  } else {
-    lines.push(`${percentLeft(limit)}% left`)
-
-    if (limit.resetsAt) {
-      const reset = `Resets in ${formatCountdown(limit.resetsAt, now)} · ${resetFull.format(limit.resetsAt)}`
-      lines.push(escapeMarkdown(reset))
-    }
-  }
-
-  lines.push('')
-
-  if (usage.limitsUpdatedAt) lines.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
-
-  lines.push('', `Click to open ${escapeMarkdown(name)}.`)
-
-  return lines.join('  \n')
-}
-
 module.exports = {
   buildSegments,
   buildTooltip,
-  buildWindowTooltip,
   escapeMarkdown,
   formatTokens,
   getToolLevel,

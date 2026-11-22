@@ -7,7 +7,7 @@
 
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
-const { buildSegments, buildTooltip, buildWindowTooltip, formatTokens, getToolLevel, getWindowLevel } = require('../src/format')
+const { buildSegments, buildTooltip, formatTokens, getToolLevel, getWindowLevel } = require('../src/format')
 const { ringIcon, ringStep } = require('../src/rings')
 
 /**
@@ -79,7 +79,7 @@ test('dashes a window whose reset has passed', () => {
   const segments = buildSegments(usage, now)
 
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0) —', '$(statumo-7d-60) 61%'])
-  assert.match(buildWindowTooltip('Codex', usage, 'fiveHour', now), /Reset Sun, Nov 22, 09:00, no reading since/)
+  assert.match(buildTooltip('Codex', usage, now), /5h limit: reset Sun, Nov 22, 09:00, no reading since/)
   assert.equal(segments.windows[0].value, '—')
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -120,16 +120,6 @@ test('escapes session titles in the tooltip', () => {
   assert.match(tooltip, /\\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*/)
   assert.match(tooltip, /Context: 48\\\.3k \/ 400k · 12% used/)
   assert.match(tooltip, /Plan: Plus/)
+  assert.match(tooltip, /7d limit: 61% left, resets in 4 d 23 h/)
   assert.match(tooltip, /5h limit: 84% left, resets in 4 h 30 min \\\(Sun, Nov 22, 14:30\\\)/)
-})
-
-test('shows when each window resets in its own tooltip', () => {
-  const usage = makeUsage()
-  const fiveHour = buildWindowTooltip('Claude Code', usage, 'fiveHour', now)
-
-  assert.match(fiveHour, /\*\*Claude Code\*\* · 5-hour limit/)
-  assert.match(fiveHour, /84% left/)
-  assert.match(fiveHour, /Resets in 4 h 30 min · Sun, Nov 22, 14:30/)
-  assert.match(buildWindowTooltip('Claude Code', usage, 'sevenDay', now), /Resets in 4 d 23 h · Fri, Nov 27, 09:00/)
-  assert.match(buildWindowTooltip('Claude Code', makeUsage({ limits: { fiveHour: null, sevenDay: null } }), 'sevenDay', now), /Not reported yet/)
 })
