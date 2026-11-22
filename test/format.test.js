@@ -85,7 +85,7 @@ test('empties the ring of a window whose reset has passed', () => {
   const segments = buildSegments(usage, now)
 
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-40) 39%'])
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/small><\/small>&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\s+.*No reading since the reset/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /5-hour limit<\/b><\/small><\/small>&nbsp;&nbsp;.*Reset Nov 22 at 09:00<.*\s+.*No reading since the reset/)
   assert.equal(segments.windows[0].value, null)
   assert.equal(segments.windows[0].isStale, true)
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
@@ -126,8 +126,8 @@ test('lays out each tooltip section as label and note, bold amount, then bar', (
 
   assert.equal(sections.length, 5)
   assert.equal(sections[0], '#### Codex \\- Statumo')
-  assert.match(sections[1], /^<small><small>Context<\/small><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
-  assert.match(sections[2], /^<small><small>5-hour limit<\/small><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(4h 30m\\\).*\s+\*\*16%\*\* .*used/)
+  assert.match(sections[1], /^<small><small><b>Context<\/b><\/small><\/small>&nbsp;&nbsp;.*48\\\.3k \/ 400k tokens.*\s+\*\*12%\*\* .*used.*\s+<span/)
+  assert.match(sections[2], /^<small><small><b>5-hour limit<\/b><\/small><\/small>&nbsp;&nbsp;.*Resets Nov 22 at 14:30 \\\(4h 30m\\\).*\s+\*\*16%\*\* .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \\\(4d 23h\\\).*\s+\*\*39%\*\* .*used/)
   assert.match(sections[4], /Plan: Plus.*\s+.*Chat Title: Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*.*\s+.*Session: \/work\/project.*\s+.*Updated: 2m ago/)
 })

@@ -298,7 +298,7 @@ function amount(percent, word) {
 }
 
 /**
- * Build one tooltip section: a small label and fine note, the amount, then an optional bar.
+ * Build one tooltip section: a small bold label and fine note, the amount, then an optional bar.
  * @param {string} label - The section's label.
  * @param {string | null} note - The note after the label, already escaped, or null for none.
  * @param {string} value - The section's amount or status, as Markdown.
@@ -306,7 +306,7 @@ function amount(percent, word) {
  * @returns {string} The section's Markdown.
  */
 function tooltipSection(label, note, value, bar) {
-  const heading = `<small><small>${label}</small></small>${note ? `&nbsp;&nbsp;${fine(note)}` : ''}`
+  const heading = `<small><small><b>${label}</b></small></small>${note ? `&nbsp;&nbsp;${fine(note)}` : ''}`
 
   return [heading, value, bar].filter(Boolean).join('  \n')
 }
