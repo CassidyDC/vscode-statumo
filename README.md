@@ -69,7 +69,7 @@ Statumo only reads files on your machine and makes no network requests. For Clau
 
 ## Development
 
-Run the tests with `npm test`. The progress rings in the status bar come from an icon font that `npm run build:icons` builds from the ring shapes drawn in `scripts/icons/`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`. The package holds only the files listed under `files` in `package.json`.
+Run the tests with `npm test`. The progress rings in the status bar come from an icon font that `npm run build:icons` builds from the ring shapes drawn in `scripts/icons/`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package`, or build and install it into VS Code with `npm run install:local`. Both use the [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce) that `npm install` adds. The package holds only the files listed under `files` in `package.json`.
 
 The Usage mod for Claude Code lives in `claude-mod/` and stays out of the extension package. Its [README](claude-mod/README.md) documents the files Statumo reads and how to validate the mod.
 

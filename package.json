@@ -547,12 +547,13 @@
     }
   },
   "scripts": {
-    "package": "vsce package",
+    "package": "vsce package --no-rewrite-relative-links --allow-missing-repository",
     "test": "node --test",
     "build:icons": "node scripts/build-icons.js",
     "install:local": "vsce package --no-rewrite-relative-links --allow-missing-repository --out statumo.vsix && code --install-extension statumo.vsix --force"
   },
   "devDependencies": {
+    "@vscode/vsce": "^4.1.1",
     "svg2ttf": "^6.1.0",
     "svgicons2svgfont": "^16.0.0",
     "ttf2woff": "^3.0.0"
