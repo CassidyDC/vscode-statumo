@@ -65,7 +65,7 @@ test('shows a window whose reset has passed at 0% with when it reset', () => {
   /** The usage's tooltip, with the time until each reset asked for. */
   const tooltip = buildTooltip('Codex', usage, { ...thresholds, showTimeUntilReset: true }, now)
 
-  assert.match(tooltip, /<b><span class="codicon codicon-statumo-five-hour-symbol"><\/span>\u00a05-hour limit<\/b><\/td><td align="right">.*>Reset today at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>0% .*used/)
+  assert.match(tooltip, /<b><span class="codicon codicon-statumo-five-hour-symbol"><\/span>\u00a05-hour limit<\/b><\/td><td align="right">.*>Last reset today at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>0% .*used/)
   assert.doesNotMatch(tooltip, /Inactive|No reading since the reset/)
 })
 
@@ -73,7 +73,7 @@ test('names a reset from yesterday as yesterday', () => {
   /** Usage whose 5-hour window reset last night. */
   const usage = makeUsage({ limits: { ...makeUsage().limits, fiveHour: { percentUsed: 90, resetsAt: new Date(2026, 10, 21, 23, 0) } } })
 
-  assert.match(buildTooltip('Codex', usage, thresholds, now), />Reset yesterday at 11:00 PM</)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), />Last reset yesterday at 11:00 PM</)
 })
 
 test('adds a Weekly Fable limit section only once it is reported', () => {

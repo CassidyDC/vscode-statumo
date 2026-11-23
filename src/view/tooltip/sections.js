@@ -46,7 +46,7 @@ function limitSection(key, limit, settings, now) {
 
   if (isLimitStale(limit, now)) {
     /** When the window reset. */
-    const reset = `Reset ${formatReset(limit.resetsAt, now, { timeFormat: settings.timeFormat })}`
+    const reset = `Last reset ${formatReset(limit.resetsAt, now, { timeFormat: settings.timeFormat })}`
     return tooltipSection(label, reset, amount(0, 'used'), progressBar(0))
   }
 

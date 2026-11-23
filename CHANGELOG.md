@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Label the hover time of a limit whose reset has passed with `Last reset` instead of `Reset`, as in `Last reset today at 9:00 AM`.
+
 ## [0.1.0] - 2026-11-23
 
 ### Added
