@@ -11,6 +11,8 @@ Each tool is one status bar item that starts with its name, Claude or Codex, and
 
 Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets (as today or tomorrow when it's that soon), your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
 
+![The Claude Code hover: context, 5-hour limit, and 7-day limit sections, each with a percent and progress bar, above the session title, folder, plan, and reading ages](images/statumo-hover.png)
+
 ## What each part follows
 
 - **Context** comes from the most recently active session whose working folder is in the current VS Code workspace. Until a tool has a session here, context shows just an empty ring.
