@@ -11,7 +11,7 @@ Each tool is one status bar item that starts with its name, Claude or Codex, and
 - **Weekly limit** (calendar) is how much of the weekly rate-limit window is used.
 - **Weekly Fable limit** (star) is how much of Claude's separate weekly limit for the Fable model is used. Claude only gets this fourth ring once Claude Code reports a Fable limit for your account.
 
-Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets (as today or tomorrow when it's that soon), your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
+Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets (just the time for the 5-hour limit, and as today or tomorrow for the weekly limits when it's that soon), your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
 
 ![The Claude Code hover: context, 5-hour limit, and weekly limit sections, each with a percent and progress bar, above the session title, folder, plan, and reading ages](images/statumo-hover.png)
 

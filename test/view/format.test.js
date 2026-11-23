@@ -31,6 +31,7 @@ test('adds the time until a reset only when asked', () => {
   assert.equal(formatReset(resetsAt, now), 'today at 2:30 PM')
   assert.equal(formatReset(resetsAt, now, { timeFormat: '24h' }), 'today at 14:30')
   assert.equal(formatReset(resetsAt, now, { showTimeUntilReset: true }), 'today at 2:30 PM (4h 30m)')
+  assert.equal(formatReset(resetsAt, now, { showDay: false }), 'at 2:30 PM')
 })
 
 test('names the reset day today or tomorrow, and dates any later day', () => {

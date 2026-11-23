@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Follow the latest session in the current workspace for context, and the account's latest reading for rate limits.
 - Read the account usage Claude Code caches in `~/.claude.json` for the Fable limit, and show its 5-hour and 7-day limits when they're newer than the Usage mod's. A cache that belongs to another account is ignored.
 - Show a limit whose reset time has passed with no newer reading at 0%, with when it reset in the hover. A limit that hasn't been reported yet shows just an empty ring.
-- Add a hover tooltip with a section and progress bar for context and each limit, session titles, token counts, when each limit resets, plan, and reading age. The limits' read time only shows when it differs from the last activity. A reset due today or tomorrow names that day, as in `Resets today at 2:30 PM`. Claude Code titles come from the end of the session's own transcript.
+- Add a hover tooltip with a section and progress bar for context and each limit, session titles, token counts, when each limit resets, plan, and reading age. The limits' read time only shows when it differs from the last activity. The 5-hour limit shows just its reset time, as in `Resets at 2:30 PM`, and a weekly reset due today or tomorrow names that day, as in `Resets tomorrow at 9:00 AM`. Claude Code titles come from the end of the session's own transcript.
 - Lead each hover section's title with its ring's symbol.
 - Use the warning and error backgrounds on a tool when any window runs low, with configurable thresholds.
 - Run each item's configured click command, which opens the Claude Code or Codex panel by default.

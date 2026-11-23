@@ -50,9 +50,9 @@ function limitSection(key, limit, settings, now) {
     return tooltipSection(label, reset, amount(0, 'used'), progressBar(0))
   }
 
-  /** The rounded percent used, and when the window resets. */
+  /** The rounded percent used, and when the window resets; the 5-hour window always resets within a day, so it skips the day. */
   const used = percentUsed(limit)
-  const note = limit.resetsAt ? `Resets ${formatReset(limit.resetsAt, now, settings)}` : null
+  const note = limit.resetsAt ? `Resets ${formatReset(limit.resetsAt, now, { ...settings, showDay: key !== 'fiveHour' })}` : null
   return tooltipSection(label, note, amount(used, 'used'), progressBar(used, getWindowLevel(limit, settings, now)))
 }
 

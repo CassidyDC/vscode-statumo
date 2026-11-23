@@ -85,11 +85,12 @@ function formatDay(date, now) {
  * @param {object} [options] - How to format it.
  * @param {'12h' | '24h'} [options.timeFormat] - Which clock to show the time on.
  * @param {boolean} [options.showTimeUntilReset] - Whether to add how long until the reset.
- * @returns {string} The reset, such as `today at 2:30 PM`, `tomorrow at 9:00 AM`, or `Nov 27 at 09:00 (4d 23h)`.
+ * @param {boolean} [options.showDay] - Whether to name the reset's day before its time.
+ * @returns {string} The reset, such as `today at 2:30 PM`, `tomorrow at 9:00 AM`, `Nov 27 at 09:00 (4d 23h)`, or `at 2:30 PM` without the day.
  */
-function formatReset(date, now, { timeFormat = '12h', showTimeUntilReset = false } = {}) {
-  /** The reset's day and time of day. */
-  const when = `${formatDay(date, now)} at ${formatClock(date, timeFormat)}`
+function formatReset(date, now, { timeFormat = '12h', showTimeUntilReset = false, showDay = true } = {}) {
+  /** The reset's day, when shown, and time of day. */
+  const when = `${showDay ? `${formatDay(date, now)} ` : ''}at ${formatClock(date, timeFormat)}`
   if (!showTimeUntilReset) return when
 
   /** Whole minutes until the reset, rounded up. */
