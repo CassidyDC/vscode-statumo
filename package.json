@@ -501,6 +501,153 @@
           "fontPath": "./images/statumo-icons.woff",
           "fontCharacter": "\\E154"
         }
+      },
+      "statumo-fb-0": {
+        "description": "Weekly Fable limit ring at 0%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E160"
+        }
+      },
+      "statumo-fb-5": {
+        "description": "Weekly Fable limit ring at 5%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E161"
+        }
+      },
+      "statumo-fb-10": {
+        "description": "Weekly Fable limit ring at 10%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E162"
+        }
+      },
+      "statumo-fb-15": {
+        "description": "Weekly Fable limit ring at 15%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E163"
+        }
+      },
+      "statumo-fb-20": {
+        "description": "Weekly Fable limit ring at 20%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E164"
+        }
+      },
+      "statumo-fb-25": {
+        "description": "Weekly Fable limit ring at 25%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E165"
+        }
+      },
+      "statumo-fb-30": {
+        "description": "Weekly Fable limit ring at 30%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E166"
+        }
+      },
+      "statumo-fb-35": {
+        "description": "Weekly Fable limit ring at 35%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E167"
+        }
+      },
+      "statumo-fb-40": {
+        "description": "Weekly Fable limit ring at 40%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E168"
+        }
+      },
+      "statumo-fb-45": {
+        "description": "Weekly Fable limit ring at 45%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E169"
+        }
+      },
+      "statumo-fb-50": {
+        "description": "Weekly Fable limit ring at 50%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E16A"
+        }
+      },
+      "statumo-fb-55": {
+        "description": "Weekly Fable limit ring at 55%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E16B"
+        }
+      },
+      "statumo-fb-60": {
+        "description": "Weekly Fable limit ring at 60%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E16C"
+        }
+      },
+      "statumo-fb-65": {
+        "description": "Weekly Fable limit ring at 65%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E16D"
+        }
+      },
+      "statumo-fb-70": {
+        "description": "Weekly Fable limit ring at 70%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E16E"
+        }
+      },
+      "statumo-fb-75": {
+        "description": "Weekly Fable limit ring at 75%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E16F"
+        }
+      },
+      "statumo-fb-80": {
+        "description": "Weekly Fable limit ring at 80%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E170"
+        }
+      },
+      "statumo-fb-85": {
+        "description": "Weekly Fable limit ring at 85%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E171"
+        }
+      },
+      "statumo-fb-90": {
+        "description": "Weekly Fable limit ring at 90%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E172"
+        }
+      },
+      "statumo-fb-95": {
+        "description": "Weekly Fable limit ring at 95%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E173"
+        }
+      },
+      "statumo-fb-100": {
+        "description": "Weekly Fable limit ring at 100%",
+        "default": {
+          "fontPath": "./images/statumo-icons.woff",
+          "fontCharacter": "\\E174"
+        }
       }
     },
     "configuration": {
@@ -511,14 +658,14 @@
           "default": 25,
           "minimum": 0,
           "maximum": 100,
-          "markdownDescription": "Show an item with the warning background when either rate-limit window has this percent or less left."
+          "markdownDescription": "Show an item with the warning background when any rate-limit window has this percent or less left."
         },
         "statumo.errorThreshold": {
           "type": "number",
           "default": 10,
           "minimum": 0,
           "maximum": 100,
-          "markdownDescription": "Show an item with the error background when either rate-limit window has this percent or less left."
+          "markdownDescription": "Show an item with the error background when any rate-limit window has this percent or less left."
         },
         "statumo.timeFormat": {
           "type": "string",

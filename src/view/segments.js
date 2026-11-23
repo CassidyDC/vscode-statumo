@@ -7,17 +7,22 @@ import { isLimitStale, percentUsed } from '../usage/levels.js'
 import { ringIcon } from './rings.js'
 
 /**
- * The full names of the rate-limit windows.
- * @type {Record<'fiveHour' | 'sevenDay', string>}
+ * Which rate-limit window a segment or section shows.
+ * @typedef {'fiveHour' | 'sevenDay' | 'sevenDayFable'} WindowKey
  */
-const windowNames = { fiveHour: '5-hour limit', sevenDay: 'weekly limit' }
+
+/**
+ * The full names of the rate-limit windows.
+ * @type {Record<WindowKey, string>}
+ */
+const windowNames = { fiveHour: '5-hour limit', sevenDay: 'weekly limit', sevenDayFable: 'weekly Fable limit' }
 
 /**
  * One rate-limit window's part of the status bar.
  * @typedef {object} WindowSegment
- * @property {'fiveHour' | 'sevenDay'} key - Which window.
- * @property {string} text - The window's ring icon and percent used, such as `$(statumo-5h-15) 16%`, or the empty ring alone when unknown or stale.
- * @property {string | null} value - The percent used, such as `16%`, or null when unknown or stale.
+ * @property {WindowKey} key - Which window.
+ * @property {string} text - The window's ring icon and percent used, such as `$(statumo-5h-15) 16%`, `0%` once it has reset with no newer reading, or the empty ring alone when unreported.
+ * @property {string | null} value - The percent used, such as `16%`, or null when unreported.
  * @property {boolean} isStale - Whether the reading predates the window's reset.
  * @property {import('../usage/model.js').LimitReading | null} limit - The window's reading.
  */
@@ -30,26 +35,25 @@ const windowNames = { fiveHour: '5-hour limit', sevenDay: 'weekly limit' }
  */
 
 /**
- * Build one window's segment.
- * @param {'fiveHour' | 'sevenDay'} key - Which window.
+ * Build one window's segment. A window whose reset has passed with no newer reading has reset, so it shows 0%.
+ * @param {WindowKey} key - Which window.
  * @param {import('./rings.js').RingKind} ring - The window's ring.
  * @param {import('../usage/model.js').LimitReading | null} limit - The window's reading.
  * @param {Date} now - The current time.
  * @returns {WindowSegment} The segment.
  */
 function buildWindowSegment(key, ring, limit, now) {
-  /** Whether the reading predates the window's reset. */
-  const isStale = isLimitStale(limit, now)
-  if (!limit || isStale) return { key, text: ringIcon(ring, null), value: null, isStale, limit }
+  if (!limit) return { key, text: ringIcon(ring, null), value: null, isStale: false, limit }
 
-  /** The rounded percent used. */
-  const used = percentUsed(limit)
+  /** Whether the reading predates the window's reset, and the rounded percent used. */
+  const isStale = isLimitStale(limit, now)
+  const used = isStale ? 0 : percentUsed(limit)
   return { key, text: `${ringIcon(ring, used)} ${used}%`, value: `${used}%`, isStale, limit }
 }
 
 /**
  * Build a tool's status bar segments: the percent of context used, then of each window used,
- * each percent led by a ring that fills to match it.
+ * each percent led by a ring that fills to match it. The Fable window only appears once it's reported.
  * @param {import('../usage/model.js').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {{ context: ContextSegment, windows: WindowSegment[] }} The context and the windows.
@@ -65,6 +69,7 @@ function buildSegments(usage, now) {
     windows: [
       buildWindowSegment('fiveHour', '5h', usage.limits.fiveHour, now),
       buildWindowSegment('sevenDay', '7d', usage.limits.sevenDay, now),
+      ...(usage.limits.sevenDayFable ? [buildWindowSegment('sevenDayFable', 'fb', usage.limits.sevenDayFable, now)] : []),
     ],
   }
 }

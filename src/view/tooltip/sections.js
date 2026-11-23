@@ -26,8 +26,9 @@ function contextSection(session) {
 }
 
 /**
- * Build the tooltip section for one rate-limit window.
- * @param {'fiveHour' | 'sevenDay'} key - Which window.
+ * Build the tooltip section for one rate-limit window. A window whose reset has passed with no newer
+ * reading has reset, so it shows 0% used and when it reset.
+ * @param {import('../segments.js').WindowKey} key - Which window.
  * @param {import('../../usage/model.js').LimitReading | null} limit - The window's reading.
  * @param {import('./index.js').TooltipSettings} settings - The thresholds and how to show reset times.
  * @param {Date} now - The current time.
@@ -36,8 +37,14 @@ function contextSection(session) {
 function limitSection(key, limit, settings, now) {
   /** The window's name, capitalized. */
   const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
+
   if (!limit) return statusSection(label, null, 'Not reported yet', null)
-  if (isLimitStale(limit, now)) return statusSection(label, 'Inactive', 'No reading since the reset', progressBar(0))
+
+  if (isLimitStale(limit, now)) {
+    /** When the window reset. */
+    const reset = `Reset ${formatReset(limit.resetsAt, now, { timeFormat: settings.timeFormat })}`
+    return tooltipSection(label, reset, amount(0, 'used'), progressBar(0))
+  }
 
   /** The rounded percent used, and when the window resets. */
   const used = percentUsed(limit)
@@ -61,7 +68,8 @@ function planLabel({ plan, access = null }) {
 
 /**
  * Build the tooltip's footer: a table of the session's chat title, the session's folder, the plan,
- * when the limits were read, and the session's last activity, each labelled on the left.
+ * when the limits were read, and the session's last activity, each labelled on the left. The Fable
+ * limit gets its own read time when it comes from an older reading than the other limits.
  * @param {import('../../usage/model.js').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string} The footer's HTML, or nothing when there is nothing to show.
@@ -71,12 +79,22 @@ function footerSection(usage, now) {
   const { session } = usage
   const plan = planLabel(usage)
   const rows = []
+
   // Text inside an HTML block can't break it with a blank line, so whitespace runs become spaces.
   if (session?.title) rows.push(footerRow('Chat', session.title.replace(/\s+/g, ' ')))
+
   if (session?.cwd) rows.push(footerRow('Folder', truncatePath(tildify(session.cwd))))
+
   if (plan) rows.push(footerRow('Plan', plan))
+
   if (usage.limitsUpdatedAt) rows.push(footerRow('Limits Read', formatAge(usage.limitsUpdatedAt, now)))
+
+  if (usage.limits.sevenDayFable && usage.fableUpdatedAt && usage.fableUpdatedAt.getTime() !== usage.limitsUpdatedAt?.getTime()) {
+    rows.push(footerRow('Fable Read', formatAge(usage.fableUpdatedAt, now)))
+  }
+
   if (session) rows.push(footerRow('Last Activity', formatAge(session.updatedAt, now)))
+
   return rows.length ? `<table>${gapRow(3)}${rows.join('')}${gapRow(3, footerEndGap)}</table>` : ''
 }
 

@@ -59,13 +59,14 @@ function formatClock(date, timeFormat) {
 }
 
 /**
- * Name a date's day relative to now, as `today`, `tomorrow`, or a short date such as `Nov 27`.
+ * Name a date's day relative to now, as `yesterday`, `today`, `tomorrow`, or a short date such as `Nov 27`.
  * @param {Date} date - The date to name.
  * @param {Date} now - The current time.
  * @returns {string} The day's name.
  */
 function formatDay(date, now) {
-  /** Local midnight at the start of today and of tomorrow. */
+  /** Local midnight at the start of yesterday, today, and tomorrow. */
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
 
@@ -73,6 +74,7 @@ function formatDay(date, now) {
   const day = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
   if (day === today.getTime()) return 'today'
   if (day === tomorrow.getTime()) return 'tomorrow'
+  if (day === yesterday.getTime()) return 'yesterday'
   return shortDate.format(date)
 }
 

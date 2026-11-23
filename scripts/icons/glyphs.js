@@ -23,7 +23,7 @@ const ringCodePointBase = 0xe100
 
 /**
  * The symbols drawn inside each ring, as path data in the 16-unit grid.
- * @type {Record<'layers' | 'clock' | 'calendar', string>}
+ * @type {Record<'layers' | 'clock' | 'calendar' | 'gem', string>}
  */
 const symbols = {
   layers: [
@@ -43,11 +43,15 @@ const symbols = {
     rect(9.7, 3.9, 0.9, 1.6),
     ...[5.9, 7.5, 9.1].flatMap(x => [rect(x, 7.75, 1, 1), rect(x, 9.35, 1, 1)]),
   ].join(''),
+  gem: [
+    polygon([[5.8, 4.7], [10.2, 4.7], [11.8, 6.8], [8, 11.6], [4.2, 6.8]]),
+    polygon([[5, 6.45], [11, 6.45], [11, 7.25], [5, 7.25]], true),
+  ].join(''),
 }
 
 /**
  * Draw one ring glyph: a thin track, the filled arc over it, and the kind's symbol inside.
- * @param {'layers' | 'clock' | 'calendar'} symbol - The symbol inside the ring.
+ * @param {'layers' | 'clock' | 'calendar' | 'gem'} symbol - The symbol inside the ring.
  * @param {number} step - How full the ring is, in percent.
  * @returns {string} The glyph's SVG.
  */

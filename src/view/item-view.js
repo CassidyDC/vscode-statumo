@@ -18,12 +18,12 @@ const gap = ' '
  * @typedef {object} ItemView
  * @property {string} text - The item's text: the tool's name, then context and each window.
  * @property {string} tooltip - The tooltip's Markdown, to render with `supportHtml` on.
- * @property {'error' | 'warning' | null} level - The warning level of the lower window.
+ * @property {'error' | 'warning' | null} level - The warning level of the lowest window.
  * @property {string} label - The screen reader label.
  */
 
 /**
- * Build what a tool's item shows. The item takes the warning or error color of its lower window,
+ * Build what a tool's item shows. The item takes the warning or error color of its lowest window,
  * and its tooltip has the full breakdown.
  * @param {{ label: string, name: string }} tool - The tool's short and full names.
  * @param {import('../usage/model.js').ToolUsage} usage - The tool's usage.
@@ -38,7 +38,7 @@ function buildItemView(tool, usage, settings, now) {
   /** How a screen reader reads each segment. */
   const parts = [
     segments.context.value === null ? 'no context yet' : `context ${segments.context.value} used`,
-    ...segments.windows.map(window => `${windowNames[window.key]} ${window.value === null ? 'not current' : `${window.value} used`}`),
+    ...segments.windows.map(window => `${windowNames[window.key]} ${window.value === null ? 'not reported yet' : `${window.value} used`}`),
   ]
 
   return {

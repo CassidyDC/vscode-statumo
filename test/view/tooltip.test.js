@@ -53,7 +53,7 @@ function footerDetail(tooltip, label) {
   return new RegExp(`>${label}</span></td><td width="12"></td><td><span[^>]*>([^<]*)<`).exec(tooltip)?.[1]
 }
 
-test('marks a window whose reset has passed as inactive', () => {
+test('shows a window whose reset has passed at 0% with when it reset', () => {
   /** Usage whose 5-hour window reset an hour ago. */
   const usage = makeUsage({
     limits: {
@@ -61,7 +61,40 @@ test('marks a window whose reset has passed as inactive', () => {
       sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
     },
   })
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*<\/tr><tr><td colspan="2" height="3"><\/td><\/tr><tr><td colspan="2"><p>.*No reading since the reset.*<\/p><h6>/)
+
+  /** The usage's tooltip, with the time until each reset asked for. */
+  const tooltip = buildTooltip('Codex', usage, { ...thresholds, showTimeUntilReset: true }, now)
+
+  assert.match(tooltip, /<b>5-hour limit<\/b><\/td><td align="right">.*>Reset today at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>0% .*used/)
+  assert.doesNotMatch(tooltip, /Inactive|No reading since the reset/)
+})
+
+test('names a reset from yesterday as yesterday', () => {
+  /** Usage whose 5-hour window reset last night. */
+  const usage = makeUsage({ limits: { ...makeUsage().limits, fiveHour: { percentUsed: 90, resetsAt: new Date(2026, 10, 21, 23, 0) } } })
+
+  assert.match(buildTooltip('Codex', usage, thresholds, now), />Reset yesterday at 11:00 PM</)
+})
+
+test('adds a Weekly Fable limit section only once it is reported', () => {
+  /** Usage with a Fable reading, and its tooltip's sections. */
+  const usage = makeUsage({ limits: { ...makeUsage().limits, sevenDayFable: { percentUsed: 3, resetsAt: new Date(2026, 10, 24, 2, 0) } } })
+  const sections = buildTooltip('Claude Code', usage, thresholds, now).split('\n\n---\n\n')
+
+  assert.equal(sections.length, 6)
+  assert.match(sections[4], /<b>Weekly Fable limit<\/b>.*Resets Nov 24 at 2:00 AM<.*<\/tr><tr><td colspan="2"><h2>3% .*used/)
+  assert.doesNotMatch(buildTooltip('Codex', makeUsage(), thresholds, now), /Fable/)
+})
+
+test('shows when the Fable limit was read only when it differs from the other limits', () => {
+  /** A Fable reading, and usage with it read with the other limits and on its own. */
+  const sevenDayFable = { percentUsed: 3, resetsAt: new Date(2026, 10, 24, 2, 0) }
+  const together = makeUsage({ limits: { ...makeUsage().limits, sevenDayFable }, fableUpdatedAt: new Date(2026, 10, 22, 9, 58) })
+  const apart = makeUsage({ limits: { ...makeUsage().limits, sevenDayFable }, fableUpdatedAt: new Date(2026, 10, 22, 8, 0) })
+
+  assert.equal(footerDetail(buildTooltip('Claude Code', together, thresholds, now), 'Fable Read'), undefined)
+  assert.equal(footerDetail(buildTooltip('Claude Code', apart, thresholds, now), 'Fable Read'), '2h ago')
+  assert.equal(footerDetail(buildTooltip('Claude Code', apart, thresholds, now), 'Limits Read'), '2m ago')
 })
 
 test('lays out each tooltip section as one table of label and note, heading-sized amount, then bar', () => {

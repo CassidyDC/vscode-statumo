@@ -33,6 +33,8 @@ test('warns and errors per window', () => {
   assert.equal(getToolLevel({ fiveHour: limit(95), sevenDay: limit(80) }, thresholds, now), 'error')
   assert.equal(getToolLevel({ fiveHour: limit(10), sevenDay: limit(80) }, thresholds, now), 'warning')
   assert.equal(getToolLevel({ fiveHour: null, sevenDay: limit(10) }, thresholds, now), null)
+  assert.equal(getToolLevel({ fiveHour: limit(10), sevenDay: limit(10), sevenDayFable: limit(80) }, thresholds, now), 'warning')
+  assert.equal(getToolLevel({ fiveHour: limit(10), sevenDay: limit(10), sevenDayFable: limit(95) }, thresholds, now), 'error')
 })
 
 test('never warns for a window whose reset has passed', () => {

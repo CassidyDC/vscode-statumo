@@ -17,4 +17,5 @@ test('rounds rings to the nearest step, keeping partial values off empty and ful
   assert.equal(ringStep(100), 100)
   assert.equal(ringStep(130), 100)
   assert.equal(ringIcon('7d', 61), '$(statumo-7d-60)')
+  assert.equal(ringIcon('fb', 61), '$(statumo-fb-60)')
 })

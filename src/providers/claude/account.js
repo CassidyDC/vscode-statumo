@@ -1,24 +1,33 @@
 /**
  * Claude Code account.
- * @file Read the signed-in account's plan, and whether it signs in with a subscription or an API key, from Claude Code's global config file.
+ * @file Read the signed-in account's plan, whether it signs in with a subscription or an API key, and Claude Code's cached rate-limit usage from Claude Code's global config file.
  */
 
 import os from 'node:os'
 import path from 'node:path'
 import { createCachedJson } from '../../files/cached-json.js'
+import { dateOrNull, makeLimit } from '../../usage/model.js'
+
+/**
+ * The rate limits Claude Code cached the last time it fetched the account's usage.
+ * @typedef {object} CachedUsage
+ * @property {import('../../usage/model.js').Limits} limits - The 5-hour, 7-day, and 7-day Fable windows.
+ * @property {Date} updatedAt - When Claude Code fetched them.
+ */
 
 /**
  * What Claude Code's global config file says of the signed-in account.
  * @typedef {object} ClaudeAccount
  * @property {string | null} plan - The account's plan, such as `Max 5x`.
  * @property {'subscription' | 'api' | null} access - Whether the account signs in with a subscription or an API key.
+ * @property {CachedUsage | null} usage - The account's cached rate limits, or null when there are none for this account.
  */
 
 /**
  * The account reading when the config file is missing or records no account.
  * @type {ClaudeAccount}
  */
-const noAccount = Object.freeze({ plan: null, access: null })
+const noAccount = Object.freeze({ plan: null, access: null, usage: null })
 
 /**
  * Find Claude Code's global config file, which records the signed-in account.
@@ -76,12 +85,74 @@ function readClaudeAccess(data) {
 }
 
 /**
+ * Read one window from the usage cache's per-window fields, such as `five_hour`, or else
+ * from its list of limits, whose entries name the window in `kind`.
+ * @param {any} utilization - The usage cache's `utilization` value.
+ * @param {string | null} field - The window's field, such as `five_hour`, or null when it has none.
+ * @param {(entry: any) => boolean} matches - Picks the window's entry in the list of limits.
+ * @returns {import('../../usage/model.js').LimitReading | null} The window's reading, or null.
+ */
+function readCachedWindow(utilization, field, matches) {
+  /** The window's own field. */
+  const window = field ? utilization?.[field] : null
+
+  /** The window's reading from its own field. */
+  const fromField = makeLimit(window?.utilization, dateOrNull(window?.resets_at))
+
+  if (fromField || !Array.isArray(utilization?.limits)) return fromField
+
+  /** The window's entry in the list of limits. */
+  const entry = utilization.limits.find(candidate => candidate && typeof candidate === 'object' && matches(candidate))
+  return entry ? makeLimit(entry.percent, dateOrNull(entry.resets_at)) : null
+}
+
+/**
+ * Whether a usage list entry is the weekly limit scoped to the Fable model.
+ * @param {any} entry - The entry.
+ * @returns {boolean} True for the weekly Fable limit.
+ */
+function isFableWeekly(entry) {
+  /** The model the limit is scoped to. */
+  const model = entry.scope?.model?.display_name
+  return entry.kind === 'weekly_scoped' && typeof model === 'string' && model.trim().toLowerCase() === 'fable'
+}
+
+/**
+ * Read the rate limits Claude Code cached from the account's usage, which it refreshes whenever it fetches
+ * usage. A cache of a different account than the signed-in one is ignored.
+ * @param {any} data - The config file's parsed JSON.
+ * @returns {CachedUsage | null} The cached limits, or null when there are none for this account.
+ */
+function readCachedUsage(data) {
+  /** The usage cache, the account it belongs to, and when Claude Code fetched it. */
+  const cache = data?.cachedUsageUtilization
+  const owner = cache?.accountUuid
+  const updatedAt = dateOrNull(cache?.fetchedAtMs)
+
+  if (!updatedAt || (typeof owner === 'string' && owner !== data?.oauthAccount?.accountUuid)) return null
+
+  /** The cache's readings. */
+  const utilization = cache.utilization
+
+  /** The cached windows. */
+  const limits = {
+    fiveHour: readCachedWindow(utilization, 'five_hour', entry => entry.kind === 'session'),
+    sevenDay: readCachedWindow(utilization, 'seven_day', entry => entry.kind === 'weekly_all'),
+    sevenDayFable: readCachedWindow(utilization, null, isFableWeekly),
+  }
+
+  if (!limits.fiveHour && !limits.sevenDay && !limits.sevenDayFable) return null
+
+  return { limits, updatedAt }
+}
+
+/**
  * Turn the config file's JSON into the account reading.
  * @param {any} data - The config file's parsed JSON.
- * @returns {ClaudeAccount} The account's plan and access.
+ * @returns {ClaudeAccount} The account's plan, access, and cached rate limits.
  */
 function toAccount(data) {
-  return { plan: formatClaudePlan(data?.oauthAccount), access: readClaudeAccess(data) }
+  return { plan: formatClaudePlan(data?.oauthAccount), access: readClaudeAccess(data), usage: readCachedUsage(data) }
 }
 
 /**
@@ -93,9 +164,9 @@ function createAccountReader() {
   const reader = createCachedJson(toAccount)
 
   /**
-   * Read the signed-in account's plan and how it signs in.
+   * Read the signed-in account's plan, how it signs in, and its cached rate limits.
    * @param {string} configDirectory - The Claude config folder.
-   * @returns {Promise<ClaudeAccount>} The account's plan and access, each null when it isn't recorded.
+   * @returns {Promise<ClaudeAccount>} The account's plan, access, and cached rate limits, each null when it isn't recorded.
    */
   async function readAccount(configDirectory) {
     return (await reader.read(globalConfigPath(configDirectory)))?.value ?? noAccount

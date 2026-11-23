@@ -18,6 +18,7 @@ import { contextSection, footerSection, limitSection } from './sections.js'
 /**
  * Build a tool's hover tooltip as Markdown with HTML: a plain title, then context and each window
  * in sections divided by rules, each with a progress bar, and the session and reading details at the bottom.
+ * The Fable window only has a section once it's reported.
  *
  * Render it with `supportHtml` on.
  * @param {string} name - The tool's full name.
@@ -32,6 +33,7 @@ function buildTooltip(name, usage, settings, now) {
     contextSection(usage.session),
     limitSection('fiveHour', usage.limits.fiveHour, settings, now),
     limitSection('sevenDay', usage.limits.sevenDay, settings, now),
+    usage.limits.sevenDayFable && limitSection('sevenDayFable', usage.limits.sevenDayFable, settings, now),
     footerSection(usage, now),
   ].filter(Boolean).join('\n\n---\n\n')
 }

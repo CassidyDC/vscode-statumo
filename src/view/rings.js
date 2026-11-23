@@ -11,17 +11,18 @@ const ringStepPercent = 5
 
 /**
  * The ring kinds, each with the icon id part, the symbol drawn inside, and a description.
- * @type {Array<{ kind: RingKind, symbol: 'layers' | 'clock' | 'calendar', description: string }>}
+ * @type {Array<{ kind: RingKind, symbol: 'layers' | 'clock' | 'calendar' | 'gem', description: string }>}
  */
 const ringKinds = [
   { kind: 'cx', symbol: 'layers', description: 'Context ring' },
   { kind: '5h', symbol: 'clock', description: '5-hour limit ring' },
   { kind: '7d', symbol: 'calendar', description: '7-day limit ring' },
+  { kind: 'fb', symbol: 'gem', description: 'Weekly Fable limit ring' },
 ]
 
 /**
  * Which ring an icon belongs to.
- * @typedef {'cx' | '5h' | '7d'} RingKind
+ * @typedef {'cx' | '5h' | '7d' | 'fb'} RingKind
  */
 
 /**

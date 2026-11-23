@@ -51,17 +51,17 @@ function getWindowLevel(limit, { warningThreshold, errorThreshold }, now) {
 }
 
 /**
- * Decide a tool's warning level from the lower of its two windows.
+ * Decide a tool's warning level from the lowest of its windows.
  * @param {import('./model.js').Limits} limits - The tool's windows.
  * @param {object} thresholds - Percent-left thresholds.
  * @param {number} thresholds.warningThreshold - At or below this, warn.
  * @param {number} thresholds.errorThreshold - At or below this, show an error.
  * @param {Date} now - The current time.
- * @returns {'error' | 'warning' | null} The more urgent window's level, or null when neither is low.
+ * @returns {'error' | 'warning' | null} The most urgent window's level, or null when none is low.
  */
 function getToolLevel(limits, thresholds, now) {
   /** Each window's level. */
-  const levels = [getWindowLevel(limits.fiveHour, thresholds, now), getWindowLevel(limits.sevenDay, thresholds, now)]
+  const levels = [limits.fiveHour, limits.sevenDay, limits.sevenDayFable].map(limit => getWindowLevel(limit ?? null, thresholds, now))
   if (levels.includes('error')) return 'error'
   if (levels.includes('warning')) return 'warning'
   return null

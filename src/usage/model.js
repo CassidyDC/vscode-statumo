@@ -11,10 +11,11 @@
  */
 
 /**
- * The 5-hour and 7-day rate-limit windows.
+ * The 5-hour, 7-day, and 7-day Fable rate-limit windows.
  * @typedef {object} Limits
  * @property {LimitReading | null} fiveHour - The 5-hour window.
  * @property {LimitReading | null} sevenDay - The 7-day window.
+ * @property {LimitReading | null} sevenDayFable - The 7-day window for the Fable model, which only Claude Code reports.
  */
 
 /**
@@ -39,7 +40,8 @@
  * @typedef {object} ToolUsage
  * @property {SessionReading | null} session - The latest session in this workspace.
  * @property {Limits} limits - The account's latest rate-limit readings.
- * @property {Date | null} limitsUpdatedAt - When the limits were read.
+ * @property {Date | null} limitsUpdatedAt - When the 5-hour and 7-day limits were read.
+ * @property {Date | null} [fableUpdatedAt] - When the Fable limit was read, when it's reported.
  * @property {string | null} plan - The account's plan, when the tool reports it.
  * @property {'subscription' | 'api' | null} access - Whether the tool signs in with a subscription or an API key, when known.
  */
@@ -79,17 +81,17 @@ function makeLimit(percentUsed, resetsAt) {
 }
 
 /**
- * An empty pair of limit readings.
- * @returns {Limits} Limits with neither window reported.
+ * An empty set of limit readings.
+ * @returns {Limits} Limits with no window reported.
  */
 function emptyLimits() {
-  return { fiveHour: null, sevenDay: null }
+  return { fiveHour: null, sevenDay: null, sevenDayFable: null }
 }
 
 /**
- * Whether any limit window has a reading.
+ * Whether the 5-hour or 7-day window has a reading.
  * @param {Limits} limits - The limits to check.
- * @returns {boolean} True when at least one window is reported.
+ * @returns {boolean} True when at least one of the two is reported.
  */
 function hasLimits(limits) {
   return Boolean(limits.fiveHour || limits.sevenDay)

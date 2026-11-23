@@ -155,6 +155,7 @@ test('a measurement writes session and limits files that the readers accept', as
   assert.deepEqual(limits.limits, {
     fiveHour: { percentUsed: 16, resetsAt: new Date('2026-11-22T14:30:00.000Z') },
     sevenDay: { percentUsed: 39, resetsAt: new Date('2026-11-27T09:00:00.000Z') },
+    sevenDayFable: null,
   })
 })
 

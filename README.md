@@ -9,6 +9,7 @@ Each tool is one status bar item that starts with its name, Claude or Codex, and
 - **Context** (layers in the ring) is how much of the current session's context window is used.
 - **5-hour limit** (clock) is how much of the 5-hour rate-limit window is used.
 - **Weekly limit** (calendar) is how much of the weekly rate-limit window is used.
+- **Weekly Fable limit** (gem) is how much of Claude's separate weekly limit for the Fable model is used. Claude only gets this fourth ring once Claude Code reports a Fable limit for your account.
 
 Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets (as today or tomorrow when it's that soon), your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
 
@@ -17,9 +18,9 @@ Hover over an item for the full breakdown, with a progress bar for context and e
 ## What each part follows
 
 - **Context** comes from the most recently active session whose working folder is in the current VS Code workspace. Until a tool has a session here, context shows just an empty ring.
-- **Rate limits** belong to your account, so they come from the most recent reading in any session.
-- When a window's reset time passes with no newer reading, it shows just an empty ring, and its hover section reads Inactive, until the tool reports again. So does a window the tool hasn't reported yet.
-- An item turns the warning color when either window has 25% or less left (75% or more used), and the error color at 10% or less left (90% or more used). Both thresholds are settings, set as percent left.
+- **Rate limits** belong to your account, so they come from the most recent reading in any session. For Claude Code, that's whichever is newer: the Usage mod's reading or the usage Claude Code itself last fetched. The Fable limit only comes from the latter.
+- When a window's reset time passes with no newer reading, it shows 0%, and its hover section says when it reset, until the tool reports again. Use on another app, such as claude.ai or ChatGPT, counts against the same limits and shows up at the next reading. A window the tool hasn't reported yet shows just an empty ring.
+- An item turns the warning color when any window has 25% or less left (75% or more used), and the error color at 10% or less left (90% or more used). Both thresholds are settings, set as percent left.
 
 A tool's item stays hidden until it has written any usage on this machine.
 
@@ -34,7 +35,9 @@ VS Code extensions can't see Claude Code's rate limits or context window directl
 - `sessions/` holds one small file per session with its folder, transcript path, and context use. Statumo deletes session files that haven't changed in 30 days.
 - `limits.json` holds the account's latest 5-hour and 7-day limits, rewritten after each reply that reports them.
 
-Chat titles come from Claude Code's own transcripts: Statumo reads the end of the transcript of the session it follows. Your plan, and whether you sign in with a subscription or an API key, come from the signed-in account Claude Code records in `~/.claude.json`. Statumo can't see an `ANTHROPIC_API_KEY` set in Claude Code's own environment, so when one takes the place of your subscription, the hover still shows the subscription.
+Chat titles come from Claude Code's own transcripts: Statumo reads the end of the transcript of the session it follows. Your plan, and whether you sign in with a subscription or an API key, come from the signed-in account Claude Code records in `~/.claude.json`.
+
+Claude Code also keeps the account usage it last fetched in `~/.claude.json`. That includes the weekly Fable limit, which isn't among the limits Claude Code gives mods, so the Fable limit comes only from there. Claude Code refreshes it whenever it fetches usage, which can be less often than Usage writes. Statumo shows the cached 5-hour and weekly limits when they're newer than Usage's, and ignores the cache when it belongs to a different account than the signed-in one. Because of this cache, the Claude item can appear before Usage is installed, but context needs Usage. Statumo can't see an `ANTHROPIC_API_KEY` set in Claude Code's own environment, so when one takes the place of your subscription, the hover still shows the subscription.
 
 Usage needs Claude Code 2.1.304 or later. When Usage isn't installed, or an update to it ships with Statumo, Statumo offers to install it. Choose **Install** or **Update**, and Statumo runs Claude Code's own command line to register its copy of the mod as the `statumo` marketplace and install Usage at user scope, so every session writes its usage, whether it runs in the VS Code panel or a terminal. Statumo uses the command line that ships with the Claude Code extension, or `claude` on your `PATH`. Start a new Claude Code session, or restart running ones, once it's installed. **Don't Ask Again** turns the offer off, and **Statumo: Install or Update the Usage Mod for Claude Code** runs it any time.
 
@@ -53,8 +56,8 @@ Codex needs no setup. Statumo reads the session logs Codex already writes under 
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `statumo.warningThreshold` | `25` | Percent left at or below which an item uses the warning background. |
-| `statumo.errorThreshold` | `10` | Percent left at or below which an item uses the error background. |
+| `statumo.warningThreshold` | `25` | Percent left in any rate-limit window at or below which an item uses the warning background. |
+| `statumo.errorThreshold` | `10` | Percent left in any rate-limit window at or below which an item uses the error background. |
 | `statumo.timeFormat` | `12h` | The clock the hover shows reset times on: `12h`, such as `2:30 PM`, or `24h`, such as `14:30`. |
 | `statumo.showTimeUntilReset` | `false` | Add how long until each limit resets after its reset time in the hover, such as `(4h 30m)`. |
 | `statumo.claude.enabled` | `true` | Show the Claude Code item. |

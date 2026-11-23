@@ -1,6 +1,6 @@
 /**
  * Status bar segment tests.
- * @file Check the context and rate-limit segments, including empty and stale windows.
+ * @file Check the context and rate-limit segments, including unreported, reset, and Fable windows.
  */
 
 import assert from 'node:assert/strict'
@@ -54,7 +54,7 @@ test('shows only an empty context ring when the workspace has no session', () =>
   assert.deepEqual(buildSegments(makeUsage({ session: null }), now).context, { text: '$(statumo-cx-0)', value: null })
 })
 
-test('empties the ring of a window whose reset has passed', () => {
+test('shows 0% for a window whose reset has passed', () => {
   /** Usage whose 5-hour window reset an hour ago. */
   const usage = makeUsage({
     limits: {
@@ -66,7 +66,26 @@ test('empties the ring of a window whose reset has passed', () => {
   /** The usage's segments. */
   const segments = buildSegments(usage, now)
 
+  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0) 0%', '$(statumo-7d-40) 39%'])
+  assert.equal(segments.windows[0].value, '0%')
+  assert.equal(segments.windows[0].isStale, true)
+})
+
+test('shows only an empty ring for a window that was never reported', () => {
+  /** The segments of usage with no 5-hour reading. */
+  const segments = buildSegments(makeUsage({ limits: { fiveHour: null, sevenDay: makeUsage().limits.sevenDay } }), now)
+
   assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-40) 39%'])
   assert.equal(segments.windows[0].value, null)
-  assert.equal(segments.windows[0].isStale, true)
+  assert.equal(segments.windows[0].isStale, false)
+})
+
+test('adds the Fable window last only once it is reported', () => {
+  /** Usage with and without a Fable reading. */
+  const withFable = makeUsage({ limits: { ...makeUsage().limits, sevenDayFable: { percentUsed: 61, resetsAt: new Date(2026, 10, 24, 2, 0) } } })
+  const withoutFable = makeUsage({ limits: { ...makeUsage().limits, sevenDayFable: null } })
+
+  assert.deepEqual(texts(buildSegments(withFable, now)), ['$(statumo-cx-10) 12%', '$(statumo-5h-15) 16%', '$(statumo-7d-40) 39%', '$(statumo-fb-60) 61%'])
+  assert.equal(buildSegments(withFable, now).windows.at(-1).key, 'sevenDayFable')
+  assert.equal(buildSegments(withoutFable, now).windows.length, 2)
 })
