@@ -4,7 +4,7 @@
  */
 
 import { ringIconId, ringKinds, ringSteps, symbolIconId } from '../../src/view/rings.js'
-import { annulus, arcBand, bar, polygon, roundedRect } from './shapes.js'
+import { annulus, arcBand, bar, polygon, roundedRect, strokedFigure } from './shapes.js'
 
 /**
  * The first code point of the ring glyphs; each kind gets a block of 32.
@@ -23,14 +23,38 @@ const ringCodePointBase = 0xe100
 
 /**
  * A symbol drawn inside a ring.
- * @typedef {'layers' | 'clock' | 'calendar' | 'star'} SymbolName
+ * @typedef {'layers' | 'clock' | 'calendar' | 'diamond'} SymbolName
  */
 
 /**
- * The share of a star's outer radius its inner corners sit at.
- * @type {number}
+ * Outline the diamond, a line icon on a 24-unit grid scaled into the 16-unit one: a table across
+ * the top, a girdle across the middle, and lines from the table down through the girdle to the point,
+ * drawn 1.65 units wide with round joins.
+ * @returns {string} The path data.
  */
-const starInnerRatio = 0.47
+function diamondSymbol() {
+  /**
+   * Scale a point from the 24-unit grid into the 16-unit one.
+   * @param {number} x - The point's x.
+   * @param {number} y - The point's y.
+   * @returns {[number, number]} The scaled point.
+   */
+  const at = (x, y) => [(x * 2) / 3, (y * 2) / 3]
+
+  /** The table's ends and where the crown lines leave it, the girdle's ends and where the crown lines meet it, and the point. */
+  const [tableLeft, crownLeft, crownRight, tableRight] = [5.652393, 9.279597, 14.720403, 18.347607].map(x => at(x, 3.838791))
+  const [girdleLeft, pavilionLeft, pavilionRight, girdleRight] = [2.025189, 5.652393, 18.347607, 21.974811].map(x => at(x, 9.279597))
+  const point = at(12, 21.06801)
+
+  return strokedFigure([tableLeft, tableRight, girdleRight, point, girdleLeft], [
+    [tableLeft, crownLeft, pavilionLeft, girdleLeft],
+    [crownLeft, crownRight, pavilionRight, pavilionLeft],
+    [crownRight, tableRight, girdleRight, pavilionRight],
+    [girdleLeft, pavilionLeft, point],
+    [pavilionLeft, pavilionRight, point],
+    [pavilionRight, girdleRight, point],
+  ], (1.65 * 2) / 3)
+}
 
 /**
  * The symbols drawn inside each ring, as path data in the 16-unit grid.
@@ -54,12 +78,7 @@ const symbols = {
     roundedRect(9.7, 3.9, 0.9, 1.6, 0.45),
     ...[5.9, 7.5, 9.1].flatMap(x => [roundedRect(x, 7.75, 1, 1, 0.25), roundedRect(x, 9.35, 1, 1, 0.25)]),
   ].join(''),
-  star: polygon(Array.from({ length: 10 }, (_, index) => {
-    /** The corner's distance from the center, and its angle clockwise from 12 o'clock. */
-    const radius = index % 2 === 0 ? 4 : 4 * starInnerRatio
-    const angle = (index / 10) * 2 * Math.PI
-    return [8 + radius * Math.sin(angle), 8 - radius * Math.cos(angle)]
-  })),
+  diamond: diamondSymbol(),
 }
 
 /**
@@ -218,14 +237,6 @@ function fitPath(d, x, y, k) {
 const symbolSize = 15
 
 /**
- * The point to center a symbol on when the middle of its bounds isn't its visual middle. The star's
- * top point reaches farther from its center than its lower points, so centering its bounds would
- * sit it low.
- * @type {Partial<Record<SymbolName, [number, number]>>}
- */
-const symbolCenters = { star: [8, 8] }
-
-/**
  * How far to lift each symbol above the middle of its box, in grid units. A hover centers icons on
  * the middle of lowercase letters, which sits below the middle of the capitals that start each
  * section title, and its sanitizer won't let an icon's alignment change, so the glyph sits higher.
@@ -243,7 +254,7 @@ function symbolSvg(symbol) {
   const points = outlinePoints(symbols[symbol])
   const [left, top] = [Math.min(...points.map(([x]) => x)), Math.min(...points.map(([, y]) => y))]
   const [right, bottom] = [Math.max(...points.map(([x]) => x)), Math.max(...points.map(([, y]) => y))]
-  const [centerX, centerY] = symbolCenters[symbol] ?? [(left + right) / 2, (top + bottom) / 2]
+  const [centerX, centerY] = [(left + right) / 2, (top + bottom) / 2]
 
   /** Half the side of the square around that point that holds the symbol, the side, and the square's corner. */
   const half = Math.max(centerX - left, right - centerX, centerY - top, bottom - centerY)
