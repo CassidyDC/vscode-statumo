@@ -3,7 +3,7 @@
  * @file Assemble a tool's hover tooltip from its title, context, rate-limit, and footer sections.
  */
 
-import { escapeMarkdown } from './html.js'
+import { tooltipTitle } from './html.js'
 import { contextSection, footerSection, limitSection } from './sections.js'
 
 /**
@@ -19,7 +19,7 @@ import { contextSection, footerSection, limitSection } from './sections.js'
  */
 function buildTooltip(name, usage, thresholds, now) {
   return [
-    escapeMarkdown(`${name} - Statumo`),
+    tooltipTitle(`${name} - Statumo`),
     contextSection(usage.session),
     limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
     limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),

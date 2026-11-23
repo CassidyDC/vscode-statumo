@@ -32,7 +32,7 @@ test('starts the text with the tool name and reads each part aloud', () => {
   assert.equal(view.text, 'Claude $(statumo-cx-10) 12% $(statumo-5h-80) 80% $(statumo-7d-0)')
   assert.equal(view.level, 'warning')
   assert.equal(view.label, 'Claude Code context 12% used, 5-hour limit 80% used, 7-day limit not current')
-  assert.match(view.tooltip, /^Claude Code \\- Statumo/)
+  assert.match(view.tooltip, /^<table><tr><td>Claude Code - Statumo<\/td>/)
 })
 
 test('reads a workspace with no session as no context yet', () => {

@@ -43,13 +43,12 @@ const headingGap = 8
 const footerColumnGap = 12
 
 /**
- * Escape text so Markdown shows it literally.
- * @param {string} text - The text to escape.
- * @returns {string} The escaped text.
+ * How many pixels tall the empty row above a section's status is. The hover drops the top margin
+ * of a paragraph that starts a table cell, so this row spaces the status from the label as far as
+ * the amount's heading margin does.
+ * @type {number}
  */
-function escapeMarkdown(text) {
-  return text.replace(/[\\`*_{}[\]()#+\-.!|<>~]/g, '\\$&')
-}
+const statusGap = 3
 
 /**
  * Escape text so HTML shows it literally, for text inside HTML blocks, where Markdown escapes don't apply.
@@ -99,37 +98,81 @@ function progressBar(percent, level = null) {
  * normal: the percent, then a smaller dimmed word.
  * @param {number} percent - The percent.
  * @param {string} word - What the percent measures, such as `used`.
- * @returns {string} The amount's Markdown.
+ * @returns {string} The amount's HTML.
  */
 function amount(percent, word) {
-  return `## ${percent}% ${dim(`<small>${word}</small>`)}`
+  return `<h2>${percent}% ${dim(`<small>${word}</small>`)}</h2>`
 }
 
 /**
- * Build the empty row that starts a section's table, spacing it from the rule above.
+ * Build an empty table row that spaces the rows around it, such as the one that starts a section's
+ * table and spaces it from the rule above.
  * @param {number} columns - How many columns the row spans.
+ * @param {number} [height] - How many pixels tall the row is.
  * @returns {string} The row's HTML.
  */
-function gapRow(columns) {
-  return `<tr><td colspan="${columns}" height="${headingGap}"></td></tr>`
+function gapRow(columns, height = headingGap) {
+  return `<tr><td colspan="${columns}" height="${height}"></td></tr>`
 }
 
 /**
- * Build one tooltip section: a bold label with an optional dimmed note aligned to the right edge,
- * the amount, then an optional bar. The heading is a full-width table, the only way the hover
- * sanitizer allows right alignment, so the note ends where the bar ends. An empty first row
- * spaces the heading from the rule above it.
+ * Build the tooltip's title: plain text in a table, so it has the same inset as the sections'
+ * tables, whose cells the hover sanitizer won't let lose their default padding and spacing.
+ * @param {string} text - The title, unescaped.
+ * @returns {string} The title's HTML.
+ */
+function tooltipTitle(text) {
+  return `<table><tr><td>${escapeHtml(text)}</td></tr></table>`
+}
+
+/**
+ * Build a section's table: an empty row that spaces it from the rule above, a bold label with an
+ * optional dimmed note aligned to the right edge, then the content across the full width.
+ *
+ * A full-width table is the only way the hover sanitizer allows right alignment, so the note ends
+ * where the bar ends. The content sits in the table too, so it has the same inset as the label and
+ * note, since the sanitizer won't let table cells lose their default padding and spacing.
  * @param {string} label - The section's label.
  * @param {string | null} note - The note across from the label, unescaped, or null for none.
- * @param {string} value - The section's amount, or a dimmed status, as Markdown.
+ * @param {string} content - The section's content, as HTML.
+ * @param {number} contentGap - How many pixels tall the empty row above the content is, or 0 for none.
+ * @returns {string} The section's HTML.
+ */
+function sectionTable(label, note, content, contentGap) {
+  /** How many columns the table has, and the note's table cell. */
+  const columns = note ? 2 : 1
+  const noteCell = note ? `<td align="right">${dim(escapeHtml(note))}</td>` : ''
+
+  /** The row that holds the label and note, the empty row above the content, and the content's row. */
+  const heading = `<tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr>`
+  const spacer = contentGap ? gapRow(columns, contentGap) : ''
+  const body = `<tr><td colspan="${columns}">${content}</td></tr>`
+  return `<table width="100%">${gapRow(columns)}${heading}${spacer}${body}</table>`
+}
+
+/**
+ * Build one tooltip section: the label and an optional note, the amount, then an optional bar.
+ * @param {string} label - The section's label.
+ * @param {string | null} note - The note across from the label, unescaped, or null for none.
+ * @param {string} value - The section's amount, as HTML.
  * @param {string | null} bar - The section's progress bar, or null for none.
- * @returns {string} The section's Markdown.
+ * @returns {string} The section's HTML.
  */
 function tooltipSection(label, note, value, bar) {
-  /** The note's table cell, and the heading table that holds the label and note. */
-  const noteCell = note ? `<td align="right">${dim(escapeHtml(note))}</td>` : ''
-  const heading = `<table width="100%">${gapRow(note ? 2 : 1)}<tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr></table>`
-  return [heading, value, bar].filter(Boolean).join('\n\n')
+  return sectionTable(label, note, `${value}${bar ?? ''}`, 0)
+}
+
+/**
+ * Build one tooltip section that shows a dimmed status in place of an amount: the label and an
+ * optional note, the status, then an optional bar.
+ * @param {string} label - The section's label.
+ * @param {string | null} note - The note across from the label, unescaped, or null for none.
+ * @param {string} text - The status, unescaped.
+ * @param {string | null} bar - The section's progress bar, or null for none.
+ * @returns {string} The section's HTML.
+ */
+function statusSection(label, note, text, bar) {
+  return sectionTable(label, note, `<p>${dim(escapeHtml(text))}</p>${bar ?? ''}`, statusGap)
 }
 
 /**
@@ -142,4 +185,4 @@ function footerRow(label, detail) {
   return `<tr><td>${dim(escapeHtml(label))}</td><td width="${footerColumnGap}"></td><td>${dim(escapeHtml(detail))}</td></tr>`
 }
 
-export { amount, dim, escapeHtml, escapeMarkdown, footerRow, gapRow, progressBar, tooltipSection }
+export { amount, dim, escapeHtml, footerRow, gapRow, progressBar, statusSection, tooltipSection, tooltipTitle }

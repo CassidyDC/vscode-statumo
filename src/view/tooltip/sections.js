@@ -7,21 +7,21 @@ import { tildify, truncatePath } from '../../files/paths.js'
 import { getWindowLevel, isLimitStale, percentUsed } from '../../usage/levels.js'
 import { formatAge, formatReset, formatTokens } from '../format.js'
 import { windowNames } from '../segments.js'
-import { amount, dim, footerRow, gapRow, progressBar, tooltipSection } from './html.js'
+import { amount, footerRow, gapRow, progressBar, statusSection, tooltipSection } from './html.js'
 
 /**
  * Build the tooltip section for the session's context.
  * @param {import('../../usage/model.js').SessionReading | null} session - The workspace's session.
- * @returns {string} The section's Markdown.
+ * @returns {string} The section's HTML.
  */
 function contextSection(session) {
-  if (!session) return tooltipSection('Context', null, dim('No session in this workspace yet'), null)
-  if (!session.context) return tooltipSection('Context', null, dim('Not reported yet'), null)
+  if (!session) return statusSection('Context', null, 'No session in this workspace yet', null)
+  if (!session.context) return statusSection('Context', null, 'Not reported yet', null)
 
   /** The context reading's values, and the token counts across from the label. */
   const { tokens = null, window = null, percent = null } = session.context
   const note = `${formatTokens(tokens)} / ${formatTokens(window)} tokens`
-  if (percent === null) return tooltipSection('Context', note, dim('Unknown'), null)
+  if (percent === null) return statusSection('Context', note, 'Unknown', null)
   return tooltipSection('Context', note, amount(Math.round(percent), 'used'), progressBar(percent))
 }
 
@@ -31,13 +31,13 @@ function contextSection(session) {
  * @param {import('../../usage/model.js').LimitReading | null} limit - The window's reading.
  * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
  * @param {Date} now - The current time.
- * @returns {string} The section's Markdown.
+ * @returns {string} The section's HTML.
  */
 function limitSection(key, limit, thresholds, now) {
   /** The window's name, capitalized. */
   const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
-  if (!limit) return tooltipSection(label, null, dim('Not reported yet'), null)
-  if (isLimitStale(limit, now)) return tooltipSection(label, 'Inactive', dim('No reading since the reset'), progressBar(0))
+  if (!limit) return statusSection(label, null, 'Not reported yet', null)
+  if (isLimitStale(limit, now)) return statusSection(label, 'Inactive', 'No reading since the reset', progressBar(0))
 
   /** The rounded percent used, and when the window resets. */
   const used = percentUsed(limit)

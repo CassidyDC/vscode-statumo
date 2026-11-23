@@ -61,10 +61,10 @@ test('marks a window whose reset has passed as inactive', () => {
       sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
     },
   })
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*\n\n.*No reading since the reset/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*<\/tr><tr><td colspan="2" height="3"><\/td><\/tr><tr><td colspan="2"><p>.*No reading since the reset/)
 })
 
-test('lays out each tooltip section as label and note, heading-sized amount, then bar', () => {
+test('lays out each tooltip section as one table of label and note, heading-sized amount, then bar', () => {
   /** Usage with a plan and a title full of Markdown. */
   const usage = makeUsage({ plan: 'Plus', access: 'subscription' })
 
@@ -75,10 +75,10 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
   const sections = tooltip.split('\n\n---\n\n')
 
   assert.equal(sections.length, 5)
-  assert.equal(sections[0], 'Codex \\- Statumo')
-  assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><\/table>\n\n## 12% .*used.*\n\n<small><small><span/)
-  assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/table>\n\n## 16% .*used/)
-  assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/table>\n\n## 39% .*used/)
+  assert.equal(sections[0], '<table><tr><td>Codex - Statumo</td></tr></table>')
+  assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><small><small><span.*<\/td><\/tr><\/table>$/)
+  assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/tr><tr><td colspan="2"><h2>16% .*used/)
+  assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/tr><tr><td colspan="2"><h2>39% .*used/)
   assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Last Activity<.*Limits Read<.*Plan<.*<\/table>$/)
   assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
   assert.equal(footerDetail(sections[4], 'Plan'), 'Plus subscription')
