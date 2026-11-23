@@ -3,10 +3,8 @@
  * @file List recent Codex session logs and read each log's session id and working folder from its head.
  */
 
-'use strict'
-
-const path = require('node:path')
-const { listNames, parseJson, readRange, statFile } = require('../../files/files')
+import path from 'node:path'
+import { listNames, parseJson, readRange, statFile } from '../../files/files.js'
 
 /**
  * Bytes read from the start of a log to find its working folder.
@@ -167,4 +165,4 @@ function createHeadReader() {
   return { read, retain }
 }
 
-module.exports = { createHeadReader, listLogs }
+export { createHeadReader, listLogs }

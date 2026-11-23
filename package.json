@@ -16,7 +16,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "AI",
@@ -33,6 +33,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "type": "module",
   "main": "./src/extension.js",
   "files": [
     "src/",

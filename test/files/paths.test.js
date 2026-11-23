@@ -3,13 +3,11 @@
  * @file Check folder settings, workspace folder matching, and how long paths are shortened.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const os = require('node:os')
-const path = require('node:path')
-const { test } = require('node:test')
-const { isInWorkspace, resolveFolder, truncatePath } = require('../../src/files/paths')
+import assert from 'node:assert/strict'
+import os from 'node:os'
+import path from 'node:path'
+import { test } from 'node:test'
+import { isInWorkspace, resolveFolder, truncatePath } from '../../src/files/paths.js'
 
 test('matches sessions inside a workspace folder only', () => {
   assert.equal(isInWorkspace('/work/project', ['/work/project']), true)

@@ -24,6 +24,8 @@ A tool's item stays hidden until it has written any usage on this machine.
 
 ## Requirements
 
+Statumo needs VS Code 1.100 or later on the desktop.
+
 ### Claude Code
 
 VS Code extensions can't see Claude Code's rate limits or context window directly, so Statumo reads them from **Usage**, a Claude Code mod that ships in this repository's [`claude-mod/`](claude-mod/README.md) folder. Usage writes them to `~/.claude/statumo/`, or to `statumo/` in your `CLAUDE_CONFIG_DIR`:

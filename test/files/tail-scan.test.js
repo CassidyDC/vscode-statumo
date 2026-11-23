@@ -3,14 +3,12 @@
  * @file Check first scans of a file's tail, scans of appended lines, and rescans after a file shrinks.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const fs = require('node:fs/promises')
-const os = require('node:os')
-const path = require('node:path')
-const { after, before, test } = require('node:test')
-const { createTailScanner } = require('../../src/files/tail-scan')
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { after, before, test } from 'node:test'
+import { createTailScanner } from '../../src/files/tail-scan.js'
 
 /**
  * The temporary folder the fixtures live in.
@@ -31,7 +29,7 @@ after(async () => {
  * @param {object} [options] - How far back to read.
  * @param {number} [options.tailLength] - Bytes read from the end on a first scan.
  * @param {number} [options.maxTailLength] - The most bytes a first scan reads.
- * @returns {{ scanner: import('../../src/files/tail-scan').TailScanner<string[]>, reads: string[][] }} The scanner, and the lines each fold was given.
+ * @returns {{ scanner: import('../../src/files/tail-scan.js').TailScanner<string[]>, reads: string[][] }} The scanner, and the lines each fold was given.
  */
 function collector({ tailLength = 1024, maxTailLength = 1024 * 1024 } = {}) {
   /** The lines each fold was given. */

@@ -3,17 +3,15 @@
  * @file Build the tooltip's context, rate-limit, and footer sections from a tool's readings.
  */
 
-'use strict'
-
-const { tildify, truncatePath } = require('../../files/paths')
-const { getWindowLevel, isLimitStale, percentUsed } = require('../../usage/levels')
-const { formatAge, formatReset, formatTokens } = require('../format')
-const { windowNames } = require('../segments')
-const { amount, dim, footerRow, gapRow, progressBar, tooltipSection } = require('./html')
+import { tildify, truncatePath } from '../../files/paths.js'
+import { getWindowLevel, isLimitStale, percentUsed } from '../../usage/levels.js'
+import { formatAge, formatReset, formatTokens } from '../format.js'
+import { windowNames } from '../segments.js'
+import { amount, dim, footerRow, gapRow, progressBar, tooltipSection } from './html.js'
 
 /**
  * Build the tooltip section for the session's context.
- * @param {import('../../usage/model').SessionReading | null} session - The workspace's session.
+ * @param {import('../../usage/model.js').SessionReading | null} session - The workspace's session.
  * @returns {string} The section's Markdown.
  */
 function contextSection(session) {
@@ -30,7 +28,7 @@ function contextSection(session) {
 /**
  * Build the tooltip section for one rate-limit window.
  * @param {'fiveHour' | 'sevenDay'} key - Which window.
- * @param {import('../../usage/model').LimitReading | null} limit - The window's reading.
+ * @param {import('../../usage/model.js').LimitReading | null} limit - The window's reading.
  * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
  * @param {Date} now - The current time.
  * @returns {string} The section's Markdown.
@@ -64,7 +62,7 @@ function planLabel({ plan, access = null }) {
 /**
  * Build the tooltip's footer: a table of the session's chat title, the session's folder, the
  * session's last activity, when the limits were read, and the plan, each labelled on the left.
- * @param {import('../../usage/model').ToolUsage} usage - The tool's readings.
+ * @param {import('../../usage/model.js').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string} The footer's HTML, or nothing when there is nothing to show.
  */
@@ -82,4 +80,4 @@ function footerSection(usage, now) {
   return rows.length ? `<table>${gapRow(3)}${rows.join('')}</table>` : ''
 }
 
-module.exports = { contextSection, footerSection, limitSection, planLabel }
+export { contextSection, footerSection, limitSection, planLabel }

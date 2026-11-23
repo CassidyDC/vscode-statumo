@@ -3,11 +3,9 @@
  * @file Check the tooltip's sections, footer rows, plan label, escaping, and progress bars.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const { test } = require('node:test')
-const { buildTooltip } = require('../../src/view/tooltip')
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { buildTooltip } from '../../src/view/tooltip/index.js'
 
 /**
  * A fixed current time for every test.
@@ -24,7 +22,7 @@ const thresholds = { warningThreshold: 25, errorThreshold: 10 }
 /**
  * Build a usage reading with a session and both windows.
  * @param {object} [overrides] - Fields to replace.
- * @returns {import('../../src/usage/model').ToolUsage} The usage.
+ * @returns {import('../../src/usage/model.js').ToolUsage} The usage.
  */
 function makeUsage(overrides = {}) {
   return {

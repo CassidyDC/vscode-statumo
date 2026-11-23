@@ -3,10 +3,8 @@
  * @file Read small JSON files, reusing each file's last reading while it's unchanged and keeping the last good one while it's broken.
  */
 
-'use strict'
-
-const fs = require('node:fs/promises')
-const { parseJson, statFile } = require('./files')
+import fs from 'node:fs/promises'
+import { parseJson, statFile } from './files.js'
 
 /**
  * A file's converted value, and the file's modified time when that value was read.
@@ -100,4 +98,4 @@ function createCachedJson(convert) {
   return { read, retain, forget }
 }
 
-module.exports = { createCachedJson }
+export { createCachedJson }

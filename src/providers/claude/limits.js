@@ -3,11 +3,9 @@
  * @file Read the account's latest rate limits from the `statumo/limits.json` file the Usage mod writes.
  */
 
-'use strict'
-
-const path = require('node:path')
-const { createCachedJson } = require('../../files/cached-json')
-const { dateOrNull, emptyLimits, hasLimits, makeLimit } = require('../../usage/model')
+import path from 'node:path'
+import { createCachedJson } from '../../files/cached-json.js'
+import { dateOrNull, emptyLimits, hasLimits, makeLimit } from '../../usage/model.js'
 
 /**
  * Which window each rate-limit kind Claude reports fills; other kinds, such as a gateway's `spend_limit`, are ignored.
@@ -18,14 +16,14 @@ const windowKeys = { five_hour: 'fiveHour', seven_day: 'sevenDay' }
 /**
  * The account's latest limits, dated by when the mod wrote them.
  * @typedef {object} ClaudeLimits
- * @property {import('../../usage/model').Limits} limits - The 5-hour and 7-day windows.
+ * @property {import('../../usage/model.js').Limits} limits - The 5-hour and 7-day windows.
  * @property {Date} updatedAt - When the limits were read.
  */
 
 /**
  * Turn the limits file's JSON into the 5-hour and 7-day windows, or reject it when it has no list of limits.
  * @param {any} data - The parsed JSON.
- * @returns {import('../../usage/model').Limits | undefined} The windows, or undefined.
+ * @returns {import('../../usage/model.js').Limits | undefined} The windows, or undefined.
  */
 function toLimits(data) {
   if (!Array.isArray(data?.rateLimits)) return undefined
@@ -65,4 +63,4 @@ function createLimitsReader() {
   return readLimits
 }
 
-module.exports = { createLimitsReader }
+export { createLimitsReader }

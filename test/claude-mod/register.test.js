@@ -3,21 +3,22 @@
  * @file Run the Usage mod's hooks against a fake mod runtime, and check that Statumo's readers accept the files it writes.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const fs = require('node:fs/promises')
-const os = require('node:os')
-const path = require('node:path')
-const { after, before, test } = require('node:test')
-const { createLimitsReader } = require('../../src/providers/claude/limits')
-const { createSessionReader } = require('../../src/providers/claude/sessions')
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { after, before, test } from 'node:test'
+import { register } from '../../claude-mod/hooks/register.js'
+import { createLimitsReader } from '../../src/providers/claude/limits.js'
+import { createSessionReader } from '../../src/providers/claude/sessions.js'
 
 /**
- * The mod's hooks module.
- * @type {string}
+ * The hooks the mod registers, by event name.
+ * @type {Map<string, Function>}
  */
-const modulePath = path.join(__dirname, '..', '..', 'claude-mod', 'hooks', 'register.js')
+const hooks = new Map()
+
+register((name, hook) => hooks.set(name, hook))
 
 /**
  * The temporary folder the fixtures live in.
@@ -25,24 +26,8 @@ const modulePath = path.join(__dirname, '..', '..', 'claude-mod', 'hooks', 'regi
  */
 let root
 
-/**
- * The hooks the mod registers, by event name.
- * @type {Map<string, Function>}
- */
-let hooks
-
 before(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'statumo-mod-'))
-
-  /**
-   * The mod's source, loaded as an ES module from a data URL. Claude Code loads it as one, and
-   * importing the file itself would warn that the repository's package.json doesn't say so.
-   */
-  const source = await fs.readFile(modulePath, 'utf8')
-  const { register } = await import(`data:text/javascript,${encodeURIComponent(source)}`)
-
-  hooks = new Map()
-  register((name, hook) => hooks.set(name, hook))
 })
 
 after(async () => {

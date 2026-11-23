@@ -3,8 +3,6 @@
  * @file Re-read every tool's usage and redraw its item on a timer and on demand, one pass at a time.
  */
 
-'use strict'
-
 /**
  * How often the items re-read usage, in milliseconds.
  * @type {number}
@@ -24,9 +22,9 @@ const refreshIntervalMs = 3000
  * A refresh asked for while one runs waits and runs once after it, however many were asked for.
  * A tool whose read fails keeps its last drawing, and each new failure message is logged once.
  * @param {object} options - What to refresh, and where its inputs come from.
- * @param {import('./providers').Tool[]} options.tools - The tools.
- * @param {Map<string, import('./view/status-item').StatusItem>} options.items - Each tool's item, by tool id.
- * @param {() => import('./settings').Settings} options.readSettings - Reads the current settings.
+ * @param {import('./providers/index.js').Tool[]} options.tools - The tools.
+ * @param {Map<string, import('./view/status-item.js').StatusItem>} options.items - Each tool's item, by tool id.
+ * @param {() => import('./settings.js').Settings} options.readSettings - Reads the current settings.
  * @param {() => string[]} options.readFolders - Reads the workspace folders' paths.
  * @param {() => boolean} options.isFocused - Whether the window has focus; timer passes are skipped without it.
  * @param {{ warn: (message: string) => void }} options.log - Where read failures are logged.
@@ -42,8 +40,8 @@ function startRefreshLoop({ tools, items, readSettings, readFolders, isFocused, 
 
   /**
    * Read one tool's usage and redraw its item, logging a new failure message once.
-   * @param {import('./providers').Tool} tool - The tool.
-   * @param {import('./settings').Settings} settings - The current settings.
+   * @param {import('./providers/index.js').Tool} tool - The tool.
+   * @param {import('./settings.js').Settings} settings - The current settings.
    * @param {string[]} folders - The workspace folders' paths.
    * @param {Date} now - The current time.
    * @returns {Promise<void>} Resolves once the item is redrawn or the failure logged.
@@ -104,4 +102,4 @@ function startRefreshLoop({ tools, items, readSettings, readFolders, isFocused, 
   return { refresh, dispose: () => clearInterval(timer) }
 }
 
-module.exports = { refreshIntervalMs, startRefreshLoop }
+export { refreshIntervalMs, startRefreshLoop }

@@ -3,11 +3,9 @@
  * @file Check the context and rate-limit segments, including empty and stale windows.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const { test } = require('node:test')
-const { buildSegments } = require('../../src/view/segments')
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { buildSegments } from '../../src/view/segments.js'
 
 /**
  * A fixed current time for every test.
@@ -18,7 +16,7 @@ const now = new Date(2026, 10, 22, 10, 0)
 /**
  * Build a usage reading with a session and both windows.
  * @param {object} [overrides] - Fields to replace.
- * @returns {import('../../src/usage/model').ToolUsage} The usage.
+ * @returns {import('../../src/usage/model.js').ToolUsage} The usage.
  */
 function makeUsage(overrides = {}) {
   return {

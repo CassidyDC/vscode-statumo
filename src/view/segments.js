@@ -3,10 +3,8 @@
  * @file Build the context and rate-limit parts of a tool's status bar item, each led by a progress ring.
  */
 
-'use strict'
-
-const { isLimitStale, percentUsed } = require('../usage/levels')
-const { ringIcon } = require('./rings')
+import { isLimitStale, percentUsed } from '../usage/levels.js'
+import { ringIcon } from './rings.js'
 
 /**
  * The full names of the rate-limit windows.
@@ -21,7 +19,7 @@ const windowNames = { fiveHour: '5-hour limit', sevenDay: '7-day limit' }
  * @property {string} text - The window's ring icon and percent used, such as `$(statumo-5h-15) 16%`, or the empty ring alone when unknown or stale.
  * @property {string | null} value - The percent used, such as `16%`, or null when unknown or stale.
  * @property {boolean} isStale - Whether the reading predates the window's reset.
- * @property {import('../usage/model').LimitReading | null} limit - The window's reading.
+ * @property {import('../usage/model.js').LimitReading | null} limit - The window's reading.
  */
 
 /**
@@ -34,8 +32,8 @@ const windowNames = { fiveHour: '5-hour limit', sevenDay: '7-day limit' }
 /**
  * Build one window's segment.
  * @param {'fiveHour' | 'sevenDay'} key - Which window.
- * @param {import('./rings').RingKind} ring - The window's ring.
- * @param {import('../usage/model').LimitReading | null} limit - The window's reading.
+ * @param {import('./rings.js').RingKind} ring - The window's ring.
+ * @param {import('../usage/model.js').LimitReading | null} limit - The window's reading.
  * @param {Date} now - The current time.
  * @returns {WindowSegment} The segment.
  */
@@ -52,7 +50,7 @@ function buildWindowSegment(key, ring, limit, now) {
 /**
  * Build a tool's status bar segments: the percent of context used, then of each window used,
  * each percent led by a ring that fills to match it.
- * @param {import('../usage/model').ToolUsage} usage - The tool's readings.
+ * @param {import('../usage/model.js').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {{ context: ContextSegment, windows: WindowSegment[] }} The context and the windows.
  */
@@ -71,4 +69,4 @@ function buildSegments(usage, now) {
   }
 }
 
-module.exports = { buildSegments, windowNames }
+export { buildSegments, windowNames }

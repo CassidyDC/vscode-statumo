@@ -3,10 +3,8 @@
  * @file Read whether Codex signs in with a ChatGPT subscription or an API key.
  */
 
-'use strict'
-
-const path = require('node:path')
-const { createCachedJson } = require('../../files/cached-json')
+import path from 'node:path'
+import { createCachedJson } from '../../files/cached-json.js'
 
 /**
  * How each `auth_mode` signs in.
@@ -46,4 +44,4 @@ function createAccessReader() {
   return readAccess
 }
 
-module.exports = { createAccessReader }
+export { createAccessReader }

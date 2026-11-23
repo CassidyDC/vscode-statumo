@@ -3,11 +3,9 @@
  * @file Read session titles from the end of Codex's session index, then only what was appended.
  */
 
-'use strict'
-
-const path = require('node:path')
-const { parseJson, statFile } = require('../../files/files')
-const { createTailScanner } = require('../../files/tail-scan')
+import path from 'node:path'
+import { parseJson, statFile } from '../../files/files.js'
+import { createTailScanner } from '../../files/tail-scan.js'
 
 /**
  * Bytes read from the end of the session index for titles.
@@ -72,4 +70,4 @@ function createTitleReader() {
   return readTitles
 }
 
-module.exports = { createTitleReader }
+export { createTitleReader }

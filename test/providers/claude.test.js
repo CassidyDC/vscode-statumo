@@ -3,14 +3,12 @@
  * @file Check the Claude Code reader against session, limits, transcript, and account files in a temporary folder.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const fs = require('node:fs/promises')
-const os = require('node:os')
-const path = require('node:path')
-const { after, before, test } = require('node:test')
-const { createClaudeReader, pruneClaudeSessions } = require('../../src/providers/claude')
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { after, before, test } from 'node:test'
+import { createClaudeReader, pruneClaudeSessions } from '../../src/providers/claude/index.js'
 
 /**
  * The temporary folder the fixtures live in.
@@ -195,7 +193,7 @@ test('Claude: names the plan and access from the signed-in account in the global
 
   /**
    * Read the usage with no workspace folders.
-   * @returns {Promise<import('../../src/usage/model').ToolUsage>} The usage.
+   * @returns {Promise<import('../../src/usage/model.js').ToolUsage>} The usage.
    */
   const read = () => readClaudeUsage({ configDirectory, folders: [] })
 

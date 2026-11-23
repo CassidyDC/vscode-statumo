@@ -3,11 +3,9 @@
  * @file Decide whether a limit reading is still current, how much of it is used or left, and whether it warns.
  */
 
-'use strict'
-
 /**
  * Whether a window's reset time has passed with no newer reading.
- * @param {import('./model').LimitReading | null} limit - The window's reading.
+ * @param {import('./model.js').LimitReading | null} limit - The window's reading.
  * @param {Date} now - The current time.
  * @returns {boolean} True when the reading predates the window's reset.
  */
@@ -17,7 +15,7 @@ function isLimitStale(limit, now) {
 
 /**
  * Percent of a window used, rounded and kept between 0 and 100.
- * @param {import('./model').LimitReading} limit - The window's reading.
+ * @param {import('./model.js').LimitReading} limit - The window's reading.
  * @returns {number} The percent used.
  */
 function percentUsed(limit) {
@@ -26,7 +24,7 @@ function percentUsed(limit) {
 
 /**
  * Percent of a window left, rounded and kept between 0 and 100.
- * @param {import('./model').LimitReading} limit - The window's reading.
+ * @param {import('./model.js').LimitReading} limit - The window's reading.
  * @returns {number} The percent left.
  */
 function percentLeft(limit) {
@@ -35,7 +33,7 @@ function percentLeft(limit) {
 
 /**
  * Decide a window's warning level from its percent left.
- * @param {import('./model').LimitReading | null} limit - The window's reading.
+ * @param {import('./model.js').LimitReading | null} limit - The window's reading.
  * @param {object} thresholds - Percent-left thresholds.
  * @param {number} thresholds.warningThreshold - At or below this, warn.
  * @param {number} thresholds.errorThreshold - At or below this, show an error.
@@ -54,7 +52,7 @@ function getWindowLevel(limit, { warningThreshold, errorThreshold }, now) {
 
 /**
  * Decide a tool's warning level from the lower of its two windows.
- * @param {import('./model').Limits} limits - The tool's windows.
+ * @param {import('./model.js').Limits} limits - The tool's windows.
  * @param {object} thresholds - Percent-left thresholds.
  * @param {number} thresholds.warningThreshold - At or below this, warn.
  * @param {number} thresholds.errorThreshold - At or below this, show an error.
@@ -69,4 +67,4 @@ function getToolLevel(limits, thresholds, now) {
   return null
 }
 
-module.exports = { getToolLevel, getWindowLevel, isLimitStale, percentLeft, percentUsed }
+export { getToolLevel, getWindowLevel, isLimitStale, percentLeft, percentUsed }

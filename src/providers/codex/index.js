@@ -3,19 +3,17 @@
  * @file Read Codex session logs for this workspace's context use and the account's latest rate limits.
  */
 
-'use strict'
-
-const path = require('node:path')
-const { isInWorkspace } = require('../../files/paths')
-const { emptyLimits } = require('../../usage/model')
-const { createAccessReader } = require('./account')
-const { createHeadReader, listLogs } = require('./logs')
-const { createLogScanner } = require('./scan')
-const { createTitleReader } = require('./titles')
+import path from 'node:path'
+import { isInWorkspace } from '../../files/paths.js'
+import { emptyLimits } from '../../usage/model.js'
+import { createAccessReader } from './account.js'
+import { createHeadReader, listLogs } from './logs.js'
+import { createLogScanner } from './scan.js'
+import { createTitleReader } from './titles.js'
 
 /**
  * Create a Codex usage reader, which keeps what it has read of each log between calls.
- * @returns {(options: { homeDirectory: string, folders: readonly string[], now: Date }) => Promise<import('../../usage/model').ToolUsage | null>} The reader.
+ * @returns {(options: { homeDirectory: string, folders: readonly string[], now: Date }) => Promise<import('../../usage/model.js').ToolUsage | null>} The reader.
  */
 function createCodexReader() {
   /** The log head reader, the log scanner, the title reader, and the access reader. */
@@ -30,7 +28,7 @@ function createCodexReader() {
    * @param {string} options.homeDirectory - The Codex home folder.
    * @param {readonly string[]} options.folders - The workspace folders' paths.
    * @param {Date} options.now - The current time.
-   * @returns {Promise<import('../../usage/model').ToolUsage | null>} The usage, or null when there are no recent logs.
+   * @returns {Promise<import('../../usage/model.js').ToolUsage | null>} The usage, or null when there are no recent logs.
    */
   async function readCodexUsage({ homeDirectory, folders, now }) {
     /** The recent logs, newest first, and their paths. */
@@ -86,4 +84,4 @@ function createCodexReader() {
   return readCodexUsage
 }
 
-module.exports = { createCodexReader }
+export { createCodexReader }

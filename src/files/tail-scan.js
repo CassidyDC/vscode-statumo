@@ -3,9 +3,7 @@
  * @file Fold the lines of growing JSON Lines files into a state, reading the tail first and then only what was appended.
  */
 
-'use strict'
-
-const { readLines } = require('./files')
+import { readLines } from './files.js'
 
 /**
  * What a scanner is told about a file before scanning it.
@@ -117,4 +115,4 @@ function createTailScanner({ tailLength, maxTailLength, initial, fold, isSettled
   return { scan, retain }
 }
 
-module.exports = { createTailScanner }
+export { createTailScanner }

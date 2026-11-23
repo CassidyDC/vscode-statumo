@@ -3,10 +3,8 @@
  * @file Resolve folder settings, decide whether a session folder belongs to the open workspace, and shorten paths for display.
  */
 
-'use strict'
-
-const os = require('node:os')
-const path = require('node:path')
+import os from 'node:os'
+import path from 'node:path'
 
 /**
  * Whether the platform's default file system ignores letter case.
@@ -114,4 +112,4 @@ function truncatePath(value, maxLength = 40) {
   return `…${value.slice(-(maxLength - 1))}`
 }
 
-module.exports = { expandHome, isInWorkspace, resolveFolder, tildify, truncatePath }
+export { expandHome, isInWorkspace, resolveFolder, tildify, truncatePath }

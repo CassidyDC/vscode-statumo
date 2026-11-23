@@ -3,8 +3,6 @@
  * @file Outline polygons, circles, rings, arcs, bars, and rectangles as SVG path data in the 16-unit icon grid.
  */
 
-'use strict'
-
 /**
  * One point of an outline, in the 16-unit ring grid.
  * @typedef {[number, number]} Point
@@ -139,4 +137,4 @@ function rect(x, y, width, height, isHole = false) {
   return polygon([[x, y], [x + width, y], [x + width, y + height], [x, y + height]], isHole)
 }
 
-module.exports = { annulus, arcBand, bar, circle, polygon, rect }
+export { annulus, arcBand, bar, circle, polygon, rect }

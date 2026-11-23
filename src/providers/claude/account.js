@@ -3,11 +3,9 @@
  * @file Read the signed-in account's plan, and whether it signs in with a subscription or an API key, from Claude Code's global config file.
  */
 
-'use strict'
-
-const os = require('node:os')
-const path = require('node:path')
-const { createCachedJson } = require('../../files/cached-json')
+import os from 'node:os'
+import path from 'node:path'
+import { createCachedJson } from '../../files/cached-json.js'
 
 /**
  * What Claude Code's global config file says of the signed-in account.
@@ -106,4 +104,4 @@ function createAccountReader() {
   return readAccount
 }
 
-module.exports = { createAccountReader }
+export { createAccountReader }

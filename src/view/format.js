@@ -3,8 +3,6 @@
  * @file Format token counts, spans of time, reset times, and reading ages for the status bar and tooltip.
  */
 
-'use strict'
-
 /**
  * Formats an older reading's date, such as `Nov 27`.
  * @type {Intl.DateTimeFormat}
@@ -76,4 +74,4 @@ function formatAge(date, now) {
   return minutes ? `${formatDuration(minutes)} ago` : 'just now'
 }
 
-module.exports = { formatAge, formatDuration, formatReset, formatTokens }
+export { formatAge, formatDuration, formatReset, formatTokens }

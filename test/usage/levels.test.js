@@ -3,11 +3,9 @@
  * @file Check the per-window and per-tool warning levels, and that a stale window never warns.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const { test } = require('node:test')
-const { getToolLevel, getWindowLevel } = require('../../src/usage/levels')
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { getToolLevel, getWindowLevel } from '../../src/usage/levels.js'
 
 /**
  * A fixed current time for every test.
@@ -25,7 +23,7 @@ test('warns and errors per window', () => {
   /**
    * Build a current reading at a given percent used.
    * @param {number} percentUsed - Percent of the window used.
-   * @returns {import('../../src/usage/model').LimitReading} The reading.
+   * @returns {import('../../src/usage/model.js').LimitReading} The reading.
    */
   const limit = percentUsed => ({ percentUsed, resetsAt: null })
   assert.equal(getWindowLevel(limit(50), thresholds, now), null)

@@ -3,11 +3,9 @@
  * @file Check how percents round to ring steps and name their icons.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const { test } = require('node:test')
-const { ringIcon, ringStep } = require('../../src/view/rings')
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { ringIcon, ringStep } from '../../src/view/rings.js'
 
 test('rounds rings to the nearest step, keeping partial values off empty and full', () => {
   assert.equal(ringStep(null), 0)

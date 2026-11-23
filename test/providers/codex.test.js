@@ -3,14 +3,12 @@
  * @file Check the Codex reader against session logs, a session index, and an auth file in a temporary folder.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const fs = require('node:fs/promises')
-const os = require('node:os')
-const path = require('node:path')
-const { after, before, test } = require('node:test')
-const { createCodexReader } = require('../../src/providers/codex')
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { after, before, test } from 'node:test'
+import { createCodexReader } from '../../src/providers/codex/index.js'
 
 /**
  * The temporary folder the fixtures live in.

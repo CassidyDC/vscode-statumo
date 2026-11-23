@@ -3,14 +3,12 @@
  * @file Check that unchanged files are reused, broken or rejected files keep the last good value, and missing files read as null.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const fs = require('node:fs/promises')
-const os = require('node:os')
-const path = require('node:path')
-const { after, before, test } = require('node:test')
-const { createCachedJson } = require('../../src/files/cached-json')
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { after, before, test } from 'node:test'
+import { createCachedJson } from '../../src/files/cached-json.js'
 
 /**
  * The temporary folder the fixtures live in.

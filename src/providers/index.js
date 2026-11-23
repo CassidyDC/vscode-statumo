@@ -3,10 +3,8 @@
  * @file Name the tools Statumo shows, their status bar places, and how each reads its usage.
  */
 
-'use strict'
-
-const { createClaudeReader } = require('./claude')
-const { createCodexReader } = require('./codex')
+import { createClaudeReader } from './claude/index.js'
+import { createCodexReader } from './codex/index.js'
 
 /**
  * One tool's status bar item.
@@ -15,7 +13,7 @@ const { createCodexReader } = require('./codex')
  * @property {string} label - The tool's short name, which starts its status bar item.
  * @property {string} name - The tool's full name.
  * @property {number} priority - The tool's status bar priority; higher sits further left.
- * @property {(settings: import('../settings').Settings, folders: readonly string[], now: Date) => Promise<import('../usage/model').ToolUsage | null>} read - Reads the tool's usage.
+ * @property {(settings: import('../settings.js').Settings, folders: readonly string[], now: Date) => Promise<import('../usage/model.js').ToolUsage | null>} read - Reads the tool's usage.
  */
 
 /**
@@ -51,9 +49,9 @@ function createTools() {
 
       /**
        * Read Claude Code's usage.
-       * @param {import('../settings').Settings} settings - The current settings.
+       * @param {import('../settings.js').Settings} settings - The current settings.
        * @param {readonly string[]} folders - The workspace folders' paths.
-       * @returns {Promise<import('../usage/model').ToolUsage | null>} The usage.
+       * @returns {Promise<import('../usage/model.js').ToolUsage | null>} The usage.
        */
       read: (settings, folders) => readClaudeUsage({ configDirectory: settings.claudeDirectory, folders }),
     },
@@ -65,14 +63,14 @@ function createTools() {
 
       /**
        * Read Codex's usage.
-       * @param {import('../settings').Settings} settings - The current settings.
+       * @param {import('../settings.js').Settings} settings - The current settings.
        * @param {readonly string[]} folders - The workspace folders' paths.
        * @param {Date} now - The current time.
-       * @returns {Promise<import('../usage/model').ToolUsage | null>} The usage.
+       * @returns {Promise<import('../usage/model.js').ToolUsage | null>} The usage.
        */
       read: (settings, folders, now) => readCodexUsage({ homeDirectory: settings.codexDirectory, folders, now }),
     },
   ]
 }
 
-module.exports = { createTools }
+export { createTools }

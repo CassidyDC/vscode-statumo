@@ -3,11 +3,9 @@
  * @file Fold the token count events of a Codex session log into its latest context use and rate limits.
  */
 
-'use strict'
-
-const { parseJson } = require('../../files/files')
-const { createTailScanner } = require('../../files/tail-scan')
-const { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit } = require('../../usage/model')
+import { parseJson } from '../../files/files.js'
+import { createTailScanner } from '../../files/tail-scan.js'
+import { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit } from '../../usage/model.js'
 
 /**
  * Bytes read from the end of a log on its first scan.
@@ -24,8 +22,8 @@ const maxTailLength = 4 * 1024 * 1024
 /**
  * What a log's latest token counts said.
  * @typedef {object} LogScan
- * @property {import('../../usage/model').ContextReading | null} context - The latest context use.
- * @property {import('../../usage/model').Limits | null} limits - The latest rate limits.
+ * @property {import('../../usage/model.js').ContextReading | null} context - The latest context use.
+ * @property {import('../../usage/model.js').Limits | null} limits - The latest rate limits.
  * @property {Date | null} limitsAt - When those limits were reported.
  * @property {string | null} plan - The plan those limits came with.
  */
@@ -40,7 +38,7 @@ const emptyScan = Object.freeze({ context: null, limits: null, limitsAt: null, p
  * Turn a token count event's rate limits into the 5-hour and 7-day windows, telling them apart
  * by their length. A window that doesn't give its length is skipped.
  * @param {any} rateLimits - The event's `rate_limits`.
- * @returns {import('../../usage/model').Limits} The windows.
+ * @returns {import('../../usage/model.js').Limits} The windows.
  */
 function toLimits(rateLimits) {
   /** The windows found so far. */
@@ -122,7 +120,7 @@ function foldTokenCounts(lines, scan) {
 /**
  * Create a scanner that keeps each log's latest token counts, reading further back on a first
  * scan only while the latest context reading is still missing.
- * @returns {import('../../files/tail-scan').TailScanner<LogScan>} The scanner.
+ * @returns {import('../../files/tail-scan.js').TailScanner<LogScan>} The scanner.
  */
 function createLogScanner() {
   return createTailScanner({
@@ -140,4 +138,4 @@ function createLogScanner() {
   })
 }
 
-module.exports = { createLogScanner }
+export { createLogScanner }

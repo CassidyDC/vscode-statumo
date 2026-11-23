@@ -3,11 +3,9 @@
  * @file Build what a tool's status bar item shows: its text, tooltip, warning level, and screen reader label.
  */
 
-'use strict'
-
-const { getToolLevel } = require('../usage/levels')
-const { buildSegments, windowNames } = require('./segments')
-const { buildTooltip } = require('./tooltip')
+import { getToolLevel } from '../usage/levels.js'
+import { buildSegments, windowNames } from './segments.js'
+import { buildTooltip } from './tooltip/index.js'
 
 /**
  * Separates the parts of an item: one en space, a little wider than a plain space.
@@ -28,7 +26,7 @@ const gap = ' '
  * Build what a tool's item shows. The item takes the warning or error color of its lower window,
  * and its tooltip has the full breakdown.
  * @param {{ label: string, name: string }} tool - The tool's short and full names.
- * @param {import('../usage/model').ToolUsage} usage - The tool's usage.
+ * @param {import('../usage/model.js').ToolUsage} usage - The tool's usage.
  * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
  * @param {Date} now - The current time.
  * @returns {ItemView} The item's content.
@@ -51,4 +49,4 @@ function buildItemView(tool, usage, thresholds, now) {
   }
 }
 
-module.exports = { buildItemView }
+export { buildItemView }

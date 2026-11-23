@@ -3,8 +3,6 @@
  * @file Describe the usage readings both readers return and build their parts from raw values.
  */
 
-'use strict'
-
 /**
  * One rate-limit window.
  * @typedef {object} LimitReading
@@ -97,4 +95,4 @@ function hasLimits(limits) {
   return Boolean(limits.fiveHour || limits.sevenDay)
 }
 
-module.exports = { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit }
+export { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit }

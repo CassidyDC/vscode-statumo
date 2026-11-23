@@ -3,20 +3,19 @@
  * @file Build the ring glyphs into the icon font the status bar items use, and register its icons in the manifest.
  */
 
-'use strict'
-
-const fs = require('node:fs')
-const path = require('node:path')
-const { Readable } = require('node:stream')
-const svg2ttf = require('svg2ttf')
-const ttf2woff = require('ttf2woff')
-const { collectGlyphs } = require('./icons/glyphs')
+import fs from 'node:fs'
+import path from 'node:path'
+import { Readable } from 'node:stream'
+import svg2ttf from 'svg2ttf'
+import { SVGIcons2SVGFontStream } from 'svgicons2svgfont'
+import ttf2woff from 'ttf2woff'
+import { collectGlyphs } from './icons/glyphs.js'
 
 /**
  * The repository's root folder.
  * @type {string}
  */
-const root = path.join(__dirname, '..')
+const root = path.join(import.meta.dirname, '..')
 
 /**
  * The built font's path.
@@ -32,13 +31,10 @@ const manifestPath = path.join(root, 'package.json')
 
 /**
  * Build the SVG font from the glyphs.
- * @param {import('./icons/glyphs').Glyph[]} glyphs - The glyphs.
+ * @param {import('./icons/glyphs.js').Glyph[]} glyphs - The glyphs.
  * @returns {Promise<string>} The SVG font's text.
  */
 async function buildSvgFont(glyphs) {
-  /** The font stream's class. */
-  const { SVGIcons2SVGFontStream } = await import('svgicons2svgfont')
-
   /** The font stream. */
   const stream = new SVGIcons2SVGFontStream({
     fontName: 'statumo-icons',
@@ -79,7 +75,7 @@ async function buildSvgFont(glyphs) {
 
 /**
  * Point `contributes.icons` in `package.json` at the glyphs.
- * @param {import('./icons/glyphs').Glyph[]} glyphs - The glyphs.
+ * @param {import('./icons/glyphs.js').Glyph[]} glyphs - The glyphs.
  * @returns {void}
  */
 function writeManifestIcons(glyphs) {

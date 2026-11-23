@@ -3,9 +3,7 @@
  * @file Read parts of large JSON Lines files without loading them whole.
  */
 
-'use strict'
-
-const fs = require('node:fs/promises')
+import fs from 'node:fs/promises'
 
 /**
  * Read a byte range of a file.
@@ -99,4 +97,4 @@ async function statFile(filePath) {
   }
 }
 
-module.exports = { listNames, parseJson, readLines, readRange, statFile }
+export { listNames, parseJson, readLines, readRange, statFile }

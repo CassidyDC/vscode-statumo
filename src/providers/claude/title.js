@@ -3,10 +3,8 @@
  * @file Read a session's title from the custom-title and ai-title rows near the end of its transcript.
  */
 
-'use strict'
-
-const { parseJson, statFile } = require('../../files/files')
-const { createTailScanner } = require('../../files/tail-scan')
+import { parseJson, statFile } from '../../files/files.js'
+import { createTailScanner } from '../../files/tail-scan.js'
 
 /**
  * Bytes read from the end of a transcript on its first scan.
@@ -112,4 +110,4 @@ function createTitleReader() {
   return readTitle
 }
 
-module.exports = { createTitleReader }
+export { createTitleReader }

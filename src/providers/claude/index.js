@@ -3,18 +3,16 @@
  * @file Combine the Usage mod's session and limits files with the session's transcript title and the signed-in account.
  */
 
-'use strict'
-
-const { isInWorkspace } = require('../../files/paths')
-const { emptyLimits } = require('../../usage/model')
-const { createAccountReader } = require('./account')
-const { createLimitsReader } = require('./limits')
-const { createSessionReader, pruneClaudeSessions } = require('./sessions')
-const { createTitleReader } = require('./title')
+import { isInWorkspace } from '../../files/paths.js'
+import { emptyLimits } from '../../usage/model.js'
+import { createAccountReader } from './account.js'
+import { createLimitsReader } from './limits.js'
+import { createSessionReader, pruneClaudeSessions } from './sessions.js'
+import { createTitleReader } from './title.js'
 
 /**
  * Create a Claude Code usage reader, which keeps what it has read of each file between calls.
- * @returns {(options: { configDirectory: string, folders: readonly string[] }) => Promise<import('../../usage/model').ToolUsage | null>} The reader.
+ * @returns {(options: { configDirectory: string, folders: readonly string[] }) => Promise<import('../../usage/model.js').ToolUsage | null>} The reader.
  */
 function createClaudeReader() {
   /** The session, limits, title, and account readers. */
@@ -28,7 +26,7 @@ function createClaudeReader() {
    * @param {object} options - Where to read and what to match.
    * @param {string} options.configDirectory - The Claude config folder.
    * @param {readonly string[]} options.folders - The workspace folders' paths.
-   * @returns {Promise<import('../../usage/model').ToolUsage | null>} The usage, or null when the mod has written neither sessions nor limits.
+   * @returns {Promise<import('../../usage/model.js').ToolUsage | null>} The usage, or null when the mod has written neither sessions nor limits.
    */
   async function readClaudeUsage({ configDirectory, folders }) {
     /** Every session, newest first, and the account's latest limits. */
@@ -53,4 +51,4 @@ function createClaudeReader() {
   return readClaudeUsage
 }
 
-module.exports = { createClaudeReader, pruneClaudeSessions }
+export { createClaudeReader, pruneClaudeSessions }

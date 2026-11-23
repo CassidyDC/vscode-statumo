@@ -3,11 +3,9 @@
  * @file Check an item's text, warning level, and screen reader label.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const { test } = require('node:test')
-const { buildItemView } = require('../../src/view/item-view')
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { buildItemView } from '../../src/view/item-view.js'
 
 /**
  * A fixed current time for every test.

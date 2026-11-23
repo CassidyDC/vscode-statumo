@@ -3,14 +3,12 @@
  * @file Show Claude Code and Codex usage as two status bar items and keep them current.
  */
 
-'use strict'
-
-const vscode = require('vscode')
-const { createTools } = require('./providers')
-const { pruneClaudeSessions } = require('./providers/claude')
-const { startRefreshLoop } = require('./refresh')
-const { readSettings } = require('./settings')
-const { createStatusItem } = require('./view/status-item')
+import * as vscode from 'vscode'
+import { createTools } from './providers/index.js'
+import { pruneClaudeSessions } from './providers/claude/index.js'
+import { startRefreshLoop } from './refresh.js'
+import { readSettings } from './settings.js'
+import { createStatusItem } from './view/status-item.js'
 
 /**
  * How old an unchanged Claude session file must be before it's deleted.
@@ -102,4 +100,4 @@ function activate(context) {
  */
 function deactivate() {}
 
-module.exports = { activate, deactivate }
+export { activate, deactivate }

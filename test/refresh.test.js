@@ -3,18 +3,16 @@
  * @file Check that overlapping refreshes fold into one more pass, failures are logged once, and the timer pauses without focus.
  */
 
-'use strict'
-
-const assert = require('node:assert/strict')
-const { mock, test } = require('node:test')
-const { refreshIntervalMs, startRefreshLoop } = require('../src/refresh')
+import assert from 'node:assert/strict'
+import { mock, test } from 'node:test'
+import { refreshIntervalMs, startRefreshLoop } from '../src/refresh.js'
 
 /**
  * Build a loop over one fake tool whose reads wait until released.
  * @param {object} [options] - How the fake tool behaves.
  * @param {() => boolean} [options.isFocused] - Whether the window has focus.
  * @param {() => Promise<object | null>} [options.read] - Reads the tool's usage.
- * @returns {{ loop: import('../src/refresh').RefreshLoop, reads: number[], renders: number[], warnings: string[] }} The loop, and counters of what it did.
+ * @returns {{ loop: import('../src/refresh.js').RefreshLoop, reads: number[], renders: number[], warnings: string[] }} The loop, and counters of what it did.
  */
 function fakeLoop({ isFocused = () => true, read } = {}) {
   /** How many reads and renders ran, and the warnings logged. */

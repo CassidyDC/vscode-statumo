@@ -3,10 +3,8 @@
  * @file Read Statumo's settings, resolving the Claude Code and Codex folders.
  */
 
-'use strict'
-
-const vscode = require('vscode')
-const { resolveFolder } = require('./files/paths')
+import * as vscode from 'vscode'
+import { resolveFolder } from './files/paths.js'
 
 /**
  * One tool's settings.
@@ -52,4 +50,4 @@ function readSettings() {
   }
 }
 
-module.exports = { readSettings }
+export { readSettings }

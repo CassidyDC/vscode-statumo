@@ -3,8 +3,6 @@
  * @file Name the ring icons the icon font draws and pick the one that matches a percent.
  */
 
-'use strict'
-
 /**
  * How many percent each ring icon covers; the font has one icon per step from 0 to 100.
  * @type {number}
@@ -66,4 +64,4 @@ function ringIcon(kind, percent) {
   return `$(${ringIconId(kind, ringStep(percent))})`
 }
 
-module.exports = { ringIcon, ringIconId, ringKinds, ringStep, ringSteps }
+export { ringIcon, ringIconId, ringKinds, ringStep, ringSteps }

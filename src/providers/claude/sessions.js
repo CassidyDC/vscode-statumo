@@ -3,20 +3,18 @@
  * @file Read the session files the Usage mod writes to `statumo/sessions/`, newest first, and delete old ones.
  */
 
-'use strict'
-
-const fs = require('node:fs/promises')
-const path = require('node:path')
-const { createCachedJson } = require('../../files/cached-json')
-const { listNames, statFile } = require('../../files/files')
-const { finiteOrNull } = require('../../usage/model')
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import { createCachedJson } from '../../files/cached-json.js'
+import { listNames, statFile } from '../../files/files.js'
+import { finiteOrNull } from '../../usage/model.js'
 
 /**
  * One session file, dated by when the mod last wrote it.
  * @typedef {object} ClaudeSession
  * @property {string | null} cwd - The session's project root.
  * @property {string | null} transcriptPath - The session's transcript, or null when it keeps none.
- * @property {import('../../usage/model').ContextReading | null} context - The session's context use.
+ * @property {import('../../usage/model.js').ContextReading | null} context - The session's context use.
  * @property {Date} updatedAt - When the mod last wrote the file.
  */
 
@@ -117,4 +115,4 @@ async function pruneClaudeSessions({ configDirectory, maxAgeMs, now }) {
   return deleted
 }
 
-module.exports = { createSessionReader, pruneClaudeSessions }
+export { createSessionReader, pruneClaudeSessions }

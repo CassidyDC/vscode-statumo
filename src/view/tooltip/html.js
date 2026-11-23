@@ -3,8 +3,6 @@
  * @file Build the escaped text, progress bars, and tables a hover tooltip is made of, within what the hover sanitizer keeps.
  */
 
-'use strict'
-
 /**
  * How many cells wide a tooltip progress bar is, about 320px at the bar's text size: the hover's
  * 13px text made smaller twice, about 9px.
@@ -144,4 +142,4 @@ function footerRow(label, detail) {
   return `<tr><td>${dim(escapeHtml(label))}</td><td width="${footerColumnGap}"></td><td>${dim(escapeHtml(detail))}</td></tr>`
 }
 
-module.exports = { amount, dim, escapeHtml, escapeMarkdown, footerRow, gapRow, progressBar, tooltipSection }
+export { amount, dim, escapeHtml, escapeMarkdown, footerRow, gapRow, progressBar, tooltipSection }

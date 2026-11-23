@@ -3,15 +3,13 @@
  * @file Create a tool's status bar item and redraw it, changing only what changed since the last redraw.
  */
 
-'use strict'
-
-const vscode = require('vscode')
-const { buildItemView } = require('./item-view')
+import * as vscode from 'vscode'
+import { buildItemView } from './item-view.js'
 
 /**
  * A tool's status bar item.
  * @typedef {object} StatusItem
- * @property {(usage: import('../usage/model').ToolUsage | null, settings: import('../settings').Settings, now: Date) => void} render - Draws the tool's usage, or hides the item when there's none.
+ * @property {(usage: import('../usage/model.js').ToolUsage | null, settings: import('../settings.js').Settings, now: Date) => void} render - Draws the tool's usage, or hides the item when there's none.
  * @property {() => void} hide - Hides the item.
  * @property {() => void} dispose - Removes the item.
  */
@@ -31,7 +29,7 @@ function toTooltip(markdown) {
 
 /**
  * Create a tool's status bar item, hidden until its first render.
- * @param {import('../providers').Tool} tool - The tool.
+ * @param {import('../providers/index.js').Tool} tool - The tool.
  * @returns {StatusItem} The item.
  */
 function createStatusItem(tool) {
@@ -40,7 +38,7 @@ function createStatusItem(tool) {
 
   /**
    * What the item showed at its last render, and whether it's showing.
-   * @type {{ view: import('./item-view').ItemView | null, command: string | undefined, isShown: boolean }}
+   * @type {{ view: import('./item-view.js').ItemView | null, command: string | undefined, isShown: boolean }}
    */
   const last = { view: null, command: undefined, isShown: false }
 
@@ -61,8 +59,8 @@ function createStatusItem(tool) {
    *
    * Only the parts that changed are assigned, since each assignment redraws the item and would
    * rebuild an open tooltip.
-   * @param {import('../usage/model').ToolUsage | null} usage - The tool's usage.
-   * @param {import('../settings').Settings} settings - The current settings.
+   * @param {import('../usage/model.js').ToolUsage | null} usage - The tool's usage.
+   * @param {import('../settings.js').Settings} settings - The current settings.
    * @param {Date} now - The current time.
    * @returns {void}
    */
@@ -103,4 +101,4 @@ function createStatusItem(tool) {
   return { render, hide, dispose: () => item.dispose() }
 }
 
-module.exports = { createStatusItem }
+export { createStatusItem }

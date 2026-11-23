@@ -3,10 +3,8 @@
  * @file Draw each ring kind at each step as an SVG glyph, with the symbol that marks its kind inside.
  */
 
-'use strict'
-
-const { ringIconId, ringKinds, ringSteps } = require('../../src/view/rings')
-const { annulus, arcBand, bar, polygon, rect } = require('./shapes')
+import { ringIconId, ringKinds, ringSteps } from '../../src/view/rings.js'
+import { annulus, arcBand, bar, polygon, rect } from './shapes.js'
 
 /**
  * The first code point of the ring glyphs; each kind gets a block of 32.
@@ -72,4 +70,4 @@ function collectGlyphs() {
   })))
 }
 
-module.exports = { collectGlyphs }
+export { collectGlyphs }
