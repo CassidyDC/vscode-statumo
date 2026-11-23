@@ -7,14 +7,14 @@
  * How many no-break spaces wide a tooltip progress bar is, about 325px at the bar's text size.
  * @type {number}
  */
-const barSpaces = 233
+const barSpaces = 260
 
 /**
- * How many times a tooltip progress bar's text is made smaller, from the hover's 13px to about
- * 4.4px, which sets how tall the bar's background is: about 5px.
+ * How many times a tooltip progress bar's text is made smaller, from the sixth-level heading's
+ * 8.7px to about 4.2px, which sets how tall the bar's background is: about 5px.
  * @type {number}
  */
-const barShrinks = 6
+const barShrinks = 4
 
 /**
  * How many pixels the corners of a progress bar's fill and track are rounded by.
@@ -64,13 +64,6 @@ const footerColumnGap = 12
 const statusGap = 3
 
 /**
- * How many columns a section's table has: the percent, the word after it, an empty one that takes
- * up the rest of the width, and the note.
- * @type {number}
- */
-const sectionColumns = 4
-
-/**
  * Escape text so HTML shows it literally, for text inside HTML blocks, where Markdown escapes don't apply.
  * @param {string} text - The text to escape.
  * @returns {string} The escaped text.
@@ -94,7 +87,9 @@ function dim(text) {
  * made smaller enough times that the backgrounds are a thin line.
  *
  * Each background is one box, so it has none of the seams that a run of block characters shows
- * where cells meet at fractions of a pixel.
+ * where cells meet at fractions of a pixel. The bar sits in a sixth-level heading, whose lines are
+ * only a little taller than its text, where other lines are 19px, and whose top margin merges with
+ * the bottom margin of the amount's heading above it, so the bar sits close under the amount.
  * @param {number} percent - How full the bar is, from 0 to 100.
  * @param {'error' | 'warning' | null} [level] - The warning level that colors the fill.
  * @returns {string} The bar's HTML.
@@ -113,20 +108,18 @@ function progressBar(percent, level = null) {
 
   /** The fill's run, or nothing when it spans no spaces. */
   const fill = filled ? run(barFills[level ?? 'normal'], '\u00a0'.repeat(filled)) : ''
-  return `${'<small>'.repeat(barShrinks)}${run(barTrack, fill + '\u00a0'.repeat(barSpaces - filled))}${'</small>'.repeat(barShrinks)}`
+  return `<h6>${'<small>'.repeat(barShrinks)}${run(barTrack, fill + '\u00a0'.repeat(barSpaces - filled))}${'</small>'.repeat(barShrinks)}</h6>`
 }
 
 /**
- * Format a section's amount as two table cells: the percent in a second-level heading, the only way
- * a hover shows text larger than normal, then the dimmed word in its own cell. Everything in a
- * heading is bold and the hover sanitizer drops font-weight styles, so the word sits beside the
- * heading in normal weight, centered against it.
+ * Format a section's amount as a second-level heading, the only way a hover shows text larger than
+ * normal: the percent, then a dimmed word made smaller twice.
  * @param {number} percent - The percent.
  * @param {string} word - What the percent measures, such as `used`, unescaped.
- * @returns {string} The amount's table cells.
+ * @returns {string} The amount's HTML.
  */
 function amount(percent, word) {
-  return `<td width="1"><h2>${percent}%</h2></td><td width="1">${dim(escapeHtml(word))}</td>`
+  return `<h2>${percent}% ${dim(`<small><small>${escapeHtml(word)}</small></small>`)}</h2>`
 }
 
 /**
@@ -152,40 +145,39 @@ function tooltipTitle(text) {
 
 /**
  * Build a section's table: an empty row that spaces it from the rule above, a bold label with an
- * optional dimmed note aligned to the right edge, then the section's other rows.
+ * optional dimmed note aligned to the right edge, then the content across the full width.
  *
  * A full-width table is the only way the hover sanitizer allows right alignment, so the note ends
- * where the bar ends. The amount and bar sit in the table too, so they have the same inset as the
- * label and note, since the sanitizer won't let table cells lose their default padding and spacing.
- *
- * The label spans the amount's columns and the wide empty one after them, so it never wraps to the
- * amount's width, and the note keeps to one line with no-break spaces, since its column is only
- * as wide as its content.
+ * where the bar ends. The content sits in the table too, so it has the same inset as the label and
+ * note, since the sanitizer won't let table cells lose their default padding and spacing.
  * @param {string} label - The section's label.
  * @param {string | null} note - The note across from the label, unescaped, or null for none.
- * @param {string} rows - The section's rows below the label, as HTML.
+ * @param {string} content - The section's content, as HTML.
+ * @param {number} contentGap - How many pixels tall the empty row above the content is, or 0 for none.
  * @returns {string} The section's HTML.
  */
-function sectionTable(label, note, rows) {
-  /** The note's dimmed text, kept to one line, and the row that holds the label and note. */
-  const noteText = note ? dim(escapeHtml(note).replace(/ /g, '\u00a0')) : ''
-  const heading = `<tr><td colspan="${sectionColumns - 1}"><b>${escapeHtml(label)}</b></td><td align="right">${noteText}</td></tr>`
-  return `<table width="100%">${gapRow(sectionColumns)}${heading}${rows}</table>`
+function sectionTable(label, note, content, contentGap) {
+  /** How many columns the table has, and the note's table cell. */
+  const columns = note ? 2 : 1
+  const noteCell = note ? `<td align="right">${dim(escapeHtml(note))}</td>` : ''
+
+  /** The row that holds the label and note, the empty row above the content, and the content's row. */
+  const heading = `<tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr>`
+  const spacer = contentGap ? gapRow(columns, contentGap) : ''
+  const body = `<tr><td colspan="${columns}">${content}</td></tr>`
+  return `<table width="100%">${gapRow(columns)}${heading}${spacer}${body}</table>`
 }
 
 /**
  * Build one tooltip section: the label and an optional note, the amount, then an optional bar.
  * @param {string} label - The section's label.
  * @param {string | null} note - The note across from the label, unescaped, or null for none.
- * @param {string} value - The section's amount, as the two table cells from `amount`.
+ * @param {string} value - The section's amount, as HTML.
  * @param {string | null} bar - The section's progress bar, or null for none.
  * @returns {string} The section's HTML.
  */
 function tooltipSection(label, note, value, bar) {
-  /** The amount's row, whose empty full-width cell keeps the amount's cells to their content, and the bar's row. */
-  const amountRow = `<tr>${value}<td></td><td></td></tr>`
-  const barRow = bar ? `<tr><td colspan="${sectionColumns}">${bar}</td></tr>` : ''
-  return sectionTable(label, note, amountRow + barRow)
+  return sectionTable(label, note, `${value}${bar ?? ''}`, 0)
 }
 
 /**
@@ -198,9 +190,7 @@ function tooltipSection(label, note, value, bar) {
  * @returns {string} The section's HTML.
  */
 function statusSection(label, note, text, bar) {
-  /** The status and bar's row. */
-  const body = `<tr><td colspan="${sectionColumns}"><p>${dim(escapeHtml(text))}</p>${bar ?? ''}</td></tr>`
-  return sectionTable(label, note, gapRow(sectionColumns, statusGap) + body)
+  return sectionTable(label, note, `<p>${dim(escapeHtml(text))}</p>${bar ?? ''}`, statusGap)
 }
 
 /**

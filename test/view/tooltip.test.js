@@ -61,7 +61,7 @@ test('marks a window whose reset has passed as inactive', () => {
       sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
     },
   })
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*<\/tr><tr><td colspan="4" height="3"><\/td><\/tr><tr><td colspan="4"><p>.*No reading since the reset/)
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*<\/tr><tr><td colspan="2" height="3"><\/td><\/tr><tr><td colspan="2"><p>.*No reading since the reset.*<\/p><h6>/)
 })
 
 test('lays out each tooltip section as one table of label and note, heading-sized amount, then bar', () => {
@@ -76,9 +76,9 @@ test('lays out each tooltip section as one table of label and note, heading-size
 
   assert.equal(sections.length, 5)
   assert.equal(sections[0], '<table><tr><td><h2>Codex - Statumo</h2></td></tr></table>')
-  assert.match(sections[1], /^<table width="100%"><tr><td colspan="4" height="8"><\/td><\/tr><tr><td colspan="3"><b>Context<\/b><\/td><td align="right">.*48\.3k\u00a0\/\u00a0400k\u00a0tokens.*<\/td><\/tr><tr><td width="1"><h2>12%<\/h2><\/td><td width="1"><span[^>]*>used<\/span><\/td><td><\/td><td><\/td><\/tr><tr><td colspan="4">(<small>){6}<span.*<\/td><\/tr><\/table>$/)
-  assert.match(sections[2], /^<table width="100%"><tr><td colspan="4" height="8"><\/td><\/tr><tr><td colspan="3"><b>5-hour limit<\/b><\/td><td align="right">.*Resets\sNov\s22\sat\s14:30\s\(4h\s30m\).*<\/tr><tr><td width="1"><h2>16%<\/h2>/)
-  assert.match(sections[3], /Resets\sNov\s27\sat\s09:00\s\(4d\s23h\).*<\/tr><tr><td width="1"><h2>39%<\/h2>/)
+  assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><h6>(<small>){4}<span.*<\/h6><\/td><\/tr><\/table>$/)
+  assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/tr><tr><td colspan="2"><h2>16% .*used/)
+  assert.match(sections[3], /<b>Weekly limit<\/b>.*Resets Nov 27 at 09:00 \(4d 23h\).*<\/tr><tr><td colspan="2"><h2>39% .*used/)
   assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Plan<.*Limits Read<.*Last Activity<.*<\/table>$/)
   assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
   assert.equal(footerDetail(sections[4], 'Plan'), 'Plus subscription')
@@ -130,8 +130,8 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   /** The usage's tooltip. */
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="background-color:var\(--vscode-editorHoverWidget-border\);border-radius:2px;"><span style="background-color:var\(--vscode-editorError-foreground\);border-radius:2px;">\u00a0{221}<\/span>\u00a0{12}<\/span>/)
-  assert.match(tooltip, /<span style="background-color:var\(--vscode-button-background\);border-radius:2px;">\u00a0{91}<\/span>\u00a0{142}<\/span>/)
+  assert.match(tooltip, /<span style="background-color:var\(--vscode-editorHoverWidget-border\);border-radius:2px;"><span style="background-color:var\(--vscode-editorError-foreground\);border-radius:2px;">\u00a0{247}<\/span>\u00a0{13}<\/span>/)
+  assert.match(tooltip, /<span style="background-color:var\(--vscode-button-background\);border-radius:2px;">\u00a0{101}<\/span>\u00a0{159}<\/span>/)
 })
 
 test('draws an empty bar as the track alone and a full bar as the fill alone', () => {
@@ -146,6 +146,6 @@ test('draws an empty bar as the track alone and a full bar as the fill alone', (
   /** The usage's tooltip. */
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="background-color:var\(--vscode-editorHoverWidget-border\);border-radius:2px;">\u00a0{233}<\/span>/)
-  assert.match(tooltip, /border-radius:2px;"><span style="background-color:var\(--vscode-editorError-foreground\);border-radius:2px;">\u00a0{233}<\/span><\/span>/)
+  assert.match(tooltip, /<span style="background-color:var\(--vscode-editorHoverWidget-border\);border-radius:2px;">\u00a0{260}<\/span>/)
+  assert.match(tooltip, /border-radius:2px;"><span style="background-color:var\(--vscode-editorError-foreground\);border-radius:2px;">\u00a0{260}<\/span><\/span>/)
 })
