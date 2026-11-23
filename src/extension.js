@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 import { createTools } from './providers/index.js'
 import { pruneClaudeSessions } from './providers/claude/index.js'
 import { startRefreshLoop } from './refresh.js'
+import { installClaudeMod, offerClaudeMod } from './mod/prompt.js'
 import { readSettings } from './settings.js'
 import { createStatusItem } from './view/status-item.js'
 
@@ -86,6 +87,7 @@ function activate(context) {
       dispose: () => clearInterval(pruneTimer),
     },
     vscode.commands.registerCommand('statumo.refresh', () => loop.refresh()),
+    vscode.commands.registerCommand('statumo.installClaudeMod', () => installClaudeMod(context, log)),
     vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration('statumo')) void loop.refresh()
     }),
@@ -97,6 +99,7 @@ function activate(context) {
 
   void prune()
   void loop.refresh()
+  void offerClaudeMod(context, log)
 }
 
 /**

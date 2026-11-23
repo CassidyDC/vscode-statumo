@@ -14,4 +14,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Add a hover tooltip with a section and progress bar for context and each limit, session titles, token counts, when each limit resets, plan, and reading age. Claude Code titles come from the end of the session's own transcript.
 - Use the warning and error backgrounds on a tool when either window runs low, with configurable thresholds.
 - Run each item's configured click command, which opens the Claude Code or Codex panel by default.
-- Ship the Usage mod for Claude Code in `claude-mod/`, installed from this repository's `statumo` marketplace, to write each session's folder, transcript path, and context use, and the account's latest rate limits, to `~/.claude/statumo/` for Statumo to read.
+- Ship the Usage mod for Claude Code inside the extension, and offer to install or update it through Claude Code's command line with one click, or with **Statumo: Install or Update the Usage Mod for Claude Code**. The mod writes each session's folder, transcript path, and context use, and the account's latest rate limits, to `~/.claude/statumo/` for Statumo to read.

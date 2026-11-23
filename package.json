@@ -37,6 +37,8 @@
   "main": "./src/extension.js",
   "files": [
     "src/",
+    ".claude-plugin/",
+    "claude-mod/",
     "images/icon.png",
     "images/statumo-icons.woff",
     "README.md",
@@ -49,6 +51,11 @@
       {
         "command": "statumo.refresh",
         "title": "Refresh Usage",
+        "category": "Statumo"
+      },
+      {
+        "command": "statumo.installClaudeMod",
+        "title": "Install or Update the Usage Mod for Claude Code",
         "category": "Statumo"
       }
     ],
