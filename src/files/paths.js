@@ -1,6 +1,6 @@
 /**
  * Path helpers.
- * @file Expand home-relative settings, decide whether a session folder belongs to the open workspace, and shorten paths for display.
+ * @file Resolve folder settings, decide whether a session folder belongs to the open workspace, and shorten paths for display.
  */
 
 'use strict'
@@ -23,6 +23,19 @@ function expandHome(value) {
   if (value === '~') return os.homedir()
   if (value.startsWith('~/') || value.startsWith('~\\')) return path.join(os.homedir(), value.slice(2))
   return value
+}
+
+/**
+ * Resolve a folder setting, falling back to an environment variable and then a folder in the home folder.
+ * @param {string | undefined} value - The setting's value.
+ * @param {string | undefined} environment - The environment variable's value.
+ * @param {string} fallback - The folder's name under the home folder.
+ * @returns {string} The folder's absolute path.
+ */
+function resolveFolder(value, environment, fallback) {
+  /** The first folder given. */
+  const chosen = value?.trim() || environment?.trim() || path.join(os.homedir(), fallback)
+  return path.resolve(expandHome(chosen))
 }
 
 /**
@@ -101,4 +114,4 @@ function truncatePath(value, maxLength = 40) {
   return `…${value.slice(-(maxLength - 1))}`
 }
 
-module.exports = { expandHome, isInWorkspace, tildify, truncatePath }
+module.exports = { expandHome, isInWorkspace, resolveFolder, tildify, truncatePath }

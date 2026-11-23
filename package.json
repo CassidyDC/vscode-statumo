@@ -40,16 +40,6 @@
         "command": "statumo.refresh",
         "title": "Refresh Usage",
         "category": "Statumo"
-      },
-      {
-        "command": "statumo.openClaude",
-        "title": "Open Claude Code",
-        "category": "Statumo"
-      },
-      {
-        "command": "statumo.openCodex",
-        "title": "Open Codex",
-        "category": "Statumo"
       }
     ],
     "icons": {
