@@ -130,6 +130,6 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   /** The usage's tooltip. */
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{48}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{2}</)
-  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▀{20}<\/span>/)
+  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{57}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{3}</)
+  assert.match(tooltip, /<span style="color:var\(--vscode-button-background\);">▀{23}<\/span>/)
 })

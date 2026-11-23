@@ -4,18 +4,19 @@
  */
 
 /**
- * How many cells wide a tooltip progress bar is, about 270px at the bar's text size: the hover's
+ * How many cells wide a tooltip progress bar is, about 325px at the bar's text size: the hover's
  * 13px text made smaller twice, about 9px.
  * @type {number}
  */
-const barCells = 50
+const barCells = 60
 
 /**
- * Theme colors for a progress bar's fill, by warning level.
+ * Theme colors for a progress bar's fill, by warning level: the primary button's color, the theme's
+ * main interactive color, or the warning or error color.
  * @type {Record<'normal' | 'warning' | 'error', string>}
  */
 const barFills = {
-  normal: 'var(--vscode-progressBar-background)',
+  normal: 'var(--vscode-button-background)',
   warning: 'var(--vscode-editorWarning-foreground)',
   error: 'var(--vscode-editorError-foreground)',
 }
