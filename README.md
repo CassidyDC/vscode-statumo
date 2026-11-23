@@ -2,7 +2,7 @@
 
 Statumo shows how much context and rate limit you've used in Claude Code and Codex, right in the VS Code status bar.
 
-![Statumo in the status bar: Claude with an empty context ring, then 21%, 9%, and 3%, and Codex at 15%, 0%, and 22%, each percent led by a ring](images/statumo-status-bar.png)
+![Statumo in the status bar: Claude at 6%, 22%, 9%, and 3%, and Codex at 15%, 0%, and 22%, each percent led by a ring](images/statumo-status-bar.png)
 
 Each tool is one status bar item that starts with its name, Claude or Codex, and shows three percents, each led by a ring that fills to match it in 5% steps:
 
