@@ -6,8 +6,9 @@
 import { tildify, truncatePath } from '../../files/paths.js'
 import { getWindowLevel, isLimitStale, percentUsed } from '../../usage/levels.js'
 import { formatAge, formatReset, formatTokens } from '../format.js'
-import { windowNames } from '../segments.js'
-import { amount, footerEndGap, footerRow, gapRow, progressBar, statusSection, tooltipSection } from './html.js'
+import { symbolIconId } from '../rings.js'
+import { windowNames, windowRings } from '../segments.js'
+import { amount, footerEndGap, footerRow, gapRow, progressBar, sectionLabel, statusSection, tooltipSection } from './html.js'
 
 /**
  * Build the tooltip section for the session's context.
@@ -15,14 +16,17 @@ import { amount, footerEndGap, footerRow, gapRow, progressBar, statusSection, to
  * @returns {string} The section's HTML.
  */
 function contextSection(session) {
-  if (!session) return statusSection('Context', null, 'No session in this workspace yet', null)
-  if (!session.context) return statusSection('Context', null, 'Not reported yet', null)
+  /** The section's label, led by the context symbol. */
+  const label = sectionLabel(symbolIconId('cx'), 'Context')
+
+  if (!session) return statusSection(label, null, 'No session in this workspace yet', null)
+  if (!session.context) return statusSection(label, null, 'Not reported yet', null)
 
   /** The context reading's values, and the token counts across from the label. */
   const { tokens = null, window = null, percent = null } = session.context
   const note = `${formatTokens(tokens)} / ${formatTokens(window)} tokens`
-  if (percent === null) return statusSection('Context', note, 'Unknown', null)
-  return tooltipSection('Context', note, amount(Math.round(percent), 'used'), progressBar(percent))
+  if (percent === null) return statusSection(label, note, 'Unknown', null)
+  return tooltipSection(label, note, amount(Math.round(percent), 'used'), progressBar(percent))
 }
 
 /**
@@ -35,8 +39,8 @@ function contextSection(session) {
  * @returns {string} The section's HTML.
  */
 function limitSection(key, limit, settings, now) {
-  /** The window's name, capitalized. */
-  const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
+  /** The window's name, capitalized and led by its symbol. */
+  const label = sectionLabel(symbolIconId(windowRings[key]), windowNames[key].replace(/^./, letter => letter.toUpperCase()))
 
   if (!limit) return statusSection(label, null, 'Not reported yet', null)
 

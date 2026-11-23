@@ -137,4 +137,46 @@ function rect(x, y, width, height, isHole = false) {
   return polygon([[x, y], [x + width, y], [x + width, y + height], [x, y + height]], isHole)
 }
 
-export { annulus, arcBand, bar, circle, polygon, rect }
+/**
+ * Outline a rectangle with rounded corners, clockwise for a fill or counterclockwise for a hole.
+ * @param {number} x - The left edge.
+ * @param {number} y - The top edge.
+ * @param {number} width - The width.
+ * @param {number} height - The height.
+ * @param {number} radius - The corners' radius, at most half the shorter side.
+ * @param {boolean} [isHole] - Whether the rectangle cuts a hole.
+ * @returns {string} The path data.
+ */
+function roundedRect(x, y, width, height, radius, isHole = false) {
+  /** The right and bottom edges. */
+  const [right, bottom] = [x + width, y + height]
+
+  /**
+   * Each corner, clockwise from the top right, as where its straight side ends and where its arc ends.
+   * @type {Array<[Point, Point]>}
+   */
+  const corners = [
+    [[right - radius, y], [right, y + radius]],
+    [[right, bottom - radius], [right - radius, bottom]],
+    [[x + radius, bottom], [x, bottom - radius]],
+    [[x, y + radius], [x + radius, y]],
+  ]
+
+  /** The outline's points in drawing order, each marked with whether an arc reaches it. */
+  const steps = corners.flatMap(([sideEnd, arcEnd]) => [[sideEnd, false], [arcEnd, true]])
+
+  /** The point each step starts from; the last step ends back at the first. */
+  const starts = [steps.at(-1)[0], ...steps.map(([point]) => point)]
+
+  /** A hole runs each step backward, from where it ends to where it starts. */
+  const ordered = isHole ? steps.map(([, isArc], index) => [starts[index], isArc]).reverse() : steps
+
+  /** The arc command up to its end point. */
+  const arc = `A${num(radius)} ${num(radius)} 0 0 ${isHole ? 0 : 1}`
+
+  return `M${num(x + radius)} ${num(y)}`
+    + ordered.map(([[pointX, pointY], isArc]) => `${isArc ? arc : 'L'}${isArc ? ' ' : ''}${num(pointX)} ${num(pointY)}`).join('')
+    + 'Z'
+}
+
+export { annulus, arcBand, bar, circle, polygon, rect, roundedRect }

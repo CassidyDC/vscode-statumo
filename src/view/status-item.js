@@ -30,11 +30,14 @@ function toTooltip(markdown) {
 /**
  * Create a tool's status bar item, hidden until its first render.
  * @param {import('../providers/index.js').Tool} tool - The tool.
+ * @param {object} [options] - How the item draws.
+ * @param {string} [options.itemId] - The item's id, when it differs from the tool's.
+ * @param {import('./rings.js').IconStyle} [options.iconStyle] - How to draw the icon before each percent.
  * @returns {StatusItem} The item.
  */
-function createStatusItem(tool) {
+function createStatusItem(tool, { itemId = tool.id, iconStyle = 'ring' } = {}) {
   /** The VS Code item. */
-  const item = vscode.window.createStatusBarItem(`statumo.${tool.id}`, vscode.StatusBarAlignment.Right, tool.priority)
+  const item = vscode.window.createStatusBarItem(`statumo.${itemId}`, vscode.StatusBarAlignment.Right, tool.priority)
 
   /**
    * What the item showed at its last render, and whether it's showing.
@@ -42,7 +45,7 @@ function createStatusItem(tool) {
    */
   const last = { view: null, command: undefined, isShown: false }
 
-  item.name = `Statumo: ${tool.name}`
+  item.name = itemId === tool.id ? `Statumo: ${tool.name}` : `Statumo: ${tool.name} (${itemId})`
 
   /**
    * Hide the item.
@@ -74,7 +77,7 @@ function createStatusItem(tool) {
     }
 
     /** What the item shows now, and the command a click runs. */
-    const view = buildItemView(tool, usage, settings, now)
+    const view = buildItemView(tool, usage, settings, now, iconStyle)
     const command = clickCommand || undefined
 
     if (command !== last.command) item.command = command

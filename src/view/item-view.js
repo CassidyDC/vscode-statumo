@@ -29,11 +29,12 @@ const gap = ' '
  * @param {import('../usage/model.js').ToolUsage} usage - The tool's usage.
  * @param {import('./tooltip/index.js').TooltipSettings} settings - The thresholds and how to show reset times.
  * @param {Date} now - The current time.
+ * @param {import('./rings.js').IconStyle} [iconStyle] - How to draw the icon before each percent.
  * @returns {ItemView} The item's content.
  */
-function buildItemView(tool, usage, settings, now) {
+function buildItemView(tool, usage, settings, now, iconStyle = 'ring') {
   /** The item's segments. */
-  const segments = buildSegments(usage, now)
+  const segments = buildSegments(usage, now, iconStyle)
 
   /** How a screen reader reads each segment. */
   const parts = [

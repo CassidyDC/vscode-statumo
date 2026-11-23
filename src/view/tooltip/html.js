@@ -151,13 +151,24 @@ function tooltipTitle(text) {
 }
 
 /**
+ * Build a section's label: its icon, then its name. The icon is a codicon span, which the hover
+ * sanitizer keeps when the icon id has only letters and hyphens.
+ * @param {string} icon - The icon id, such as `statumo-context-symbol`.
+ * @param {string} text - The label's text, unescaped.
+ * @returns {string} The label's HTML.
+ */
+function sectionLabel(icon, text) {
+  return `<span class="codicon codicon-${icon}"></span>\u00a0${escapeHtml(text)}`
+}
+
+/**
  * Build a section's table: an empty row that spaces it from the rule above, a bold label with an
  * optional dimmed note aligned to the right edge, then the content across the full width.
  *
  * A full-width table is the only way the hover sanitizer allows right alignment, so the note ends
  * where the bar ends. The content sits in the table too, so it has the same inset as the label and
  * note, since the sanitizer won't let table cells lose their default padding and spacing.
- * @param {string} label - The section's label.
+ * @param {string} label - The section's label, as HTML.
  * @param {string | null} note - The note across from the label, unescaped, or null for none.
  * @param {string} content - The section's content, as HTML.
  * @param {number} contentGap - How many pixels tall the empty row above the content is, or 0 for none.
@@ -169,7 +180,7 @@ function sectionTable(label, note, content, contentGap) {
   const noteCell = note ? `<td align="right">${dim(escapeHtml(note))}</td>` : ''
 
   /** The row that holds the label and note, the empty row above the content, and the content's row. */
-  const heading = `<tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr>`
+  const heading = `<tr><td><b>${label}</b></td>${noteCell}</tr>`
   const spacer = contentGap ? gapRow(columns, contentGap) : ''
   const body = `<tr><td colspan="${columns}">${content}</td></tr>`
   return `<table width="100%">${gapRow(columns)}${heading}${spacer}${body}</table>`
@@ -177,7 +188,7 @@ function sectionTable(label, note, content, contentGap) {
 
 /**
  * Build one tooltip section: the label and an optional note, the amount, then an optional bar.
- * @param {string} label - The section's label.
+ * @param {string} label - The section's label, as HTML.
  * @param {string | null} note - The note across from the label, unescaped, or null for none.
  * @param {string} value - The section's amount, as HTML.
  * @param {string | null} bar - The section's progress bar, or null for none.
@@ -190,7 +201,7 @@ function tooltipSection(label, note, value, bar) {
 /**
  * Build one tooltip section that shows a dimmed status in place of an amount: the label and an
  * optional note, the status, then an optional bar.
- * @param {string} label - The section's label.
+ * @param {string} label - The section's label, as HTML.
  * @param {string | null} note - The note across from the label, unescaped, or null for none.
  * @param {string} text - The status, unescaped.
  * @param {string | null} bar - The section's progress bar, or null for none.
@@ -210,4 +221,4 @@ function footerRow(label, detail) {
   return `<tr><td>${dim(escapeHtml(label))}</td><td width="${footerColumnGap}"></td><td>${dim(escapeHtml(detail))}</td></tr>`
 }
 
-export { amount, dim, escapeHtml, footerEndGap, footerRow, gapRow, progressBar, statusSection, tooltipSection, tooltipTitle }
+export { amount, dim, escapeHtml, footerEndGap, footerRow, gapRow, progressBar, sectionLabel, statusSection, tooltipSection, tooltipTitle }

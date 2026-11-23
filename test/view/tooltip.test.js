@@ -65,7 +65,7 @@ test('shows a window whose reset has passed at 0% with when it reset', () => {
   /** The usage's tooltip, with the time until each reset asked for. */
   const tooltip = buildTooltip('Codex', usage, { ...thresholds, showTimeUntilReset: true }, now)
 
-  assert.match(tooltip, /<b>5-hour limit<\/b><\/td><td align="right">.*>Reset today at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>0% .*used/)
+  assert.match(tooltip, /<b><span class="codicon codicon-statumo-five-hour-symbol"><\/span>\u00a05-hour limit<\/b><\/td><td align="right">.*>Reset today at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>0% .*used/)
   assert.doesNotMatch(tooltip, /Inactive|No reading since the reset/)
 })
 
@@ -82,7 +82,7 @@ test('adds a Weekly Fable limit section only once it is reported', () => {
   const sections = buildTooltip('Claude Code', usage, thresholds, now).split('\n\n---\n\n')
 
   assert.equal(sections.length, 6)
-  assert.match(sections[4], /<b>Weekly Fable limit<\/b>.*Resets Nov 24 at 2:00 AM<.*<\/tr><tr><td colspan="2"><h2>3% .*used/)
+  assert.match(sections[4], /<b><span class="codicon codicon-statumo-fable-symbol"><\/span>\u00a0Weekly Fable limit<\/b>.*Resets Nov 24 at 2:00 AM<.*<\/tr><tr><td colspan="2"><h2>3% .*used/)
   assert.doesNotMatch(buildTooltip('Codex', makeUsage(), thresholds, now), /Fable/)
 })
 
@@ -108,9 +108,9 @@ test('lays out each tooltip section as one table of label and note, heading-size
 
   assert.equal(sections.length, 5)
   assert.equal(sections[0], '<table><tr><td><h2>Codex - Statumo</h2></td></tr></table>')
-  assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><h6>(<small>){4}<span.*<\/h6><\/td><\/tr><\/table>$/)
-  assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets today at 2:30 PM<.*<\/tr><tr><td colspan="2"><h2>16% .*used/)
-  assert.match(sections[3], /<b>Weekly limit<\/b>.*Resets Nov 27 at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>39% .*used/)
+  assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b><span class="codicon codicon-statumo-context-symbol"><\/span>\u00a0Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><h6>(<small>){4}<span.*<\/h6><\/td><\/tr><\/table>$/)
+  assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b><span class="codicon codicon-statumo-five-hour-symbol"><\/span>\u00a05-hour limit<\/b><\/td><td align="right">.*Resets today at 2:30 PM<.*<\/tr><tr><td colspan="2"><h2>16% .*used/)
+  assert.match(sections[3], /<b><span class="codicon codicon-statumo-weekly-symbol"><\/span>\u00a0Weekly limit<\/b>.*Resets Nov 27 at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>39% .*used/)
   assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Plan<.*Last Activity<.*<\/table>$/)
   assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
   assert.equal(footerDetail(sections[4], 'Plan'), 'Plus Subscription')
