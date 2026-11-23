@@ -59,7 +59,6 @@ function collector({ tailLength = 1024, maxTailLength = 1024 * 1024 } = {}) {
      */
     isSettled: state => state.includes('mark'),
   })
-
   return { scanner, reads }
 }
 

@@ -7,6 +7,7 @@
 ## Repository guidance
 
 - Finish each task or feature by committing its completed changes.
+- Run `npm run lint` and `npm test` before committing; `npx eslint --fix .` fixes most spacing problems.
 - Match the existing commit message style and formatting; use a plain, sentence-case imperative subject without adding prefixes or changing the format.
 - When relevant, document completed tasks or features in `CHANGELOG.md` and/or `README.md`.
 - Do not add attribution to anything written to Git or GitHub: commit messages, tags, pull request titles and descriptions, issues, comments or release notes. That includes `Co-Authored-By` lines and any "Generated with Claude", "Generated with Claude Code" or similar text, links or emoji.

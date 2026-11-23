@@ -88,7 +88,6 @@ function fakeRuntime({ transcriptPath, id, cwd = '/work/project', context = {} }
       },
     },
   }
-
   return { $, writes }
 }
 
@@ -108,7 +107,6 @@ async function runHook(name, $, event) {
     passed.push(nextEvent)
     return 'next result'
   })
-
   return { result, passed }
 }
 
@@ -181,8 +179,10 @@ test('a measurement without limits keeps the last limits file, and nulls unrepor
 })
 
 test('a session start writes the live context without limits, except at startup', async () => {
-  /** The config folder, and the fake runtime with a live context reading. */
+  /** The config folder. */
   const configDirectory = path.join(root, 'start')
+
+  /** The fake runtime, with a live context reading. */
   const { $, writes } = fakeRuntime({
     transcriptPath: transcriptIn(configDirectory, 'session-c'),
     id: 'session-c',
@@ -205,7 +205,6 @@ test('a session start writes the live context without limits, except at startup'
 
   /** What Statumo reads from the session file. */
   const [session] = await createSessionReader()(configDirectory)
-
   assert.deepEqual(session.context, { tokens: 9000, window: 200_000, percent: 4.5 })
 })
 

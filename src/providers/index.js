@@ -13,7 +13,7 @@ import { createCodexReader } from './codex/index.js'
  * @property {string} label - The tool's short name, which starts its status bar item.
  * @property {string} name - The tool's full name.
  * @property {number} priority - The tool's status bar priority; higher sits further left.
- * @property {(settings: import('../settings.js').Settings, folders: readonly string[], now: Date) => Promise<import('../usage/model.js').ToolUsage | null>} read - Reads the tool's usage.
+ * @property {(settings: import('../settings.js').Settings, folders: ReadonlyArray<string>, now: Date) => Promise<import('../usage/model.js').ToolUsage | null>} read - Reads the tool's usage.
  */
 
 /**

@@ -99,7 +99,15 @@ function startRefreshLoop({ tools, items, readSettings, readFolders, isFocused, 
     if (isFocused()) void refresh()
   }, refreshIntervalMs)
 
-  return { refresh, dispose: () => clearInterval(timer) }
+  return {
+    refresh,
+
+    /**
+     * Stop the refresh timer.
+     * @returns {void}
+     */
+    dispose: () => clearInterval(timer),
+  }
 }
 
 export { refreshIntervalMs, startRefreshLoop }

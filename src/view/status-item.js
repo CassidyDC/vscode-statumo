@@ -98,7 +98,16 @@ function createStatusItem(tool) {
     last.isShown = true
   }
 
-  return { render, hide, dispose: () => item.dispose() }
+  return {
+    render,
+    hide,
+
+    /**
+     * Remove the item.
+     * @returns {void}
+     */
+    dispose: () => item.dispose(),
+  }
 }
 
 export { createStatusItem }

@@ -548,13 +548,18 @@
     }
   },
   "scripts": {
+    "lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
     "package": "vsce package --no-rewrite-relative-links --allow-missing-repository",
     "test": "node --test",
     "build:icons": "node scripts/build-icons.js",
     "install:local": "vsce package --no-rewrite-relative-links --allow-missing-repository --out statumo.vsix && code --install-extension statumo.vsix --force"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@vscode/vsce": "^4.1.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-jsdoc": "^65.5.2",
+    "globals": "^17.14.0",
     "svg2ttf": "^6.1.0",
     "svgicons2svgfont": "^16.0.0",
     "ttf2woff": "^3.0.0"

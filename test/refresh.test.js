@@ -80,7 +80,6 @@ function fakeLoop({ isFocused = () => true, read } = {}) {
       },
     },
   })
-
   return { loop, reads, renders, warnings }
 }
 
@@ -138,7 +137,13 @@ test('skips timer passes while the window is unfocused', async t => {
   let isFocused = false
 
   /** A loop that follows that focus. */
-  const { loop, reads } = fakeLoop({ isFocused: () => isFocused })
+  const { loop, reads } = fakeLoop({
+    /**
+     * Whether the window has focus.
+     * @returns {boolean} The focus the test sets.
+     */
+    isFocused: () => isFocused,
+  })
 
   mock.timers.tick(refreshIntervalMs)
   await Promise.resolve()

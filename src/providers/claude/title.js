@@ -40,6 +40,7 @@ function cleanTitle(value) {
   if (typeof value !== 'string') return null
 
   /** The title on one line. */
+  // eslint-disable-next-line no-control-regex -- Control characters are what this removes.
   const title = value.replace(/[\s\u0000-\u001f\u007f-\u009f]+/g, ' ').trim()
   return title || null
 }

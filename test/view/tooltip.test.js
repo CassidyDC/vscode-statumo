@@ -61,7 +61,6 @@ test('marks a window whose reset has passed as inactive', () => {
       sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
     },
   })
-
   assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*\n\n.*No reading since the reset/)
 })
 

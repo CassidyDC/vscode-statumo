@@ -13,7 +13,7 @@ import { createTitleReader } from './titles.js'
 
 /**
  * Create a Codex usage reader, which keeps what it has read of each log between calls.
- * @returns {(options: { homeDirectory: string, folders: readonly string[], now: Date }) => Promise<import('../../usage/model.js').ToolUsage | null>} The reader.
+ * @returns {(options: { homeDirectory: string, folders: ReadonlyArray<string>, now: Date }) => Promise<import('../../usage/model.js').ToolUsage | null>} The reader.
  */
 function createCodexReader() {
   /** The log head reader, the log scanner, the title reader, and the access reader. */

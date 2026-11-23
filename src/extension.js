@@ -65,7 +65,6 @@ function activate(context) {
         maxAgeMs: sessionFileMaxAgeMs,
         now: new Date(),
       })
-
       if (deleted) log.info(`Deleted ${deleted} Claude session files older than 30 days.`)
     } catch (error) {
       log.warn(`Couldn't prune Claude session files: ${error instanceof Error ? error.message : String(error)}`)
@@ -79,7 +78,13 @@ function activate(context) {
     log,
     ...items.values(),
     loop,
-    { dispose: () => clearInterval(pruneTimer) },
+    {
+      /**
+       * Stop pruning old Claude session files.
+       * @returns {void}
+       */
+      dispose: () => clearInterval(pruneTimer),
+    },
     vscode.commands.registerCommand('statumo.refresh', () => loop.refresh()),
     vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration('statumo')) void loop.refresh()
