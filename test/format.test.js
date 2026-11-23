@@ -42,6 +42,7 @@ function makeUsage(overrides = {}) {
     },
     limitsUpdatedAt: new Date(2026, 10, 22, 9, 58),
     plan: null,
+    access: null,
     ...overrides,
   }
 }
@@ -117,7 +118,7 @@ test('formats token counts in thousands and millions', () => {
 })
 
 test('lays out each tooltip section as label and note, heading-sized amount, then bar', () => {
-  const usage = makeUsage({ plan: 'Plus' })
+  const usage = makeUsage({ plan: 'Plus', access: 'subscription' })
 
   usage.session.title = 'Fix [link](https://example.com) *now*'
 
@@ -129,7 +130,7 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
   assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><\/table>\n\n## 12% .*used.*\n\n<small><small><span/)
   assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/table>\n\n## 16% .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/table>\n\n## 39% .*used/)
-  assert.match(sections[4], /^<span[^>]*>Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*<\/span>  \n.*Plan: Plus.*\s+.*Folder: \/work\/project.*\s+.*Last activity 2m ago · Limits read 2m ago/)
+  assert.match(sections[4], /^<span[^>]*>Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*<\/span>  \n.*Plan: Plus subscription<.*\s+.*Folder: \/work\/project.*\s+.*Last activity 2m ago · Limits read 2m ago/)
 })
 
 test('shows the last activity and when the limits were read on one line', () => {
@@ -137,6 +138,22 @@ test('shows the last activity and when the limits were read on one line', () => 
   const footer = buildTooltip('Codex', usage, thresholds, now).split('\n\n---\n\n').at(-1)
 
   assert.match(footer, /Last activity 2m ago · Limits read 3h 15m ago</)
+})
+
+test('names the plan with how the tool signs in', () => {
+  /**
+   * Read the Plan line from a tooltip built with the given plan and access.
+   * @param {string | null} plan - The account's plan.
+   * @param {'subscription' | 'api' | null} access - How the tool signs in.
+   * @returns {string | undefined} The Plan line's text, or undefined when there is none.
+   */
+  const planLine = (plan, access) => /Plan: ([^<]*)</.exec(buildTooltip('Codex', makeUsage({ plan, access }), thresholds, now))?.[1]
+
+  assert.equal(planLine('Plus', 'subscription'), 'Plus subscription')
+  assert.equal(planLine(null, 'subscription'), 'Subscription')
+  assert.equal(planLine('Plus', 'api'), 'API')
+  assert.equal(planLine('Plus', null), 'Plus')
+  assert.equal(planLine(null, null), undefined)
 })
 
 test('shows when an ended session ended in place of its last activity', () => {

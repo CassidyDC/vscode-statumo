@@ -5,6 +5,7 @@
 
 'use strict'
 
+const fs = require('node:fs/promises')
 const path = require('node:path')
 const { listNames, parseJson, readLines, readRange, statFile } = require('./files')
 const { isInWorkspace } = require('./paths')
@@ -78,6 +79,12 @@ const logCache = new Map()
  * @type {{ mtimeMs: number, size: number, titles: Map<string, string> } | null}
  */
 let indexCache = null
+
+/**
+ * How Codex signs in, last read from its auth file, kept until the file changes.
+ * @type {{ filePath: string, mtimeMs: number, size: number, access: 'subscription' | 'api' | null } | undefined}
+ */
+let authCache
 
 /**
  * List numeric folder names, highest first.
@@ -325,6 +332,37 @@ async function readTitles(homeDirectory) {
 }
 
 /**
+ * Read whether Codex signs in with a ChatGPT subscription or an API key, from the `auth_mode`
+ * field of its auth file: `chatgpt` or `apikey`. The file also holds sign-in tokens, and only
+ * that field is kept.
+ * @param {string} homeDirectory - The Codex home folder.
+ * @returns {Promise<'subscription' | 'api' | null>} How Codex signs in, or null when the file doesn't say.
+ */
+async function readCodexAccess(homeDirectory) {
+  const filePath = path.join(homeDirectory, 'auth.json')
+  const stats = await statFile(filePath)
+
+  if (!stats) return null
+
+  const cached = authCache?.filePath === filePath ? authCache : undefined
+
+  if (cached?.mtimeMs === stats.mtimeMs && cached.size === stats.size) return cached.access
+
+  const text = await fs.readFile(filePath, 'utf8').catch(() => undefined)
+  const data = text === undefined ? undefined : parseJson(text)
+
+  // A file caught mid-write fails to parse; keep the last reading until it settles.
+  if (data === undefined) return cached?.access ?? null
+
+  const modes = { chatgpt: 'subscription', apikey: 'api' }
+  const access = modes[data?.auth_mode] ?? null
+
+  authCache = { filePath, mtimeMs: stats.mtimeMs, size: stats.size, access }
+
+  return access
+}
+
+/**
  * Read Codex's usage for a workspace.
  * @param {object} options - Where to read and what to match.
  * @param {string} options.homeDirectory - The Codex home folder.
@@ -375,6 +413,8 @@ async function readCodexUsage({ homeDirectory, folders, now }) {
     limits: limitsScan?.limits ?? emptyLimits(),
     limitsUpdatedAt: limitsScan?.limitsAt ?? null,
     plan: limitsScan?.plan ?? null,
+    // Only a ChatGPT sign-in reports a plan, so one stands in when the auth file doesn't say.
+    access: (await readCodexAccess(homeDirectory)) ?? (limitsScan?.plan ? 'subscription' : null),
   }
 }
 

@@ -44,6 +44,7 @@
  * @property {Limits} limits - The account's latest rate-limit readings.
  * @property {Date | null} limitsUpdatedAt - When the limits were read.
  * @property {string | null} plan - The account's plan, when the tool reports it.
+ * @property {'subscription' | 'api' | null} access - Whether the tool signs in with a subscription or an API key, when known.
  */
 
 /**

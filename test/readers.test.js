@@ -108,6 +108,11 @@ test('Claude: names the plan from the signed-in account in the global config fil
   await writeAccount({ organizationType: 'claude_max', organizationRateLimitTier: 'default_claude_max_20x' })
 
   assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).plan, 'Max 20x')
+  assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).access, null)
+
+  await writeAccount({ organizationType: 'claude_max', billingType: 'stripe_subscription' })
+
+  assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).access, 'subscription')
 
   await writeAccount({ organizationType: 'claude_pro', organizationRateLimitTier: null })
 
@@ -116,6 +121,19 @@ test('Claude: names the plan from the signed-in account in the global config fil
   await fs.writeFile(path.join(configDirectory, '.claude.json'), '{')
 
   assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).plan, 'Pro')
+
+  await fs.writeFile(path.join(configDirectory, '.claude.json'), JSON.stringify({ primaryApiKey: 'sk-test' }))
+
+  const apiUsage = await readClaudeUsage({ configDirectory, folders: [] })
+
+  assert.equal(apiUsage.plan, null)
+  assert.equal(apiUsage.access, 'api')
+
+  await writeClaudeSession(configDirectory, 'session', {
+    rateLimits: { fiveHour: { percentUsed: 10, resetsAt: null }, sevenDay: null },
+  })
+
+  assert.equal((await readClaudeUsage({ configDirectory, folders: [] })).access, 'subscription')
 })
 
 test('Claude: returns null without session files, and prunes old ones', async () => {
@@ -205,6 +223,11 @@ test('Codex: reads workspace context, the latest limits, and appended lines', as
   assert.equal(usage.limits.sevenDay.percentUsed, 18)
   assert.equal(usage.limits.fiveHour.resetsAt.getTime(), resetsAt * 1000)
   assert.equal(usage.plan, 'Plus')
+  assert.equal(usage.access, 'subscription')
+
+  await fs.writeFile(path.join(homeDirectory, 'auth.json'), JSON.stringify({ auth_mode: 'apikey', tokens: null }))
+
+  assert.equal((await readCodexUsage({ homeDirectory, folders: ['/work/project'], now })).access, 'api')
 
   const later = tokenCount({
     timestamp: '2026-11-22T07:23:00.000Z',

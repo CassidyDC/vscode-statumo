@@ -36,10 +36,23 @@ const formatVersion = 1
 const recordCache = new Map()
 
 /**
- * The plan last read from Claude Code's global config file, kept until the file changes.
- * @type {{ filePath: string, mtimeMs: number, size: number, plan: string | null } | undefined}
+ * What Claude Code's global config file says of the signed-in account.
+ * @typedef {object} ClaudeAccount
+ * @property {string | null} plan - The account's plan, such as `Max 5x`.
+ * @property {'subscription' | 'api' | null} access - Whether the account signs in with a subscription or an API key.
  */
-let planCache
+
+/**
+ * The account last read from Claude Code's global config file, kept until the file changes.
+ * @type {{ filePath: string, mtimeMs: number, size: number, account: ClaudeAccount } | undefined}
+ */
+let accountCache
+
+/**
+ * The account reading when the config file is missing or records no account.
+ * @type {ClaudeAccount}
+ */
+const noAccount = { plan: null, access: null }
 
 /**
  * Find Claude Code's global config file, which records the signed-in account.
@@ -80,32 +93,47 @@ function formatClaudePlan(account) {
 }
 
 /**
- * Read the signed-in account's plan from Claude Code's global config file,
+ * Tell from the config file whether the account signs in with a subscription or an API key:
+ * a subscription billing type, such as `stripe_subscription`, or else a saved API key.
+ * An `ANTHROPIC_API_KEY` in Claude Code's own environment takes precedence over both, and Statumo can't see it.
+ * @param {any} data - The config file's parsed JSON.
+ * @returns {'subscription' | 'api' | null} How the account signs in, or null when the file doesn't say.
+ */
+function readClaudeAccess(data) {
+  const billing = data?.oauthAccount?.billingType
+
+  if (typeof billing === 'string' && billing.includes('subscription')) return 'subscription'
+  if (typeof data?.primaryApiKey === 'string' && data.primaryApiKey) return 'api'
+  return null
+}
+
+/**
+ * Read the signed-in account's plan and how it signs in from Claude Code's global config file,
  * reusing the last reading while the file is unchanged.
  * @param {string} configDirectory - The Claude config folder.
- * @returns {Promise<string | null>} The plan's name, or null when it isn't recorded.
+ * @returns {Promise<ClaudeAccount>} The account's plan and access, each null when it isn't recorded.
  */
-async function readClaudePlan(configDirectory) {
+async function readClaudeAccount(configDirectory) {
   const filePath = globalConfigPath(configDirectory)
   const stats = await statFile(filePath)
 
-  if (!stats) return null
+  if (!stats) return noAccount
 
-  const cached = planCache?.filePath === filePath ? planCache : undefined
+  const cached = accountCache?.filePath === filePath ? accountCache : undefined
 
-  if (cached?.mtimeMs === stats.mtimeMs && cached.size === stats.size) return cached.plan
+  if (cached?.mtimeMs === stats.mtimeMs && cached.size === stats.size) return cached.account
 
   const text = await fs.readFile(filePath, 'utf8').catch(() => undefined)
   const data = text === undefined ? undefined : parseJson(text)
 
   // A file caught mid-write fails to parse; keep the last reading until it settles.
-  if (data === undefined) return cached?.plan ?? null
+  if (data === undefined) return cached?.account ?? noAccount
 
-  const plan = formatClaudePlan(data?.oauthAccount)
+  const account = { plan: formatClaudePlan(data?.oauthAccount), access: readClaudeAccess(data) }
 
-  planCache = { filePath, mtimeMs: stats.mtimeMs, size: stats.size, plan }
+  accountCache = { filePath, mtimeMs: stats.mtimeMs, size: stats.size, account }
 
-  return plan
+  return account
 }
 
 /**
@@ -201,6 +229,7 @@ async function readClaudeUsage({ configDirectory, folders }) {
 
   const session = records.find(record => isInWorkspace(record.cwd, folders)) ?? null
   const limitsRecord = records.find(record => hasLimits(record.limits))
+  const account = await readClaudeAccount(configDirectory)
 
   return {
     session: session && {
@@ -212,7 +241,10 @@ async function readClaudeUsage({ configDirectory, folders }) {
     },
     limits: limitsRecord?.limits ?? emptyLimits(),
     limitsUpdatedAt: limitsRecord?.updatedAt ?? null,
-    plan: await readClaudePlan(configDirectory),
+    plan: account.plan,
+    // Claude Code reports rate limits only on a subscription, so the newest session reporting
+    // them settles it; otherwise, such as before its first reply, the account file decides.
+    access: hasLimits(records[0].limits) ? 'subscription' : account.access,
   }
 }
 

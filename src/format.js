@@ -400,6 +400,20 @@ function limitSection(key, limit, thresholds, now) {
 }
 
 /**
+ * Describe the account's plan and how the tool signs in: the plan with `subscription` after it,
+ * `API` for an API key, which has no plan, or the plan alone when the sign-in isn't known.
+ * @param {object} usage - The tool's readings.
+ * @param {string | null} usage.plan - The account's plan.
+ * @param {'subscription' | 'api' | null} [usage.access] - How the tool signs in.
+ * @returns {string | null} The description, or null when neither is known.
+ */
+function planLabel({ plan, access = null }) {
+  if (access === 'api') return 'API'
+  if (access === 'subscription') return plan ? `${plan} subscription` : 'Subscription'
+  return plan
+}
+
+/**
  * Build the tooltip's footer lines: the session's title without a label, the plan, the session's
  * folder, and one line with the session's last activity, or when it ended, and when the limits were
  * read, separated by a dot.
@@ -409,11 +423,12 @@ function limitSection(key, limit, thresholds, now) {
  */
 function footerLines(usage, now) {
   const { session } = usage
+  const plan = planLabel(usage)
   const lines = []
   const ages = []
 
   if (session?.title) lines.push(escapeMarkdown(session.title))
-  if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
+  if (plan) lines.push(`Plan: ${escapeMarkdown(plan)}`)
   if (session?.cwd) lines.push(`Folder: ${escapeMarkdown(truncatePath(tildify(session.cwd)))}`)
   if (session) ages.push(`${session.isEnded ? 'Ended' : 'Last activity'} ${formatAge(session.updatedAt, now)}`)
   if (usage.limitsUpdatedAt) ages.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
