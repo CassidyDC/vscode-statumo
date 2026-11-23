@@ -339,6 +339,15 @@ function amount(percent, word) {
 const headingGap = 8
 
 /**
+ * Build the empty row that starts a section's table, spacing it from the rule above.
+ * @param {number} columns - How many columns the row spans.
+ * @returns {string} The row's HTML.
+ */
+function gapRow(columns) {
+  return `<tr><td colspan="${columns}" height="${headingGap}"></td></tr>`
+}
+
+/**
  * Build one tooltip section: a bold label with an optional dimmed note aligned to the right edge,
  * the amount, then an optional bar. The heading is a full-width table, the only way the hover
  * sanitizer allows right alignment, so the note ends where the bar ends. An empty first row
@@ -351,8 +360,7 @@ const headingGap = 8
  */
 function tooltipSection(label, note, value, bar) {
   const noteCell = note ? `<td align="right">${dim(escapeHtml(note))}</td>` : ''
-  const gapRow = `<tr><td colspan="${note ? 2 : 1}" height="${headingGap}"></td></tr>`
-  const heading = `<table width="100%">${gapRow}<tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr></table>`
+  const heading = `<table width="100%">${gapRow(note ? 2 : 1)}<tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr></table>`
 
   return [heading, value, bar].filter(Boolean).join('\n\n')
 }
@@ -414,27 +422,47 @@ function planLabel({ plan, access = null }) {
 }
 
 /**
- * Build the tooltip's footer lines: the session's title without a label, the plan, the session's
- * folder, and one line with the session's last activity, or when it ended, and when the limits were
- * read, separated by a dot.
+ * How many pixels wide the empty column between the footer's labels and details is, since the
+ * hover sanitizer drops padding styles.
+ * @type {number}
+ */
+const footerColumnGap = 12
+
+/**
+ * Build one footer table row: a dimmed label, the gap column, then the dimmed detail.
+ * @param {string} label - The row's label, unescaped.
+ * @param {string} detail - The row's detail, unescaped.
+ * @returns {string} The row's HTML.
+ */
+function footerRow(label, detail) {
+  return `<tr><td>${dim(escapeHtml(label))}</td><td width="${footerColumnGap}"></td><td>${dim(escapeHtml(detail))}</td></tr>`
+}
+
+/**
+ * Build the tooltip's footer: a table with the session's title across both columns, then the plan
+ * and the session's folder, each labelled on the left, and below it one line with the session's last
+ * activity, or when it ended, and when the limits were read, separated by a dot.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
- * @returns {string[]} The lines, already escaped.
+ * @returns {string} The footer's Markdown, or nothing when there is nothing to show.
  */
-function footerLines(usage, now) {
+function footerSection(usage, now) {
   const { session } = usage
   const plan = planLabel(usage)
-  const lines = []
+  const rows = []
   const ages = []
 
-  if (session?.title) lines.push(escapeMarkdown(session.title))
-  if (plan) lines.push(`Plan: ${escapeMarkdown(plan)}`)
-  if (session?.cwd) lines.push(`Folder: ${escapeMarkdown(truncatePath(tildify(session.cwd)))}`)
+  // Text inside an HTML block can't break it with a blank line, so whitespace runs become spaces.
+  if (session?.title) rows.push(`<tr><td colspan="3">${dim(escapeHtml(session.title.replace(/\s+/g, ' ')))}</td></tr>`)
+  if (plan) rows.push(footerRow('Plan', plan))
+  if (session?.cwd) rows.push(footerRow('Folder', truncatePath(tildify(session.cwd))))
   if (session) ages.push(`${session.isEnded ? 'Ended' : 'Last activity'} ${formatAge(session.updatedAt, now)}`)
   if (usage.limitsUpdatedAt) ages.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
-  if (ages.length) lines.push(ages.join(' · '))
 
-  return lines
+  const table = rows.length ? `<table>${gapRow(3)}${rows.join('')}</table>` : ''
+  const updates = ages.length ? dim(ages.join(' · ')) : ''
+
+  return [table, updates].filter(Boolean).join('\n\n')
 }
 
 /**
@@ -454,7 +482,7 @@ function buildTooltip(name, usage, thresholds, now) {
     contextSection(usage.session),
     limitSection('fiveHour', usage.limits.fiveHour, thresholds, now),
     limitSection('sevenDay', usage.limits.sevenDay, thresholds, now),
-    footerLines(usage, now).map(dim).join('  \n'),
+    footerSection(usage, now),
   ].filter(Boolean).join('\n\n---\n\n')
 }
 

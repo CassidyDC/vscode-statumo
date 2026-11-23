@@ -130,7 +130,9 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
   assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><\/table>\n\n## 12% .*used.*\n\n<small><small><span/)
   assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/table>\n\n## 16% .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/table>\n\n## 39% .*used/)
-  assert.match(sections[4], /^<span[^>]*>Fix \\\[link\\\]\\\(https:\/\/example\\\.com\\\) \\\*now\\\*<\/span>  \n.*Plan: Plus subscription<.*\s+.*Folder: \/work\/project.*\s+.*Last activity 2m ago · Limits read 2m ago/)
+  assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td colspan="3"><span[^>]*>Fix \[link\]\(https:\/\/example\.com\) \*now\*<\/span><\/td><\/tr>/)
+  assert.match(sections[4], /<td><span[^>]*>Plan<\/span><\/td><td width="12"><\/td><td><span[^>]*>Plus subscription<\/span><\/td>/)
+  assert.match(sections[4], /<td><span[^>]*>Folder<\/span><\/td><td width="12"><\/td><td><span[^>]*>\/work\/project<\/span><\/td><\/tr><\/table>\n\n<span[^>]*>Last activity 2m ago · Limits read 2m ago<\/span>$/)
 })
 
 test('shows the last activity and when the limits were read on one line', () => {
@@ -147,7 +149,7 @@ test('names the plan with how the tool signs in', () => {
    * @param {'subscription' | 'api' | null} access - How the tool signs in.
    * @returns {string | undefined} The Plan line's text, or undefined when there is none.
    */
-  const planLine = (plan, access) => /Plan: ([^<]*)</.exec(buildTooltip('Codex', makeUsage({ plan, access }), thresholds, now))?.[1]
+  const planLine = (plan, access) => />Plan<\/span><\/td><td width="12"><\/td><td><span[^>]*>([^<]*)</.exec(buildTooltip('Codex', makeUsage({ plan, access }), thresholds, now))?.[1]
 
   assert.equal(planLine('Plus', 'subscription'), 'Plus subscription')
   assert.equal(planLine(null, 'subscription'), 'Subscription')
