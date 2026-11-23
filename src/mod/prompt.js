@@ -8,7 +8,7 @@ import path from 'node:path'
 import * as vscode from 'vscode'
 import { readSettings } from '../settings.js'
 import { findClaudeCli, runClaudeJson } from './cli.js'
-import { findInstalledMod, modId, planModAction } from './plan.js'
+import { findInstalledMod, findMarketplaceFolder, isMarketplaceStale, modId, planModAction } from './plan.js'
 
 /**
  * The Claude Code extension's id.
@@ -42,6 +42,7 @@ const offerIntervalMs = 86_400_000
  * @property {string} bundledVersion - The version that ships with Statumo.
  * @property {import('./plan.js').InstalledMod | null} installed - The installed mod, or null.
  * @property {'install' | 'update' | null} action - What to do, or null when the mod is current.
+ * @property {boolean} isMarketplaceStale - Whether the `statumo` marketplace is added from another Statumo version's folder.
  */
 
 /**
@@ -84,12 +85,22 @@ async function inspectMod(context) {
   /** The environment to run Claude Code in, and its command line. */
   const env = claudeEnv()
   const cli = await findClaudeCli({ extensionPath: vscode.extensions.getExtension(claudeExtensionId)?.extensionPath, env })
+
   if (!cli) return null
 
-  /** The version that ships with Statumo, and the installed mod. */
+  /** The version that ships with Statumo, the installed mod, and the folder the marketplace reads from. */
   const bundledVersion = await readBundledVersion(modFolder(context))
   const installed = findInstalledMod(await runClaudeJson(cli, ['plugin', 'list'], env))
-  return { cli, env, bundledVersion, installed, action: planModAction(installed, bundledVersion) }
+  const marketplaceFolder = findMarketplaceFolder(await runClaudeJson(cli, ['plugin', 'marketplace', 'list'], env))
+
+  return {
+    cli,
+    env,
+    bundledVersion,
+    installed,
+    action: planModAction(installed, bundledVersion),
+    isMarketplaceStale: isMarketplaceStale(marketplaceFolder, modFolder(context)),
+  }
 }
 
 /**
@@ -103,6 +114,26 @@ async function runPluginCommand(state, args) {
   /** The command's result. */
   const result = await runClaudeJson(state.cli, args, state.env)
   if (result?.outcome && result.outcome !== 'ok') throw new Error(String(result.message ?? `\`claude ${args.join(' ')}\` didn't finish.`))
+}
+
+/**
+ * Add the `statumo` marketplace again from the copy of the mod that ships with this version of
+ * Statumo when it's added from another version's folder, which VS Code deletes once Statumo updates.
+ * The installed mod is unchanged, so this runs without asking and only logs the outcome.
+ * @param {vscode.ExtensionContext} context - Statumo's context.
+ * @param {ModState} state - What Statumo found.
+ * @param {vscode.LogOutputChannel} log - Statumo's log.
+ * @returns {Promise<void>} Resolves once the marketplace is added again, or the failure logged.
+ */
+async function repointMarketplace(context, state, log) {
+  if (!state.isMarketplaceStale) return
+
+  try {
+    await runPluginCommand(state, ['plugin', 'marketplace', 'add', modFolder(context)])
+    log.info(`Pointed the Statumo marketplace at ${modFolder(context)}.`)
+  } catch (error) {
+    log.warn(`Couldn't point the Statumo marketplace at ${modFolder(context)}: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 /**
@@ -173,7 +204,10 @@ async function offerClaudeMod(context, log) {
     return
   }
 
-  if (!state.action) return
+  if (!state.action) {
+    await repointMarketplace(context, state, log)
+    return
+  }
 
   await context.globalState.update(offeredAtKey, Date.now())
 
@@ -213,6 +247,7 @@ async function installClaudeMod(context, log) {
   }
 
   if (!state.action) {
+    await repointMarketplace(context, state, log)
     void vscode.window.showInformationMessage(`The Usage mod for Claude Code is up to date (${state.installed?.version}).`)
     return
   }

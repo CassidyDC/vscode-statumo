@@ -1,13 +1,21 @@
 /**
  * Usage mod plan.
- * @file Decide whether the Usage mod that ships with Statumo should be installed or updated, from what Claude Code lists.
+ * @file Decide whether the Usage mod that ships with Statumo should be installed or updated, and whether its marketplace points at an old folder, from what Claude Code lists.
  */
+
+import path from 'node:path'
+
+/**
+ * The name of the marketplace the Usage mod's folder serves as.
+ * @type {string}
+ */
+const marketplaceName = 'statumo'
 
 /**
  * The Usage mod's id in Claude Code: the plugin's name, then the marketplace's.
  * @type {string}
  */
-const modId = 'usage@statumo'
+const modId = `usage@${marketplaceName}`
 
 /**
  * The Usage mod as Claude Code lists it.
@@ -57,6 +65,31 @@ function findInstalledMod(plugins) {
 }
 
 /**
+ * Find the folder the `statumo` marketplace reads from in what `claude plugin marketplace list --json` printed.
+ * @param {unknown} marketplaces - The parsed list.
+ * @returns {string | null} The marketplace's folder, or null when it isn't added or isn't a folder.
+ */
+function findMarketplaceFolder(marketplaces) {
+  if (!Array.isArray(marketplaces)) return null
+
+  /** The marketplace's entry. */
+  const entry = marketplaces.find(marketplace => marketplace?.name === marketplaceName)
+  return typeof entry?.path === 'string' && entry.path ? entry.path : null
+}
+
+/**
+ * Whether the `statumo` marketplace should be added again from the copy of the mod that ships with
+ * this version of Statumo. Each Statumo version installs to its own folder and VS Code deletes the
+ * old one, so a marketplace added by an older version points at a folder that's gone.
+ * @param {string | null} marketplaceFolder - The folder the marketplace reads from, or null when it isn't added.
+ * @param {string} bundledFolder - The folder of the mod that ships with Statumo.
+ * @returns {boolean} True when the marketplace is added from another folder.
+ */
+function isMarketplaceStale(marketplaceFolder, bundledFolder) {
+  return marketplaceFolder !== null && path.resolve(marketplaceFolder) !== path.resolve(bundledFolder)
+}
+
+/**
  * Decide what to do with the Usage mod: install it when it's missing, update it when the copy that
  * ships with Statumo is newer, or nothing.
  * @param {InstalledMod | null} installed - The installed mod, or null.
@@ -68,4 +101,4 @@ function planModAction(installed, bundledVersion) {
   return compareVersions(installed.version, bundledVersion) < 0 ? 'update' : null
 }
 
-export { compareVersions, findInstalledMod, modId, planModAction }
+export { compareVersions, findInstalledMod, findMarketplaceFolder, isMarketplaceStale, modId, planModAction }
