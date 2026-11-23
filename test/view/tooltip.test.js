@@ -81,7 +81,7 @@ test('lays out each tooltip section as one table of label and note, heading-size
   assert.match(sections[3], /<b>Weekly limit<\/b>.*Resets Nov 27 at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>39% .*used/)
   assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Plan<.*Limits Read<.*Last Activity<.*<\/table>$/)
   assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
-  assert.equal(footerDetail(sections[4], 'Plan'), 'Plus subscription')
+  assert.equal(footerDetail(sections[4], 'Plan'), 'Plus Subscription')
   assert.equal(footerDetail(sections[4], 'Folder'), '/work/project')
   assert.equal(footerDetail(sections[4], 'Last Activity'), '2m ago')
   assert.equal(footerDetail(sections[4], 'Limits Read'), '2m ago')
@@ -113,6 +113,14 @@ test('shows the last activity and when the limits were read in their own rows', 
   assert.equal(footerDetail(tooltip, 'Limits Read'), '3h 15m ago')
 })
 
+test('shows a reading from the last minute as Just now', () => {
+  /** A tooltip whose session and limits were both read this minute. */
+  const tooltip = buildTooltip('Codex', makeUsage({ limitsUpdatedAt: now, session: { ...makeUsage().session, updatedAt: now } }), thresholds, now)
+
+  assert.equal(footerDetail(tooltip, 'Last Activity'), 'Just now')
+  assert.equal(footerDetail(tooltip, 'Limits Read'), 'Just now')
+})
+
 test('names the plan with how the tool signs in', () => {
   /**
    * Read the Plan row's detail from a tooltip built with the given plan and access.
@@ -121,7 +129,7 @@ test('names the plan with how the tool signs in', () => {
    * @returns {string | undefined} The Plan row's detail, or undefined when there is none.
    */
   const planLine = (plan, access) => footerDetail(buildTooltip('Codex', makeUsage({ plan, access }), thresholds, now), 'Plan')
-  assert.equal(planLine('Plus', 'subscription'), 'Plus subscription')
+  assert.equal(planLine('Plus', 'subscription'), 'Plus Subscription')
   assert.equal(planLine(null, 'subscription'), 'Subscription')
   assert.equal(planLine('Plus', 'api'), 'API')
   assert.equal(planLine('Plus', null), 'Plus')

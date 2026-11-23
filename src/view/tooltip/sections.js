@@ -46,7 +46,7 @@ function limitSection(key, limit, settings, now) {
 }
 
 /**
- * Describe the account's plan and how the tool signs in: the plan with `subscription` after it,
+ * Describe the account's plan and how the tool signs in: the plan with `Subscription` after it,
  * `API` for an API key, which has no plan, or the plan alone when the sign-in isn't known.
  * @param {object} usage - The tool's readings.
  * @param {string | null} usage.plan - The account's plan.
@@ -55,7 +55,7 @@ function limitSection(key, limit, settings, now) {
  */
 function planLabel({ plan, access = null }) {
   if (access === 'api') return 'API'
-  if (access === 'subscription') return plan ? `${plan} subscription` : 'Subscription'
+  if (access === 'subscription') return plan ? `${plan} Subscription` : 'Subscription'
   return plan
 }
 

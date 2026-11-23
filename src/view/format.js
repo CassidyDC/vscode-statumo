@@ -99,12 +99,12 @@ function formatReset(date, now, { timeFormat = '12h', showTimeUntilReset = false
  * Format how long ago something happened.
  * @param {Date} date - When it happened.
  * @param {Date} now - The current time.
- * @returns {string} The age, such as `2m ago` or `1d 3h ago`.
+ * @returns {string} The age, such as `2m ago`, `1d 3h ago`, or `Just now`.
  */
 function formatAge(date, now) {
   /** Whole minutes since then, rounded down. */
   const minutes = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 60_000))
-  return minutes ? `${formatDuration(minutes)} ago` : 'just now'
+  return minutes ? `${formatDuration(minutes)} ago` : 'Just now'
 }
 
 export { formatAge, formatClock, formatDuration, formatReset, formatTokens }
