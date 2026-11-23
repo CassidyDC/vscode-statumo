@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Show Claude Code and Codex context use and 5-hour and 7-day limit use in the status bar, one item per tool that starts with the tool's name, kept side by side.
 - Lead each percent with a circular progress ring that fills in 5% steps, marked inside by layers for context, a clock for the 5-hour limit, or a calendar for the 7-day limit.
-- Show Claude's weekly Fable limit, marked by a gem, in the Claude Code item and hover once Claude Code reports one.
+- Show Claude's weekly Fable limit, marked by a star, in the Claude Code item and hover once Claude Code reports one.
 - Follow the latest session in the current workspace for context, and the account's latest reading for rate limits.
 - Read the account usage Claude Code caches in `~/.claude.json` for the Fable limit, and show its 5-hour and 7-day limits when they're newer than the Usage mod's. A cache that belongs to another account is ignored.
 - Show a limit whose reset time has passed with no newer reading at 0%, with when it reset in the hover. A limit that hasn't been reported yet shows just an empty ring.

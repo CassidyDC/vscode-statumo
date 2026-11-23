@@ -34,38 +34,6 @@ function activate(context) {
   const tools = createTools()
   const items = new Map(tools.map(tool => [tool.id, createStatusItem(tool)]))
 
-  /** Test only: the Claude tool, for copies of its item. */
-  const claudeTool = tools.find(tool => tool.id === 'claude')
-
-  /** Test only: the Claude item, then a copy left of it with full-size rings. */
-  const claudeItems = [
-    items.get('claude'),
-    createStatusItem({ ...claudeTool, priority: claudeTool.priority + 0.000003 }, { itemId: 'claude-full-rings', iconStyle: 'full-ring' }),
-  ]
-
-  items.set('claude', {
-    /**
-     * Draw the Claude usage on the original item and its test copy.
-     * @param {import('./usage/model.js').ToolUsage | null} usage - The tool's usage.
-     * @param {import('./settings.js').Settings} settings - The current settings.
-     * @param {Date} now - The current time.
-     * @returns {void}
-     */
-    render: (usage, settings, now) => claudeItems.forEach(item => item.render(usage, settings, now)),
-
-    /**
-     * Hide the original item and its test copy.
-     * @returns {void}
-     */
-    hide: () => claudeItems.forEach(item => item.hide()),
-
-    /**
-     * Remove the original item and its test copy.
-     * @returns {void}
-     */
-    dispose: () => claudeItems.forEach(item => item.dispose()),
-  })
-
   /** The refresh loop. */
   const loop = startRefreshLoop({
     tools,

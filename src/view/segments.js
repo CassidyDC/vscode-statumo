@@ -4,7 +4,7 @@
  */
 
 import { isLimitStale, percentUsed } from '../usage/levels.js'
-import { iconStyles } from './rings.js'
+import { ringIcon } from './rings.js'
 
 /**
  * Which rate-limit window a segment or section shows.
@@ -46,16 +46,15 @@ const windowRings = { fiveHour: '5h', sevenDay: '7d', sevenDayFable: 'fb' }
  * @param {import('./rings.js').RingKind} ring - The window's ring.
  * @param {import('../usage/model.js').LimitReading | null} limit - The window's reading.
  * @param {Date} now - The current time.
- * @param {(ring: import('./rings.js').RingKind, percent: number | null) => string} icon - Draws the segment's icon.
  * @returns {WindowSegment} The segment.
  */
-function buildWindowSegment(key, ring, limit, now, icon) {
-  if (!limit) return { key, text: icon(ring, null), value: null, isStale: false, limit }
+function buildWindowSegment(key, ring, limit, now) {
+  if (!limit) return { key, text: ringIcon(ring, null), value: null, isStale: false, limit }
 
   /** Whether the reading predates the window's reset, and the rounded percent used. */
   const isStale = isLimitStale(limit, now)
   const used = isStale ? 0 : percentUsed(limit)
-  return { key, text: `${icon(ring, used)} ${used}%`, value: `${used}%`, isStale, limit }
+  return { key, text: `${ringIcon(ring, used)} ${used}%`, value: `${used}%`, isStale, limit }
 }
 
 /**
@@ -63,24 +62,20 @@ function buildWindowSegment(key, ring, limit, now, icon) {
  * each percent led by a ring that fills to match it. The Fable window only appears once it's reported.
  * @param {import('../usage/model.js').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
- * @param {import('./rings.js').IconStyle} [iconStyle] - How to draw the icon before each percent.
  * @returns {{ context: ContextSegment, windows: WindowSegment[] }} The context and the windows.
  */
-function buildSegments(usage, now, iconStyle = 'ring') {
-  /** Draws a segment's icon. */
-  const icon = iconStyles[iconStyle]
-
+function buildSegments(usage, now) {
   /** The session's context percent, rounded, and as text. */
   const percent = usage.session?.context?.percent ?? null
   const used = percent === null ? null : Math.round(percent)
   const value = used === null ? null : `${used}%`
 
   return {
-    context: { text: value === null ? icon('cx', null) : `${icon('cx', used)} ${value}`, value },
+    context: { text: value === null ? ringIcon('cx', null) : `${ringIcon('cx', used)} ${value}`, value },
     windows: [
-      buildWindowSegment('fiveHour', windowRings.fiveHour, usage.limits.fiveHour, now, icon),
-      buildWindowSegment('sevenDay', windowRings.sevenDay, usage.limits.sevenDay, now, icon),
-      ...(usage.limits.sevenDayFable ? [buildWindowSegment('sevenDayFable', windowRings.sevenDayFable, usage.limits.sevenDayFable, now, icon)] : []),
+      buildWindowSegment('fiveHour', windowRings.fiveHour, usage.limits.fiveHour, now),
+      buildWindowSegment('sevenDay', windowRings.sevenDay, usage.limits.sevenDay, now),
+      ...(usage.limits.sevenDayFable ? [buildWindowSegment('sevenDayFable', windowRings.sevenDayFable, usage.limits.sevenDayFable, now)] : []),
     ],
   }
 }

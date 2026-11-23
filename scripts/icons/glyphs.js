@@ -3,7 +3,7 @@
  * @file Draw each ring kind at each step as an SVG glyph, with the symbol that marks its kind inside.
  */
 
-import { fullRingIconId, ringIconId, ringKinds, ringSteps, symbolIconId } from '../../src/view/rings.js'
+import { ringIconId, ringKinds, ringSteps, symbolIconId } from '../../src/view/rings.js'
 import { annulus, arcBand, bar, polygon, roundedRect } from './shapes.js'
 
 /**
@@ -23,7 +23,7 @@ const ringCodePointBase = 0xe100
 
 /**
  * A symbol drawn inside a ring.
- * @typedef {'layers' | 'clock' | 'calendar' | 'gem' | 'star'} SymbolName
+ * @typedef {'layers' | 'clock' | 'calendar' | 'star'} SymbolName
  */
 
 /**
@@ -54,45 +54,12 @@ const symbols = {
     roundedRect(9.7, 3.9, 0.9, 1.6, 0.45),
     ...[5.9, 7.5, 9.1].flatMap(x => [roundedRect(x, 7.75, 1, 1, 0.25), roundedRect(x, 9.35, 1, 1, 0.25)]),
   ].join(''),
-  gem: [
-    polygon([[5.8, 4.7], [10.2, 4.7], [11.8, 6.8], [8, 11.6], [4.2, 6.8]]),
-    polygon([[5, 6.45], [11, 6.45], [11, 7.25], [5, 7.25]], true),
-  ].join(''),
   star: polygon(Array.from({ length: 10 }, (_, index) => {
     /** The corner's distance from the center, and its angle clockwise from 12 o'clock. */
     const radius = index % 2 === 0 ? 4 : 4 * starInnerRatio
     const angle = (index / 10) * 2 * Math.PI
     return [8 + radius * Math.sin(angle), 8 - radius * Math.cos(angle)]
   })),
-}
-
-/**
- * The symbol the test icons draw for each kind: the original's, with a star in place of the gem.
- * @param {SymbolName} symbol - The original icon's symbol.
- * @returns {SymbolName} The test icon's symbol.
- */
-function testSymbol(symbol) {
-  return symbol === 'gem' ? 'star' : symbol
-}
-
-/**
- * Draw one ring glyph: a thin track, the filled arc over it, and the kind's symbol inside.
- * @param {SymbolName} symbol - The symbol inside the ring.
- * @param {number} step - How full the ring is, in percent.
- * @returns {string} The glyph's SVG.
- */
-function ringSvg(symbol, step) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="${ringPath(symbol, step)}"/></svg>`
-}
-
-/**
- * Outline one ring: a thin track, the filled arc over it, and the kind's symbol inside.
- * @param {SymbolName} symbol - The symbol inside the ring.
- * @param {number} step - How full the ring is, in percent.
- * @returns {string} The path data, in the 16-unit grid.
- */
-function ringPath(symbol, step) {
-  return ringBandPath(step) + symbols[symbol]
 }
 
 /**
@@ -110,12 +77,6 @@ function ringBandPath(step) {
  */
 const ringOuterRadius = 7.85
 const ringInnerRadius = 6.15
-
-/**
- * The first code point of the full-size ring glyphs; each kind gets a block of 32.
- * @type {number}
- */
-const fullRingCodePointBase = 0xe200
 
 /**
  * The points of a symbol's outline, with each arc sampled along its length, to find what bounds it.
@@ -197,13 +158,14 @@ function boundingCircle(points) {
 }
 
 /**
- * Draw one ring filling the whole 16-unit box, with its symbol grown until the gap between the
- * arc and the symbol's nearest point matches the arc's thickness.
+ * Draw one ring glyph: a thin track and the filled arc over it, filling the whole 16-unit box, with
+ * the kind's symbol inside, grown until the gap between the arc and the symbol's nearest point
+ * matches the arc's thickness.
  * @param {SymbolName} symbol - The symbol inside the ring.
  * @param {number} step - How full the ring is, in percent.
  * @returns {string} The glyph's SVG.
  */
-function fullRingSvg(symbol, step) {
+function ringSvg(symbol, step) {
   /** How much to scale the ring by so its outermost ink reaches the box's edges. */
   const k = 8 / ringOuterRadius
 
@@ -277,7 +239,7 @@ function symbolSvg(symbol) {
 }
 
 /**
- * Every glyph in the font: each ring kind at each step, each kind's symbol alone for the hover, then each full-size test ring.
+ * Every glyph in the font: each ring kind at each step, then each kind's symbol alone for the hover.
  * @returns {Glyph[]} The glyphs.
  */
 function collectGlyphs() {
@@ -292,14 +254,8 @@ function collectGlyphs() {
       id: symbolIconId(kind),
       description: `${description} symbol`,
       codePoint: symbolCodePointBase + kindIndex,
-      svg: Buffer.from(symbolSvg(testSymbol(symbol))),
+      svg: Buffer.from(symbolSvg(symbol)),
     })),
-    ...ringKinds.flatMap(({ kind, symbol, description }, kindIndex) => ringSteps.map((step, stepIndex) => ({
-      id: fullRingIconId(kind, step),
-      description: `Full-size ${description.toLowerCase()} at ${step}%`,
-      codePoint: fullRingCodePointBase + kindIndex * 0x20 + stepIndex,
-      svg: Buffer.from(fullRingSvg(testSymbol(symbol), step)),
-    }))),
   ]
 }
 
