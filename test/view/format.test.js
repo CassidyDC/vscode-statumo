@@ -28,7 +28,18 @@ test('adds the time until a reset only when asked', () => {
   const now = new Date(2026, 10, 22, 10, 0)
   const resetsAt = new Date(2026, 10, 22, 14, 30)
 
-  assert.equal(formatReset(resetsAt, now), 'Nov 22 at 2:30 PM')
-  assert.equal(formatReset(resetsAt, now, { timeFormat: '24h' }), 'Nov 22 at 14:30')
-  assert.equal(formatReset(resetsAt, now, { showTimeUntilReset: true }), 'Nov 22 at 2:30 PM (4h 30m)')
+  assert.equal(formatReset(resetsAt, now), 'today at 2:30 PM')
+  assert.equal(formatReset(resetsAt, now, { timeFormat: '24h' }), 'today at 14:30')
+  assert.equal(formatReset(resetsAt, now, { showTimeUntilReset: true }), 'today at 2:30 PM (4h 30m)')
+})
+
+test('names the reset day today or tomorrow, and dates any later day', () => {
+  /** A fixed late-evening current time. */
+  const now = new Date(2026, 10, 22, 23, 30)
+
+  assert.equal(formatReset(new Date(2026, 10, 22, 23, 45), now), 'today at 11:45 PM')
+  assert.equal(formatReset(new Date(2026, 10, 23, 0, 15), now), 'tomorrow at 12:15 AM')
+  assert.equal(formatReset(new Date(2026, 10, 23, 23, 59), now), 'tomorrow at 11:59 PM')
+  assert.equal(formatReset(new Date(2026, 10, 24, 0, 0), now), 'Nov 24 at 12:00 AM')
+  assert.equal(formatReset(new Date(2026, 11, 1, 9, 0), new Date(2026, 10, 30, 9, 0)), 'tomorrow at 9:00 AM')
 })

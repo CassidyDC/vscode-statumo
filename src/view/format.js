@@ -59,17 +59,35 @@ function formatClock(date, timeFormat) {
 }
 
 /**
+ * Name a date's day relative to now, as `today`, `tomorrow`, or a short date such as `Nov 27`.
+ * @param {Date} date - The date to name.
+ * @param {Date} now - The current time.
+ * @returns {string} The day's name.
+ */
+function formatDay(date, now) {
+  /** Local midnight at the start of today and of tomorrow. */
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+
+  /** Local midnight at the start of the date's day. */
+  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  if (day === today.getTime()) return 'today'
+  if (day === tomorrow.getTime()) return 'tomorrow'
+  return shortDate.format(date)
+}
+
+/**
  * Format when a window resets, and optionally how long until then.
  * @param {Date} date - The reset time.
  * @param {Date} now - The current time.
  * @param {object} [options] - How to format it.
  * @param {'12h' | '24h'} [options.timeFormat] - Which clock to show the time on.
  * @param {boolean} [options.showTimeUntilReset] - Whether to add how long until the reset.
- * @returns {string} The reset, such as `Nov 27 at 9:00 AM`, or `Nov 27 at 09:00 (4d 23h)`.
+ * @returns {string} The reset, such as `today at 2:30 PM`, `tomorrow at 9:00 AM`, or `Nov 27 at 09:00 (4d 23h)`.
  */
 function formatReset(date, now, { timeFormat = '12h', showTimeUntilReset = false } = {}) {
-  /** The reset's date and time of day. */
-  const when = `${shortDate.format(date)} at ${formatClock(date, timeFormat)}`
+  /** The reset's day and time of day. */
+  const when = `${formatDay(date, now)} at ${formatClock(date, timeFormat)}`
   if (!showTimeUntilReset) return when
 
   /** Whole minutes until the reset, rounded up. */
