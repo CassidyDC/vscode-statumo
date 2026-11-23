@@ -67,7 +67,6 @@ function createCodexReader() {
           cwd: head.cwd,
           context: scan.context,
           updatedAt: new Date(log.mtimeMs),
-          isEnded: false,
         }
       }
 

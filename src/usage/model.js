@@ -34,7 +34,6 @@
  * @property {string | null} cwd - The session's working folder.
  * @property {ContextReading | null} context - The session's context use.
  * @property {Date} updatedAt - When the session last changed.
- * @property {boolean} isEnded - Whether the session has ended.
  */
 
 /**

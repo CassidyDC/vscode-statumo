@@ -111,7 +111,6 @@ async function readHead(filePath) {
   const head = (await readRange(filePath, 0, headLength)).toString('utf8')
   const firstLine = head.split('\n', 1)[0]
   const idMatch = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i.exec(filePath)
-
   if (!firstLine.includes('"session_meta"')) return { id: idMatch?.[1] ?? null, cwd: null }
 
   /**
@@ -120,7 +119,6 @@ async function readHead(filePath) {
    */
   const cwdMatch = /"cwd"\s*:\s*("(?:[^"\\]|\\.)*")/.exec(firstLine)
   const cwd = cwdMatch ? parseJson(cwdMatch[1]) : undefined
-
   return { id: idMatch?.[1] ?? null, cwd: typeof cwd === 'string' ? cwd : null }
 }
 

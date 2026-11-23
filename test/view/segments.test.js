@@ -27,7 +27,6 @@ function makeUsage(overrides = {}) {
       cwd: '/work/project',
       context: { tokens: 48_300, window: 400_000, percent: 12 },
       updatedAt: new Date(2026, 10, 22, 9, 58),
-      isEnded: false,
     },
     limits: {
       fiveHour: { percentUsed: 16, resetsAt: new Date(2026, 10, 22, 14, 30) },

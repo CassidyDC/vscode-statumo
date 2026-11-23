@@ -167,6 +167,7 @@ test('Codex: skips a window that does not give its length, and appends new sessi
       secondary: { used_percent: 12, window_minutes: 10_080, resets_at: 1_800_000_000 },
     }),
   ].join('\n')}\n`)
+
   await fs.writeFile(indexPath, `${JSON.stringify({ id, thread_name: 'First title' })}\n`)
 
   /** The first reading. */

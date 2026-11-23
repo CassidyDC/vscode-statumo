@@ -8,8 +8,8 @@
 const os = require('node:os')
 const path = require('node:path')
 const vscode = require('vscode')
-const { pruneClaudeSessions, readClaudeUsage } = require('./claude')
 const { expandHome } = require('./files/paths')
+const { createClaudeReader, pruneClaudeSessions } = require('./providers/claude')
 const { createCodexReader } = require('./providers/codex')
 const { getToolLevel } = require('./usage/levels')
 const { buildSegments, windowNames } = require('./view/segments')
@@ -52,6 +52,12 @@ const pruneIntervalMs = 86_400_000
  * @property {string} openCommand - The Statumo command that opens the tool.
  * @property {(settings: Settings, folders: string[], now: Date) => Promise<import('./usage/model').ToolUsage | null>} read - Reads the tool's usage.
  */
+
+/**
+ * Reads Claude Code usage, keeping what it has read of each file between refreshes.
+ * @type {ReturnType<typeof createClaudeReader>}
+ */
+const readClaudeUsage = createClaudeReader()
 
 /**
  * Reads Codex usage, keeping what it has read of each log between refreshes.
