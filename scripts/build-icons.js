@@ -10,7 +10,7 @@ const path = require('node:path')
 const { Readable } = require('node:stream')
 const svg2ttf = require('svg2ttf')
 const ttf2woff = require('ttf2woff')
-const { ringIconId, ringKinds, ringSteps } = require('../src/rings')
+const { ringIconId, ringKinds, ringSteps } = require('../src/view/rings')
 
 /**
  * The repository's root folder.

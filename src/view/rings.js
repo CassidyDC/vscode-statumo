@@ -41,8 +41,8 @@ function ringStep(percent) {
   if (percent === null || !(percent > 0)) return 0
   if (percent >= 100) return 100
 
+  /** The nearest step, before keeping it off empty and full. */
   const step = Math.round(percent / ringStepPercent) * ringStepPercent
-
   return Math.max(ringStepPercent, Math.min(100 - ringStepPercent, step))
 }
 

@@ -10,8 +10,10 @@ const path = require('node:path')
 const vscode = require('vscode')
 const { pruneClaudeSessions, readClaudeUsage } = require('./claude')
 const { readCodexUsage } = require('./codex')
-const { buildSegments, buildTooltip, getToolLevel, windowNames } = require('./format')
-const { expandHome } = require('./paths')
+const { expandHome } = require('./files/paths')
+const { getToolLevel } = require('./usage/levels')
+const { buildSegments, windowNames } = require('./view/segments')
+const { buildTooltip } = require('./view/tooltip')
 
 /**
  * How often the items re-read usage, in milliseconds.
@@ -48,7 +50,7 @@ const pruneIntervalMs = 86_400_000
  * @property {string} name - The tool's full name.
  * @property {number} priority - The tool's status bar priority; higher sits further left.
  * @property {string} openCommand - The Statumo command that opens the tool.
- * @property {(settings: Settings, folders: string[], now: Date) => Promise<import('./usage').ToolUsage | null>} read - Reads the tool's usage.
+ * @property {(settings: Settings, folders: string[], now: Date) => Promise<import('./usage/model').ToolUsage | null>} read - Reads the tool's usage.
  */
 
 /**
@@ -153,7 +155,7 @@ function toTooltip(markdown) {
  * color of its lower window, and its tooltip has the full breakdown.
  * @param {vscode.StatusBarItem} item - The tool's item.
  * @param {Tool} tool - The tool.
- * @param {import('./usage').ToolUsage | null} usage - The tool's usage.
+ * @param {import('./usage/model').ToolUsage | null} usage - The tool's usage.
  * @param {Settings} settings - The current settings.
  * @param {Date} now - The current time.
  */

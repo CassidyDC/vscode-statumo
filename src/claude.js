@@ -8,9 +8,9 @@
 const fs = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
-const { listNames, parseJson, statFile } = require('./files')
-const { isInWorkspace } = require('./paths')
-const { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit } = require('./usage')
+const { listNames, parseJson, statFile } = require('./files/files')
+const { isInWorkspace } = require('./files/paths')
+const { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit } = require('./usage/model')
 
 /**
  * The session file format version this reader understands.
@@ -23,8 +23,8 @@ const formatVersion = 1
  * @typedef {object} ClaudeRecord
  * @property {string | null} title - The session's title.
  * @property {string | null} cwd - The session's project root.
- * @property {import('./usage').ContextReading} context - The session's context use.
- * @property {import('./usage').Limits} limits - The limits the session last saw.
+ * @property {import('./usage/model').ContextReading} context - The session's context use.
+ * @property {import('./usage/model').Limits} limits - The limits the session last saw.
  * @property {Date} updatedAt - When the mod last wrote the file.
  * @property {Date} limitsUpdatedAt - When the file's limits were read, which a restarted session carries over.
  * @property {boolean} isEnded - Whether the session has ended.
@@ -161,7 +161,7 @@ function toRecord(data) {
   /**
    * Build a limit reading from one of the file's windows.
    * @param {any} window - The window as the file stores it.
-   * @returns {import('./usage').LimitReading | null} The reading, or null.
+   * @returns {import('./usage/model').LimitReading | null} The reading, or null.
    */
   const toLimit = window => makeLimit(window?.percentUsed, dateOrNull(window?.resetsAt))
 
@@ -213,7 +213,7 @@ async function readRecord(filePath) {
  * @param {object} options - Where to read and what to match.
  * @param {string} options.configDirectory - The Claude config folder.
  * @param {readonly string[]} options.folders - The workspace folders' paths.
- * @returns {Promise<import('./usage').ToolUsage | null>} The usage, or null when no session file exists.
+ * @returns {Promise<import('./usage/model').ToolUsage | null>} The usage, or null when no session file exists.
  */
 async function readClaudeUsage({ configDirectory, folders }) {
   const folder = sessionsFolder(configDirectory)

@@ -7,9 +7,9 @@
 
 const fs = require('node:fs/promises')
 const path = require('node:path')
-const { listNames, parseJson, readLines, readRange, statFile } = require('./files')
-const { isInWorkspace } = require('./paths')
-const { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit } = require('./usage')
+const { listNames, parseJson, readLines, readRange, statFile } = require('./files/files')
+const { isInWorkspace } = require('./files/paths')
+const { dateOrNull, emptyLimits, finiteOrNull, hasLimits, makeLimit } = require('./usage/model')
 
 /**
  * Bytes read from the start of a log to find its working folder.
@@ -51,8 +51,8 @@ const dayMs = 86_400_000
  * What a log's latest token counts said.
  * @typedef {object} LogScan
  * @property {number} end - The offset after the last line scanned.
- * @property {import('./usage').ContextReading | null} context - The latest context use.
- * @property {import('./usage').Limits | null} limits - The latest rate limits.
+ * @property {import('./usage/model').ContextReading | null} context - The latest context use.
+ * @property {import('./usage/model').Limits | null} limits - The latest rate limits.
  * @property {Date | null} limitsAt - When those limits were reported.
  * @property {string | null} plan - The plan those limits came with.
  */
@@ -164,7 +164,7 @@ async function readHead(filePath) {
  * Turn a token count event's rate limits into the 5-hour and 7-day windows.
  * @param {any} rateLimits - The event's `rate_limits`.
  * @param {Date | null} timestamp - When the event was logged.
- * @returns {import('./usage').Limits} The windows.
+ * @returns {import('./usage/model').Limits} The windows.
  */
 function toLimits(rateLimits, timestamp) {
   const limits = emptyLimits()
@@ -368,7 +368,7 @@ async function readCodexAccess(homeDirectory) {
  * @param {string} options.homeDirectory - The Codex home folder.
  * @param {readonly string[]} options.folders - The workspace folders' paths.
  * @param {Date} options.now - The current time.
- * @returns {Promise<import('./usage').ToolUsage | null>} The usage, or null when there are no recent logs.
+ * @returns {Promise<import('./usage/model').ToolUsage | null>} The usage, or null when there are no recent logs.
  */
 async function readCodexUsage({ homeDirectory, folders, now }) {
   const logs = await listLogs(path.join(homeDirectory, 'sessions'), now)

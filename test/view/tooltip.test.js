@@ -1,14 +1,13 @@
 /**
- * Status text formatting tests.
- * @file Check the status bar segments, progress rings, per-window warning levels, staleness, and tooltips.
+ * Tooltip tests.
+ * @file Check the tooltip's sections, footer rows, plan label, escaping, and progress bars.
  */
 
 'use strict'
 
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
-const { buildSegments, buildTooltip, formatTokens, getToolLevel, getWindowLevel, truncatePath } = require('../src/format')
-const { ringIcon, ringStep } = require('../src/rings')
+const { buildTooltip } = require('../../src/view/tooltip')
 
 /**
  * A fixed current time for every test.
@@ -25,7 +24,7 @@ const thresholds = { warningThreshold: 25, errorThreshold: 10 }
 /**
  * Build a usage reading with a session and both windows.
  * @param {object} [overrides] - Fields to replace.
- * @returns {import('../src/usage').ToolUsage} The usage.
+ * @returns {import('../../src/usage/model').ToolUsage} The usage.
  */
 function makeUsage(overrides = {}) {
   return {
@@ -48,51 +47,6 @@ function makeUsage(overrides = {}) {
 }
 
 /**
- * Reduce segments to their visible text.
- * @param {ReturnType<typeof buildSegments>} segments - The segments.
- * @returns {string[]} The texts, left to right.
- */
-function texts(segments) {
-  return [segments.context.text, ...segments.windows.map(window => window.text)]
-}
-
-test('builds segments with context and limits used', () => {
-  assert.deepEqual(texts(buildSegments(makeUsage(), now)), ['$(statumo-cx-10) 12%', '$(statumo-5h-15) 16%', '$(statumo-7d-40) 39%'])
-})
-
-test('shows only an empty context ring when the workspace has no session', () => {
-  assert.deepEqual(buildSegments(makeUsage({ session: null }), now).context, { text: '$(statumo-cx-0)', value: null })
-})
-
-test('rounds rings to the nearest step, keeping partial values off empty and full', () => {
-  assert.equal(ringStep(null), 0)
-  assert.equal(ringStep(0), 0)
-  assert.equal(ringStep(1), 5)
-  assert.equal(ringStep(42), 40)
-  assert.equal(ringStep(43), 45)
-  assert.equal(ringStep(99), 95)
-  assert.equal(ringStep(100), 100)
-  assert.equal(ringStep(130), 100)
-  assert.equal(ringIcon('7d', 61), '$(statumo-7d-60)')
-})
-
-test('empties the ring of a window whose reset has passed', () => {
-  const usage = makeUsage({
-    limits: {
-      fiveHour: { percentUsed: 90, resetsAt: new Date(2026, 10, 22, 9, 0) },
-      sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
-    },
-  })
-  const segments = buildSegments(usage, now)
-
-  assert.deepEqual(texts(segments), ['$(statumo-cx-10) 12%', '$(statumo-5h-0)', '$(statumo-7d-40) 39%'])
-  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*\n\n.*No reading since the reset/)
-  assert.equal(segments.windows[0].value, null)
-  assert.equal(segments.windows[0].isStale, true)
-  assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
-})
-
-/**
  * Read one labelled detail from a tooltip's footer table.
  * @param {string} tooltip - The tooltip, or its footer.
  * @param {string} label - The row's label.
@@ -102,36 +56,25 @@ function footerDetail(tooltip, label) {
   return new RegExp(`>${label}</span></td><td width="12"></td><td><span[^>]*>([^<]*)<`).exec(tooltip)?.[1]
 }
 
-test('warns and errors per window', () => {
-  const thresholds = { warningThreshold: 25, errorThreshold: 10 }
+test('marks a window whose reset has passed as inactive', () => {
+  /** Usage whose 5-hour window reset an hour ago. */
+  const usage = makeUsage({
+    limits: {
+      fiveHour: { percentUsed: 90, resetsAt: new Date(2026, 10, 22, 9, 0) },
+      sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
+    },
+  })
 
-  /**
-   * Build a current reading at a given percent used.
-   * @param {number} percentUsed - Percent of the window used.
-   * @returns {import('../src/usage').LimitReading} The reading.
-   */
-  const limit = percentUsed => ({ percentUsed, resetsAt: null })
-
-  assert.equal(getWindowLevel(limit(50), thresholds, now), null)
-  assert.equal(getWindowLevel(limit(75), thresholds, now), 'warning')
-  assert.equal(getWindowLevel(limit(95), thresholds, now), 'error')
-  assert.equal(getWindowLevel(null, thresholds, now), null)
-  assert.equal(getToolLevel({ fiveHour: limit(95), sevenDay: limit(80) }, thresholds, now), 'error')
-  assert.equal(getToolLevel({ fiveHour: limit(10), sevenDay: limit(80) }, thresholds, now), 'warning')
-  assert.equal(getToolLevel({ fiveHour: null, sevenDay: limit(10) }, thresholds, now), null)
-})
-
-test('formats token counts in thousands and millions', () => {
-  assert.equal(formatTokens(48_300), '48.3k')
-  assert.equal(formatTokens(1_000_000), '1m')
-  assert.equal(formatTokens(null), '—')
+  assert.match(buildTooltip('Codex', usage, thresholds, now), /<b>5-hour limit<\/b><\/td><td align="right">.*>Inactive<.*\n\n.*No reading since the reset/)
 })
 
 test('lays out each tooltip section as label and note, heading-sized amount, then bar', () => {
+  /** Usage with a plan and a title full of Markdown. */
   const usage = makeUsage({ plan: 'Plus', access: 'subscription' })
 
   usage.session.title = 'Fix [link](https://example.com) *now*'
 
+  /** The tooltip, and its sections. */
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
   const sections = tooltip.split('\n\n---\n\n')
 
@@ -149,6 +92,7 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
 })
 
 test('shows the last activity and when the limits were read in their own rows', () => {
+  /** Usage whose limits were read over three hours ago, and its tooltip. */
   const usage = makeUsage({ limitsUpdatedAt: new Date(2026, 10, 22, 6, 45) })
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
@@ -164,7 +108,6 @@ test('names the plan with how the tool signs in', () => {
    * @returns {string | undefined} The Plan row's detail, or undefined when there is none.
    */
   const planLine = (plan, access) => footerDetail(buildTooltip('Codex', makeUsage({ plan, access }), thresholds, now), 'Plan')
-
   assert.equal(planLine('Plus', 'subscription'), 'Plus subscription')
   assert.equal(planLine(null, 'subscription'), 'Subscription')
   assert.equal(planLine('Plus', 'api'), 'API')
@@ -173,10 +116,12 @@ test('names the plan with how the tool signs in', () => {
 })
 
 test('shows when an ended session ended in place of its last activity', () => {
+  /** Usage whose session has ended. */
   const usage = makeUsage()
 
   usage.session.isEnded = true
 
+  /** The usage's tooltip. */
   const tooltip = buildTooltip('Claude Code', usage, thresholds, now)
 
   assert.equal(footerDetail(tooltip, 'Ended'), '2m ago')
@@ -184,32 +129,24 @@ test('shows when an ended session ended in place of its last activity', () => {
 })
 
 test('escapes HTML in session titles so only the progress bars are HTML', () => {
+  /** Usage whose title is an HTML tag. */
   const usage = makeUsage()
-
   usage.session.title = '<img src=x onerror=alert(1)>'
-
   assert.doesNotMatch(buildTooltip('Codex', usage, thresholds, now), /(?<!\\)<img/)
 })
 
 test('draws progress bars from theme colors, coloring low windows', () => {
+  /** Usage whose 5-hour window is nearly used up. */
   const usage = makeUsage({
     limits: {
       fiveHour: { percentUsed: 95, resetsAt: new Date(2026, 10, 22, 14, 30) },
       sevenDay: { percentUsed: 39, resetsAt: new Date(2026, 10, 27, 9, 0) },
     },
   })
+
+  /** The usage's tooltip. */
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
   assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{56}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{3}</)
   assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▀{23}<\/span>/)
-})
-
-test('shortens long paths in the middle, keeping the first and last folders', () => {
-  assert.equal(truncatePath('~/work/project'), '~/work/project')
-  assert.equal(
-    truncatePath('~/Projects/Software/First-Party/Groups/CassidyDC/Packages/Repos/_statumo'),
-    '~/…/CassidyDC/Packages/Repos/_statumo',
-  )
-  assert.equal(truncatePath('/Volumes/Data/very/deep/folder/structure/for/a/project'), '/Volumes/…/structure/for/a/project')
-  assert.equal(truncatePath(`~/${'x'.repeat(60)}`, 20), `…${'x'.repeat(19)}`)
 })

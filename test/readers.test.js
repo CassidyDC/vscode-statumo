@@ -12,7 +12,6 @@ const path = require('node:path')
 const { after, before, test } = require('node:test')
 const { pruneClaudeSessions, readClaudeUsage } = require('../src/claude')
 const { readCodexUsage } = require('../src/codex')
-const { isInWorkspace } = require('../src/paths')
 
 /**
  * The temporary folder the fixtures live in.
@@ -54,14 +53,6 @@ async function writeClaudeSession(configDirectory, id, fields) {
   await fs.mkdir(folder, { recursive: true })
   await fs.writeFile(path.join(folder, `${id}.json`), JSON.stringify(data))
 }
-
-test('matches sessions inside a workspace folder only', () => {
-  assert.equal(isInWorkspace('/work/project', ['/work/project']), true)
-  assert.equal(isInWorkspace('/work/project/packages/a', ['/work/project']), true)
-  assert.equal(isInWorkspace('/work/project-two', ['/work/project']), false)
-  assert.equal(isInWorkspace('/work', ['/work/project']), false)
-  assert.equal(isInWorkspace(null, ['/work/project']), false)
-})
 
 test('Claude: follows the workspace session and the newest limits', async () => {
   const configDirectory = path.join(root, 'claude')

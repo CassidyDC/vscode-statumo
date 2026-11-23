@@ -64,8 +64,8 @@ function finiteOrNull(value) {
 function dateOrNull(value) {
   if (typeof value !== 'string' && typeof value !== 'number') return null
 
+  /** The parsed date, which may be invalid. */
   const date = new Date(value)
-
   return Number.isFinite(date.getTime()) ? date : null
 }
 
@@ -76,8 +76,8 @@ function dateOrNull(value) {
  * @returns {LimitReading | null} The reading, or null.
  */
 function makeLimit(percentUsed, resetsAt) {
+  /** The percent used as a finite number. */
   const percent = finiteOrNull(percentUsed)
-
   return percent === null ? null : { percentUsed: percent, resetsAt }
 }
 

@@ -15,16 +15,18 @@ const fs = require('node:fs/promises')
  * @returns {Promise<Buffer>} The bytes in the range.
  */
 async function readRange(filePath, start, end) {
+  /** How many bytes the range spans. */
   const length = Math.max(0, end - start)
 
   if (!length) return Buffer.alloc(0)
 
+  /** The open file. */
   const handle = await fs.open(filePath, 'r')
 
   try {
+    /** The buffer the read fills, and how many bytes it filled. */
     const buffer = Buffer.alloc(length)
     const { bytesRead } = await handle.read(buffer, 0, length, start)
-
     return buffer.subarray(0, bytesRead)
   } finally {
     await handle.close()
@@ -45,15 +47,14 @@ async function readRange(filePath, start, end) {
  * @returns {Promise<{ lines: string[], end: number }>} The lines, oldest first, and the offset after the last newline.
  */
 async function readLines(filePath, { start, end, skipPartialStart = false }) {
+  /** The range's bytes, and where the last newline in them sits. */
   const buffer = await readRange(filePath, start, end)
   const lastNewline = buffer.lastIndexOf(0x0a)
-
   if (lastNewline === -1) return { lines: [], end: start }
 
+  /** The lines before the last newline. */
   const lines = buffer.subarray(0, lastNewline).toString('utf8').split('\n')
-
   if (skipPartialStart && start > 0) lines.shift()
-
   return { lines: lines.filter(line => line.trim() !== ''), end: start + lastNewline + 1 }
 }
 
