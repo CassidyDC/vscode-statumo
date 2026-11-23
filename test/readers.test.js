@@ -91,6 +91,23 @@ test('Claude: follows the workspace session and the newest limits', async () => 
   assert.equal(usage.limitsUpdatedAt.toISOString(), '2026-11-22T09:30:00.000Z')
 })
 
+test('Claude: dates limits by when they were read, so limits a restarted session carries over lose to newer ones', async () => {
+  const configDirectory = path.join(root, 'claude-restart')
+  const limits = percentUsed => ({ fiveHour: { percentUsed, resetsAt: null }, sevenDay: null })
+
+  await writeClaudeSession(configDirectory, 'restarted', {
+    rateLimits: limits(5),
+    updatedAt: '2026-11-22T10:00:00.000Z',
+    rateLimitsUpdatedAt: '2026-11-22T08:00:00.000Z',
+  })
+  await writeClaudeSession(configDirectory, 'other', { rateLimits: limits(9), updatedAt: '2026-11-22T09:00:00.000Z' })
+
+  const usage = await readClaudeUsage({ configDirectory, folders: [] })
+
+  assert.equal(usage.limits.fiveHour.percentUsed, 9)
+  assert.equal(usage.limitsUpdatedAt.toISOString(), '2026-11-22T09:00:00.000Z')
+})
+
 test('Claude: names the plan from the signed-in account in the global config file', async () => {
   const configDirectory = path.join(root, 'claude-plan')
 

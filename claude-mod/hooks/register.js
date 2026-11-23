@@ -88,16 +88,52 @@ let transcript
 let outputPath
 
 /**
- * The fields last written to the session file, and when they last changed.
- * @type {{ fields: object, updatedAt: string } | undefined}
+ * The fields last written to the session file, when they last changed, and when its limits were read.
+ * @type {{ fields: object, updatedAt: string, rateLimitsUpdatedAt: string | null } | undefined}
  */
 let snapshot
+
+/**
+ * The last limits Claude reported in this session and when, or null for none. Undefined until
+ * the session file is checked for limits an earlier run of this session saved.
+ * @type {{ rateLimits: { fiveHour: object | null, sevenDay: object | null }, at: string } | null | undefined}
+ */
+let lastLimits
 
 /**
  * Counts writes so a slower, older write doesn't overwrite a newer one.
  * @type {number}
  */
 let revision = 0
+
+/**
+ * Read the limits an earlier run of this session saved, and when they were read.
+ *
+ * Claude has no rate-limit reading after a restart, such as a reloaded VS Code window, until
+ * its next reply, so the saved limits stand in until then instead of being erased.
+ * @param {object} $ - The mod's runtime API.
+ * @returns {Promise<{ rateLimits: { fiveHour: object | null, sevenDay: object | null }, at: string } | null>} The saved limits, or null for none.
+ */
+async function readSavedLimits($) {
+  const text = await $.fs.read(outputPath).catch(() => undefined)
+
+  if (text === undefined) return null
+
+  let saved
+
+  try {
+    saved = JSON.parse(text)
+  } catch {
+    return null
+  }
+
+  const rateLimits = saved?.version === formatVersion ? saved.rateLimits : undefined
+  const at = typeof saved?.rateLimitsUpdatedAt === 'string' ? saved.rateLimitsUpdatedAt : saved?.updatedAt
+
+  if ((!rateLimits?.fiveHour && !rateLimits?.sevenDay) || typeof at !== 'string') return null
+
+  return { rateLimits: { fiveHour: rateLimits.fiveHour ?? null, sevenDay: rateLimits.sevenDay ?? null }, at }
+}
 
 /**
  * Write the session file when Claude reports usage, or when the title or project root changed.
@@ -113,18 +149,22 @@ async function publish($, { isObserved }) {
 
   if (!outputPath) return
 
-  const [usage, metadata, root, sessionId] = await Promise.all([
+  const [usage, metadata, root, sessionId, savedLimits] = await Promise.all([
     $.session.usage().catch(() => undefined),
     readSessionTitle($, transcript).catch(() => ({})),
     $.session.root(),
     $.session.id(),
+    lastLimits === undefined ? readSavedLimits($).catch(() => null) : lastLimits,
   ])
 
   if (current !== revision) return
 
   transcript = metadata.cursor
+  lastLimits ??= savedLimits
 
   const limits = usage?.rateLimits ?? []
+  const reported = { fiveHour: readLimit(limits, 'five_hour'), sevenDay: readLimit(limits, 'seven_day') }
+  const isReported = Boolean(reported.fiveHour || reported.sevenDay)
   const title = metadata.title?.replace(/[\s\u0000-\u001f\u007f-\u009f]+/g, ' ').trim()
 
   const fields = {
@@ -134,10 +174,7 @@ async function publish($, { isObserved }) {
     cwd: root,
     title: title || null,
     context: readContext(usage?.context),
-    rateLimits: {
-      fiveHour: readLimit(limits, 'five_hour'),
-      sevenDay: readLimit(limits, 'seven_day'),
-    },
+    rateLimits: isReported ? reported : (lastLimits?.rateLimits ?? reported),
     endedAt: null,
   }
 
@@ -147,7 +184,11 @@ async function publish($, { isObserved }) {
 
   if (!isObserved && !isChanged) return
 
-  snapshot = { fields, updatedAt: new Date().toISOString() }
+  const updatedAt = new Date().toISOString()
+
+  if (isReported) lastLimits = { rateLimits: reported, at: updatedAt }
+
+  snapshot = { fields, updatedAt, rateLimitsUpdatedAt: lastLimits?.at ?? null }
   await write($, snapshot)
 }
 
@@ -157,10 +198,11 @@ async function publish($, { isObserved }) {
  * @param {object} saved - What to save.
  * @param {object} saved.fields - The session's fields.
  * @param {string} saved.updatedAt - When the fields last changed.
+ * @param {string | null} saved.rateLimitsUpdatedAt - When the saved limits were read, or null for none.
  * @returns {Promise<void>} Resolves once the file is written.
  */
-function write($, { fields, updatedAt }) {
-  return $.fs.write(outputPath, `${JSON.stringify({ ...fields, updatedAt }, null, 2)}\n`)
+function write($, { fields, updatedAt, rateLimitsUpdatedAt }) {
+  return $.fs.write(outputPath, `${JSON.stringify({ ...fields, updatedAt, rateLimitsUpdatedAt }, null, 2)}\n`)
 }
 
 /**
@@ -202,13 +244,14 @@ async function end($, event, next) {
 
   if (outputPath && snapshot) {
     const endedAt = new Date().toISOString()
-    snapshot = { fields: { ...snapshot.fields, endedAt }, updatedAt: endedAt }
+    snapshot = { ...snapshot, fields: { ...snapshot.fields, endedAt }, updatedAt: endedAt }
     await write($, snapshot).catch(() => {})
   }
 
   transcript = undefined
   outputPath = undefined
   snapshot = undefined
+  lastLimits = undefined
 
   return next(event)
 }

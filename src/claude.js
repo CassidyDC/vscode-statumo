@@ -26,6 +26,7 @@ const formatVersion = 1
  * @property {import('./usage').ContextReading} context - The session's context use.
  * @property {import('./usage').Limits} limits - The limits the session last saw.
  * @property {Date} updatedAt - When the mod last wrote the file.
+ * @property {Date} limitsUpdatedAt - When the file's limits were read, which a restarted session carries over.
  * @property {boolean} isEnded - Whether the session has ended.
  */
 
@@ -177,6 +178,8 @@ function toRecord(data) {
       sevenDay: toLimit(data.rateLimits?.sevenDay),
     },
     updatedAt,
+    // Older mods don't save when limits were read, and wrote them fresh with every update.
+    limitsUpdatedAt: dateOrNull(data.rateLimitsUpdatedAt) ?? updatedAt,
     isEnded: Boolean(data.endedAt),
   }
 }
@@ -228,7 +231,9 @@ async function readClaudeUsage({ configDirectory, folders }) {
   records.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
 
   const session = records.find(record => isInWorkspace(record.cwd, folders)) ?? null
-  const limitsRecord = records.find(record => hasLimits(record.limits))
+  const limitsRecord = records
+    .filter(record => hasLimits(record.limits))
+    .reduce((newest, record) => (!newest || record.limitsUpdatedAt > newest.limitsUpdatedAt ? record : newest), null)
   const account = await readClaudeAccount(configDirectory)
 
   return {
@@ -240,10 +245,10 @@ async function readClaudeUsage({ configDirectory, folders }) {
       isEnded: session.isEnded,
     },
     limits: limitsRecord?.limits ?? emptyLimits(),
-    limitsUpdatedAt: limitsRecord?.updatedAt ?? null,
+    limitsUpdatedAt: limitsRecord?.limitsUpdatedAt ?? null,
     plan: account.plan,
-    // Claude Code reports rate limits only on a subscription, so the newest session reporting
-    // them settles it; otherwise, such as before its first reply, the account file decides.
+    // Claude Code reports rate limits only on a subscription, so the newest session holding
+    // them settles it; otherwise, such as a new session before its first reply, the account file decides.
     access: hasLimits(records[0].limits) ? 'subscription' : account.access,
   }
 }
