@@ -28,7 +28,7 @@ const { readLines } = require('./files')
  * The first scan of a file, or a scan after the file shrank, reads its last `tailLength` bytes,
  * doubling the length until `isSettled` accepts the state, the read reaches the start of the file,
  * or the length reaches `maxTailLength`. Later scans read only the complete lines appended since,
- * and an unchanged file returns the state it had.
+ * at most the last `maxTailLength` bytes of them, and an unchanged file returns the state it had.
  * @template S
  * @param {object} options - How to read and fold.
  * @param {number} options.tailLength - Bytes read from the end of a file on its first scan.
@@ -77,8 +77,18 @@ function createTailScanner({ tailLength, maxTailLength, initial, fold, isSettled
 
     if (entry && entry.size === size && entry.mtimeMs === mtimeMs) return entry.state
 
-    /** The complete lines appended since the last scan, when the file only grew. */
-    const appended = entry && size >= entry.end ? await readLines(filePath, { start: entry.end, end: size }) : null
+    /**
+     * Where reading the appended lines starts, when the file only grew: right after the last
+     * complete line, or `maxTailLength` from the end when more than that was appended, so a file
+     * that grew a lot between scans isn't read whole. Folding newer lines into the kept state
+     * still leaves its latest readings current.
+     */
+    const appendStart = entry && size >= entry.end ? Math.max(entry.end, size - maxTailLength) : null
+
+    /** The complete lines appended since the last scan, skipping a partial first line when reading starts mid-file. */
+    const appended = appendStart === null
+      ? null
+      : await readLines(filePath, { start: appendStart, end: size, skipPartialStart: appendStart > entry.end })
 
     /** The new offset and state. */
     const next = appended

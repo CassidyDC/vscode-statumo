@@ -124,6 +124,19 @@ test('reads only appended complete lines, and reuses an unchanged file', async (
   assert.equal(reads.length, foldCount)
 })
 
+test('reads at most the longest tail of what was appended, keeping the earlier state', async () => {
+  /** The file, and the scanner under test with a capped tail. */
+  const filePath = path.join(root, 'grown.jsonl')
+  const { scanner, reads } = collector({ tailLength: 16, maxTailLength: 32 })
+
+  await fs.writeFile(filePath, 'mark\n')
+  await scanner.scan(filePath, await stat(filePath))
+  await fs.appendFile(filePath, `${'skipped-line\n'.repeat(8)}last-line\n`)
+
+  assert.deepEqual(await scanner.scan(filePath, await stat(filePath)), ['mark', 'skipped-line', 'last-line'])
+  assert.deepEqual(reads.at(-1), ['skipped-line', 'last-line'])
+})
+
 test('rescans the tail after a file shrinks', async () => {
   /** The file, and the scanner under test. */
   const filePath = path.join(root, 'shrunk.jsonl')
