@@ -1,8 +1,8 @@
 {
   "name": "usage",
   "displayName": "Usage",
-  "version": "0.2.1",
-  "description": "Write live Claude Code context usage, rate limits, and session titles for the Statumo VS Code status bar.",
+  "version": "0.3.0",
+  "description": "Write live Claude Code context usage and rate limits for the Statumo VS Code status bar.",
   "author": {
     "name": "Jacob Cassidy"
   }

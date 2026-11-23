@@ -1,15 +1,7 @@
 /**
  * Usage mod hooks.
- * @file Write each Claude Code session's context use, rate limits, and title to a JSON file for Statumo to read.
+ * @file Write each Claude Code session's folder, transcript path, and context use, and the account's rate limits, for Statumo to read.
  */
-
-import { readSessionTitle } from './session-title.js'
-
-/**
- * The session file format version Statumo's reader understands.
- * @type {number}
- */
-const formatVersion = 1
 
 /**
  * Matches a transcript path inside the Claude config folder's `projects/` folder, capturing the config folder.
@@ -18,240 +10,78 @@ const formatVersion = 1
 const transcriptLayout = /^(.*)[\\/]projects[\\/][^\\/]+[\\/][^\\/]+$/
 
 /**
- * Find one rate-limit window in the limits Claude reported.
- * @param {any[]} limits - The rate limits Claude reported.
- * @param {string} kind - The window's kind, such as `five_hour`.
- * @returns {{ percentUsed: number, resetsAt: string | null } | null} The window, or null when Claude hasn't reported it.
+ * Keep a finite number, or use null.
+ * @param {unknown} value - The value to check.
+ * @returns {number | null} The number, or null.
  */
-function readLimit(limits, kind) {
-  const limit = limits.find(entry => entry.kind === kind)
-
-  if (!Number.isFinite(limit?.percentUsed)) return null
-
-  return {
-    percentUsed: limit.percentUsed,
-    resetsAt: typeof limit.resetsAt === 'string' ? limit.resetsAt : null,
-  }
+function finiteOrNull(value) {
+  return Number.isFinite(value) ? value : null
 }
 
 /**
- * Copy Claude's context reading, using null for any value it hasn't reported.
- * @param {any} context - The context reading Claude reported.
- * @returns {{ tokens: number | null, window: number | null, percent: number | null }} The reading.
- */
-function readContext(context) {
-  /**
-   * Keep a finite number, or use null.
-   * @param {unknown} value - The value to check.
-   * @returns {number | null} The number, or null.
-   */
-  const number = value => (Number.isFinite(value) ? value : null)
-
-  return {
-    tokens: number(context?.tokens),
-    window: number(context?.window),
-    percent: number(context?.percent),
-  }
-}
-
-/**
- * Find where this session's file goes.
+ * Write this session's file, and the limits file when Claude reported limits.
  *
- * Session files sit beside `projects/` in the Claude config folder, so a custom
- * CLAUDE_CONFIG_DIR is followed without reading the environment.
+ * Both sit in `statumo/` beside `projects/` in the Claude config folder, so a custom
+ * CLAUDE_CONFIG_DIR is followed without reading the environment. Limits are written only when
+ * there are some, so a session with no reading yet never erases another session's.
  * @param {object} $ - The mod's runtime API.
- * @returns {Promise<string | undefined>} The file's path, or undefined when the transcript isn't in a config folder.
+ * @param {object} reading - What to report.
+ * @param {{ tokens?: number, window?: number, percent?: number } | undefined} reading.context - The session's context reading.
+ * @param {Array<{ kind: string, percentUsed: number, resetsAt?: string }>} [reading.rateLimits] - The rate-limit windows Claude reported.
+ * @returns {Promise<void>} Resolves once the files are written or skipped.
  */
-async function resolveOutputPath($) {
-  const [{ transcriptPath }, id] = await Promise.all([$.session.info(), $.session.id()])
-  const match = transcriptLayout.exec(transcriptPath ?? '')
+async function report($, { context, rateLimits = [] }) {
+  /** The session's transcript path, id, and project root, and the config folder the transcript is in. */
+  const [{ transcriptPath }, id, cwd] = await Promise.all([$.session.info(), $.session.id(), $.session.root()])
+  const configFolder = transcriptLayout.exec(transcriptPath ?? '')?.[1]
 
-  if (match && id) return `${match[1]}/usage/sessions/${id}.json`
+  if (!configFolder || !id) return
+
+  /** The session's context reading, with null for any value Claude hasn't reported. */
+  const reduced = {
+    tokens: finiteOrNull(context?.tokens),
+    window: finiteOrNull(context?.window),
+    percent: finiteOrNull(context?.percent),
+  }
+
+  await $.fs.write(`${configFolder}/statumo/sessions/${id}.json`, JSON.stringify({ cwd, transcriptPath, context: reduced }))
+
+  if (rateLimits.length) await $.fs.write(`${configFolder}/statumo/limits.json`, JSON.stringify({ rateLimits }))
 }
 
 /**
- * The timer that rechecks the title and project root while the session is open.
- * @type {{ cancel: () => void } | undefined}
- */
-let timer
-
-/**
- * Where the last title read stopped in the transcript.
- * @type {import('./session-title.js').TitleCursor | undefined}
- */
-let transcript
-
-/**
- * This session's file.
- * @type {string | undefined}
- */
-let outputPath
-
-/**
- * The fields last written to the session file, when they last changed, and when its limits were read.
- * @type {{ fields: object, updatedAt: string, rateLimitsUpdatedAt: string | null } | undefined}
- */
-let snapshot
-
-/**
- * The last limits Claude reported in this session and when, or null for none. Undefined until
- * the session file is checked for limits an earlier run of this session saved.
- * @type {{ rateLimits: { fiveHour: object | null, sevenDay: object | null }, at: string } | null | undefined}
- */
-let lastLimits
-
-/**
- * Counts writes so a slower, older write doesn't overwrite a newer one.
- * @type {number}
- */
-let revision = 0
-
-/**
- * Read the limits an earlier run of this session saved, and when they were read.
- *
- * Claude has no rate-limit reading after a restart, such as a reloaded VS Code window, until
- * its next reply, so the saved limits stand in until then instead of being erased.
+ * Report the context and limits of the turn that just ended, then pass the event on.
  * @param {object} $ - The mod's runtime API.
- * @returns {Promise<{ rateLimits: { fiveHour: object | null, sevenDay: object | null }, at: string } | null>} The saved limits, or null for none.
+ * @param {object} event - The measurement, with `context` and `rateLimits`.
+ * @param {(event: object) => Promise<unknown>} next - Passes the event to the next hook.
+ * @returns {Promise<unknown>} What the next hook returns.
  */
-async function readSavedLimits($) {
-  const text = await $.fs.read(outputPath).catch(() => undefined)
-
-  if (text === undefined) return null
-
-  let saved
-
+async function measure($, event, next) {
   try {
-    saved = JSON.parse(text)
+    await report($, event)
   } catch {
-    return null
+    // A failed report must never break the session.
   }
 
-  const rateLimits = saved?.version === formatVersion ? saved.rateLimits : undefined
-  const at = typeof saved?.rateLimitsUpdatedAt === 'string' ? saved.rateLimitsUpdatedAt : saved?.updatedAt
-
-  if ((!rateLimits?.fiveHour && !rateLimits?.sevenDay) || typeof at !== 'string') return null
-
-  return { rateLimits: { fiveHour: rateLimits.fiveHour ?? null, sevenDay: rateLimits.sevenDay ?? null }, at }
+  return next(event)
 }
 
 /**
- * Write the session file when Claude reports usage, or when the title or project root changed.
- * @param {object} $ - The mod's runtime API.
- * @param {object} options - Why the file is being written.
- * @param {boolean} options.isObserved - Whether a session event asked for the write, which always rewrites the file.
- * @returns {Promise<void>} Resolves once the file is written or skipped.
- */
-async function publish($, { isObserved }) {
-  const current = ++revision
-
-  outputPath ??= await resolveOutputPath($)
-
-  if (!outputPath) return
-
-  const [usage, metadata, root, sessionId, savedLimits] = await Promise.all([
-    $.session.usage().catch(() => undefined),
-    readSessionTitle($, transcript).catch(() => ({})),
-    $.session.root(),
-    $.session.id(),
-    lastLimits === undefined ? readSavedLimits($).catch(() => null) : lastLimits,
-  ])
-
-  if (current !== revision) return
-
-  transcript = metadata.cursor
-  lastLimits ??= savedLimits
-
-  const limits = usage?.rateLimits ?? []
-  const reported = { fiveHour: readLimit(limits, 'five_hour'), sevenDay: readLimit(limits, 'seven_day') }
-  const isReported = Boolean(reported.fiveHour || reported.sevenDay)
-  const title = metadata.title?.replace(/[\s\u0000-\u001f\u007f-\u009f]+/g, ' ').trim()
-
-  const fields = {
-    version: formatVersion,
-    tool: 'claude-code',
-    sessionId,
-    cwd: root,
-    title: title || null,
-    context: readContext(usage?.context),
-    rateLimits: isReported ? reported : (lastLimits?.rateLimits ?? reported),
-    endedAt: null,
-  }
-
-  // Timer passes only rewrite the file when something changed, so `updatedAt`
-  // keeps saying when Claude last reported usage or the session last changed.
-  const isChanged = JSON.stringify(fields) !== JSON.stringify(snapshot?.fields)
-
-  if (!isObserved && !isChanged) return
-
-  const updatedAt = new Date().toISOString()
-
-  if (isReported) lastLimits = { rateLimits: reported, at: updatedAt }
-
-  snapshot = { fields, updatedAt, rateLimitsUpdatedAt: lastLimits?.at ?? null }
-  await write($, snapshot)
-}
-
-/**
- * Save a snapshot to the session file.
- * @param {object} $ - The mod's runtime API.
- * @param {object} saved - What to save.
- * @param {object} saved.fields - The session's fields.
- * @param {string} saved.updatedAt - When the fields last changed.
- * @param {string | null} saved.rateLimitsUpdatedAt - When the saved limits were read, or null for none.
- * @returns {Promise<void>} Resolves once the file is written.
- */
-function write($, { fields, updatedAt, rateLimitsUpdatedAt }) {
-  return $.fs.write(outputPath, `${JSON.stringify({ ...fields, updatedAt, rateLimitsUpdatedAt }, null, 2)}\n`)
-}
-
-/**
- * Start rechecking the session every 10 seconds, unless already started.
- * @param {object} $ - The mod's runtime API.
- * @returns {void}
- */
-function startTimer($) {
-  // Saved titles and the project root can change while the conversation is idle.
-  timer ??= $.clock.every(10_000, () => {
-    void publish($, { isObserved: false }).catch(() => {})
-  })
-}
-
-/**
- * Write the session file for a session event, then pass the event on.
+ * Report a new, cleared, resumed, or compacted session's context before its first turn, then pass
+ * the event on. Its limits wait for a measurement, since a start would stamp an old reading as new.
  * @param {object} $ - The mod's runtime API.
  * @param {object} event - The session event.
  * @param {(event: object) => Promise<unknown>} next - Passes the event to the next hook.
  * @returns {Promise<unknown>} What the next hook returns.
  */
-async function observe($, event, next) {
-  startTimer($)
-  await publish($, { isObserved: true }).catch(() => {})
-  return next(event)
-}
-
-/**
- * Mark the session file as ended, stop the timer, and pass the event on.
- * @param {object} $ - The mod's runtime API.
- * @param {object} event - The session end event.
- * @param {(event: object) => Promise<unknown>} next - Passes the event to the next hook.
- * @returns {Promise<unknown>} What the next hook returns.
- */
-async function end($, event, next) {
-  revision += 1
-  timer?.cancel()
-  timer = undefined
-
-  if (outputPath && snapshot) {
-    const endedAt = new Date().toISOString()
-    snapshot = { ...snapshot, fields: { ...snapshot.fields, endedAt }, updatedAt: endedAt }
-    await write($, snapshot).catch(() => {})
+async function start($, event, next) {
+  try {
+    /** The session's live context reading. */
+    const { context } = await $.session.usage()
+    await report($, { context })
+  } catch {
+    // A failed report must never break the session.
   }
-
-  transcript = undefined
-  outputPath = undefined
-  snapshot = undefined
-  lastLimits = undefined
 
   return next(event)
 }
@@ -262,11 +92,7 @@ async function end($, event, next) {
  * @returns {void}
  */
 export function register(on) {
-  on('session.start', observe)
-  on('session.attach', observe)
-  on('session.measure', observe)
-  on('session.end', end)
-  on('classic.SessionStart', ($, event, next) =>
-    event.source === 'startup' ? next(event) : observe($, event, next),
-  )
+  on('session.measure', measure)
+  on('session.start', start)
+  on('classic.SessionStart', ($, event, next) => (event.source === 'startup' ? next(event) : start($, event, next)))
 }

@@ -6,12 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-23
+
 ### Added
 
-- Show Claude Code and Codex context use and 5-hour and 7-day limit use in the status bar, one item per tool that starts with the tool's name, kept side by side.
-- Lead each percent with a circular progress ring that fills in 5% steps, marked inside by layers for context, a clock for the 5-hour limit, or a calendar for the 7-day limit.
+- Show Claude Code and Codex context use and 5-hour and weekly limit use in the status bar, one item per tool that starts with the tool's name, kept side by side.
+- Lead each percent with a circular progress ring that fills in 5% steps, marked inside by layers for context, a clock for the 5-hour limit, or a calendar for the weekly limit.
+- Show Claude's weekly Fable limit, marked by a star, in the Claude Code item and hover once Claude Code reports one.
 - Follow the latest session in the current workspace for context, and the account's latest reading for rate limits.
-- Add a hover tooltip with a section and progress bar for context and each limit, session titles, token counts, when each limit resets, plan, and reading age.
-- Use the warning and error backgrounds on a tool when either window runs low, with configurable thresholds.
-- Open the Claude Code or Codex panel when you click its item.
-- Ship the Usage mod for Claude Code in `claude-mod/`, installed from this repository's `statumo` marketplace, to write each session's context use, rate limits, and title for Statumo to read.
+- Read the account usage Claude Code caches in `~/.claude.json` for the Fable limit, and show its 5-hour and weekly limits when they're newer than the Usage mod's. A cache that belongs to another account is ignored.
+- Show a limit whose reset time has passed with no newer reading at 0%, with when it reset in the hover. A limit that hasn't been reported yet shows just an empty ring.
+- Add a hover tooltip with a section and progress bar for context and each limit, session titles, token counts, when each limit resets, plan, and reading age. The limits' read time only shows when it differs from the last activity. The 5-hour limit shows just its reset time, as in `Resets at 2:30 PM`, and a weekly reset due today or tomorrow names that day, as in `Resets tomorrow at 9:00 AM`. Claude Code titles come from the end of the session's own transcript.
+- Lead each hover section's title with its ring's symbol.
+- Use the warning and error backgrounds on a tool when any window runs low, with configurable thresholds.
+- Add settings for the clock the hover shows reset times on, 12-hour or 24-hour, and for adding how long until each reset.
+- Run each item's configured click command, which opens the Claude Code or Codex panel by default.
+- Ship the Usage mod for Claude Code inside the extension, and offer to install or update it through Claude Code's command line with one click, or with **Statumo: Install or Update the Usage Mod for Claude Code**. The mod writes each session's folder, transcript path, and context use, and the account's latest rate limits, to `~/.claude/statumo/` for Statumo to read. When Statumo updates, it points the `statumo` marketplace at the new version's copy of the mod.
