@@ -7,7 +7,8 @@ Statumo shows how much context and rate limit you've used in Claude Code and Cod
 Each tool is one status bar item that starts with its name, Claude or Codex, and shows three percents, each led by a ring that fills to match it in 5% steps:
 
 - **Context** (layers in the ring) is how much of the current session's context window is used.
-- **5-hour limit** (clock) and **weekly limit** (calendar) are how much of each rate-limit window is used.
+- **5-hour limit** (clock) is how much of the 5-hour rate-limit window is used.
+- **Weekly limit** (calendar) is how much of the weekly rate-limit window is used.
 
 Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets (as today or tomorrow when it's that soon), your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
 
