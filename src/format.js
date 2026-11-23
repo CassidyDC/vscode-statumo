@@ -395,11 +395,7 @@ function limitSection(key, limit, thresholds, now) {
 
   if (!limit) return tooltipSection(label, null, dim('Not reported yet'), null)
 
-  if (isLimitStale(limit, now)) {
-    const note = `Reset ${shortDate.format(limit.resetsAt)} at ${clockTime.format(limit.resetsAt)}`
-
-    return tooltipSection(label, note, dim('No reading since the reset'), progressBar(0))
-  }
+  if (isLimitStale(limit, now)) return tooltipSection(label, 'Inactive', dim('No reading since the reset'), progressBar(0))
 
   const used = percentUsed(limit)
   const note = limit.resetsAt ? `Resets ${formatReset(limit.resetsAt, now)}` : null

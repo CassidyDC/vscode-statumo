@@ -17,7 +17,7 @@ Hover over an item for the full breakdown, with a progress bar for context and e
 
 - **Context** comes from the most recently active session whose working folder is in the current VS Code workspace. Until a tool has a session here, context shows just an empty ring.
 - **Rate limits** belong to your account, so they come from the most recent reading in any session.
-- When a window's reset time passes with no newer reading, it shows just an empty ring until the tool reports again. So does a window the tool hasn't reported yet.
+- When a window's reset time passes with no newer reading, it shows just an empty ring, and its hover section reads Inactive, until the tool reports again. So does a window the tool hasn't reported yet.
 - An item turns the warning color when either window has 25% or less left (75% or more used), and the error color at 10% or less left (90% or more used). Both thresholds are settings, set as percent left.
 
 A tool's item stays hidden until it has written any usage on this machine.
