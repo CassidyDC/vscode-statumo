@@ -34,6 +34,15 @@
     "onStartupFinished"
   ],
   "main": "./src/extension.js",
+  "files": [
+    "src/",
+    "images/icon.png",
+    "images/statumo-icons.woff",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "package.json"
+  ],
   "contributes": {
     "commands": [
       {
