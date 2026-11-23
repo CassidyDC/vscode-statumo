@@ -400,8 +400,9 @@ function limitSection(key, limit, thresholds, now) {
 }
 
 /**
- * Build the tooltip's footer lines: the plan, the session's title and folder, and one line with the
- * session's last activity, or when it ended, and when the limits were read, separated by a dot.
+ * Build the tooltip's footer lines: the session's title without a label, the plan, the session's
+ * folder, and one line with the session's last activity, or when it ended, and when the limits were
+ * read, separated by a dot.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string[]} The lines, already escaped.
@@ -411,8 +412,8 @@ function footerLines(usage, now) {
   const lines = []
   const ages = []
 
+  if (session?.title) lines.push(escapeMarkdown(session.title))
   if (usage.plan) lines.push(`Plan: ${escapeMarkdown(usage.plan)}`)
-  if (session?.title) lines.push(`Chat Title: ${escapeMarkdown(session.title)}`)
   if (session?.cwd) lines.push(`Folder: ${escapeMarkdown(truncatePath(tildify(session.cwd)))}`)
   if (session) ages.push(`${session.isEnded ? 'Ended' : 'Last activity'} ${formatAge(session.updatedAt, now)}`)
   if (usage.limitsUpdatedAt) ages.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
