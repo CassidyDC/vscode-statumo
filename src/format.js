@@ -330,9 +330,19 @@ function amount(percent, word) {
 }
 
 /**
+ * How many pixels tall the empty row above each section heading is.
+ *
+ * The hover pulls whatever follows a rule up by 4px, and the sanitizer drops padding and margin
+ * styles, so this row's `height` attribute is what keeps a heading off the rule above it.
+ * @type {number}
+ */
+const headingGap = 8
+
+/**
  * Build one tooltip section: a bold label with an optional dimmed note aligned to the right edge,
  * the amount, then an optional bar. The heading is a full-width table, the only way the hover
- * sanitizer allows right alignment, so the note ends where the bar ends.
+ * sanitizer allows right alignment, so the note ends where the bar ends. An empty first row
+ * spaces the heading from the rule above it.
  * @param {string} label - The section's label.
  * @param {string | null} note - The note across from the label, unescaped, or null for none.
  * @param {string} value - The section's amount, or a dimmed status, as Markdown.
@@ -341,7 +351,8 @@ function amount(percent, word) {
  */
 function tooltipSection(label, note, value, bar) {
   const noteCell = note ? `<td align="right">${dim(escapeHtml(note))}</td>` : ''
-  const heading = `<table width="100%"><tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr></table>`
+  const gapRow = `<tr><td colspan="${note ? 2 : 1}" height="${headingGap}"></td></tr>`
+  const heading = `<table width="100%">${gapRow}<tr><td><b>${escapeHtml(label)}</b></td>${noteCell}</tr></table>`
 
   return [heading, value, bar].filter(Boolean).join('\n\n')
 }
