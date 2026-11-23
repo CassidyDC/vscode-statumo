@@ -92,6 +92,16 @@ test('empties the ring of a window whose reset has passed', () => {
   assert.equal(getWindowLevel(usage.limits.fiveHour, { warningThreshold: 25, errorThreshold: 10 }, now), null)
 })
 
+/**
+ * Read one labelled detail from a tooltip's footer table.
+ * @param {string} tooltip - The tooltip, or its footer.
+ * @param {string} label - The row's label.
+ * @returns {string | undefined} The row's detail, or undefined when there is no such row.
+ */
+function footerDetail(tooltip, label) {
+  return new RegExp(`>${label}</span></td><td width="12"></td><td><span[^>]*>([^<]*)<`).exec(tooltip)?.[1]
+}
+
 test('warns and errors per window', () => {
   const thresholds = { warningThreshold: 25, errorThreshold: 10 }
 
@@ -130,26 +140,30 @@ test('lays out each tooltip section as label and note, heading-sized amount, the
   assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><\/table>\n\n## 12% .*used.*\n\n<small><small><span/)
   assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/table>\n\n## 16% .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/table>\n\n## 39% .*used/)
-  assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td colspan="3"><span[^>]*>Fix \[link\]\(https:\/\/example\.com\) \*now\*<\/span><\/td><\/tr>/)
-  assert.match(sections[4], /<td><span[^>]*>Plan<\/span><\/td><td width="12"><\/td><td><span[^>]*>Plus subscription<\/span><\/td>/)
-  assert.match(sections[4], /<td><span[^>]*>Folder<\/span><\/td><td width="12"><\/td><td><span[^>]*>\/work\/project<\/span><\/td><\/tr><\/table>\n\n<span[^>]*>Last activity 2m ago · Limits read 2m ago<\/span>$/)
+  assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Plan<.*Folder<.*Last Activity<.*Limits Read<.*<\/table>$/)
+  assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
+  assert.equal(footerDetail(sections[4], 'Plan'), 'Plus subscription')
+  assert.equal(footerDetail(sections[4], 'Folder'), '/work/project')
+  assert.equal(footerDetail(sections[4], 'Last Activity'), '2m ago')
+  assert.equal(footerDetail(sections[4], 'Limits Read'), '2m ago')
 })
 
-test('shows the last activity and when the limits were read on one line', () => {
+test('shows the last activity and when the limits were read in their own rows', () => {
   const usage = makeUsage({ limitsUpdatedAt: new Date(2026, 10, 22, 6, 45) })
-  const footer = buildTooltip('Codex', usage, thresholds, now).split('\n\n---\n\n').at(-1)
+  const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(footer, /Last activity 2m ago · Limits read 3h 15m ago</)
+  assert.equal(footerDetail(tooltip, 'Last Activity'), '2m ago')
+  assert.equal(footerDetail(tooltip, 'Limits Read'), '3h 15m ago')
 })
 
 test('names the plan with how the tool signs in', () => {
   /**
-   * Read the Plan line from a tooltip built with the given plan and access.
+   * Read the Plan row's detail from a tooltip built with the given plan and access.
    * @param {string | null} plan - The account's plan.
    * @param {'subscription' | 'api' | null} access - How the tool signs in.
-   * @returns {string | undefined} The Plan line's text, or undefined when there is none.
+   * @returns {string | undefined} The Plan row's detail, or undefined when there is none.
    */
-  const planLine = (plan, access) => />Plan<\/span><\/td><td width="12"><\/td><td><span[^>]*>([^<]*)</.exec(buildTooltip('Codex', makeUsage({ plan, access }), thresholds, now))?.[1]
+  const planLine = (plan, access) => footerDetail(buildTooltip('Codex', makeUsage({ plan, access }), thresholds, now), 'Plan')
 
   assert.equal(planLine('Plus', 'subscription'), 'Plus subscription')
   assert.equal(planLine(null, 'subscription'), 'Subscription')
@@ -163,9 +177,10 @@ test('shows when an ended session ended in place of its last activity', () => {
 
   usage.session.isEnded = true
 
-  const footer = buildTooltip('Claude Code', usage, thresholds, now).split('\n\n---\n\n').at(-1)
+  const tooltip = buildTooltip('Claude Code', usage, thresholds, now)
 
-  assert.match(footer, /Ended 2m ago · Limits read 2m ago</)
+  assert.equal(footerDetail(tooltip, 'Ended'), '2m ago')
+  assert.equal(footerDetail(tooltip, 'Last Activity'), undefined)
 })
 
 test('escapes HTML in session titles so only the progress bars are HTML', () => {

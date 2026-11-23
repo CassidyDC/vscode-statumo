@@ -439,30 +439,25 @@ function footerRow(label, detail) {
 }
 
 /**
- * Build the tooltip's footer: a table with the session's title across both columns, then the plan
- * and the session's folder, each labelled on the left, and below it one line with the session's last
- * activity, or when it ended, and when the limits were read, separated by a dot.
+ * Build the tooltip's footer: a table of the session's chat title, the plan, the session's folder,
+ * the session's last activity or when it ended, and when the limits were read, each labelled on the left.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
- * @returns {string} The footer's Markdown, or nothing when there is nothing to show.
+ * @returns {string} The footer's HTML, or nothing when there is nothing to show.
  */
 function footerSection(usage, now) {
   const { session } = usage
   const plan = planLabel(usage)
   const rows = []
-  const ages = []
 
   // Text inside an HTML block can't break it with a blank line, so whitespace runs become spaces.
-  if (session?.title) rows.push(`<tr><td colspan="3">${dim(escapeHtml(session.title.replace(/\s+/g, ' ')))}</td></tr>`)
+  if (session?.title) rows.push(footerRow('Chat', session.title.replace(/\s+/g, ' ')))
   if (plan) rows.push(footerRow('Plan', plan))
   if (session?.cwd) rows.push(footerRow('Folder', truncatePath(tildify(session.cwd))))
-  if (session) ages.push(`${session.isEnded ? 'Ended' : 'Last activity'} ${formatAge(session.updatedAt, now)}`)
-  if (usage.limitsUpdatedAt) ages.push(`Limits read ${formatAge(usage.limitsUpdatedAt, now)}`)
+  if (session) rows.push(footerRow(session.isEnded ? 'Ended' : 'Last Activity', formatAge(session.updatedAt, now)))
+  if (usage.limitsUpdatedAt) rows.push(footerRow('Limits Read', formatAge(usage.limitsUpdatedAt, now)))
 
-  const table = rows.length ? `<table>${gapRow(3)}${rows.join('')}</table>` : ''
-  const updates = ages.length ? dim(ages.join(' · ')) : ''
-
-  return [table, updates].filter(Boolean).join('\n\n')
+  return rows.length ? `<table>${gapRow(3)}${rows.join('')}</table>` : ''
 }
 
 /**
