@@ -12,13 +12,13 @@ const ringStepPercent = 5
 /**
  * The ring kinds, each with the icon id part, the symbol drawn inside, a description, and the
  * digit-free name its symbol's icon id uses, since hovers drop icon classes with digits in them.
- * @type {Array<{ kind: RingKind, symbol: 'layers' | 'clock' | 'calendar' | 'diamond', description: string, name: string }>}
+ * @type {Array<{ kind: RingKind, symbol: 'layers' | 'clock' | 'calendar' | 'star', description: string, name: string }>}
  */
 const ringKinds = [
   { kind: 'cx', symbol: 'layers', description: 'Context ring', name: 'context' },
   { kind: '5h', symbol: 'clock', description: '5-hour limit ring', name: 'five-hour' },
   { kind: '7d', symbol: 'calendar', description: '7-day limit ring', name: 'weekly' },
-  { kind: 'fb', symbol: 'diamond', description: 'Weekly Fable limit ring', name: 'fable' },
+  { kind: 'fb', symbol: 'star', description: 'Weekly Fable limit ring', name: 'fable' },
 ]
 
 /**

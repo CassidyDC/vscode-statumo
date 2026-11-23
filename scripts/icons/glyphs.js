@@ -23,8 +23,14 @@ const ringCodePointBase = 0xe100
 
 /**
  * A symbol drawn inside a ring.
- * @typedef {'layers' | 'clock' | 'calendar' | 'diamond'} SymbolName
+ * @typedef {'layers' | 'clock' | 'calendar' | 'star' | 'diamond'} SymbolName
  */
+
+/**
+ * The share of a star's outer radius its inner corners sit at.
+ * @type {number}
+ */
+const starInnerRatio = 0.47
 
 /**
  * Outline the diamond, a line icon on a 24-unit grid scaled into the 16-unit one: a table across
@@ -57,7 +63,8 @@ function diamondSymbol() {
 }
 
 /**
- * The symbols drawn inside each ring, as path data in the 16-unit grid.
+ * The symbols drawn inside each ring, as path data in the 16-unit grid. No ring uses the diamond
+ * yet; it's kept as a ready alternative to the star.
  * @type {Record<SymbolName, string>}
  */
 const symbols = {
@@ -78,6 +85,12 @@ const symbols = {
     roundedRect(9.7, 3.9, 0.9, 1.6, 0.45),
     ...[5.9, 7.5, 9.1].flatMap(x => [roundedRect(x, 7.75, 1, 1, 0.25), roundedRect(x, 9.35, 1, 1, 0.25)]),
   ].join(''),
+  star: polygon(Array.from({ length: 10 }, (_, index) => {
+    /** The corner's distance from the center, and its angle clockwise from 12 o'clock. */
+    const radius = index % 2 === 0 ? 4 : 4 * starInnerRatio
+    const angle = (index / 10) * 2 * Math.PI
+    return [8 + radius * Math.sin(angle), 8 - radius * Math.cos(angle)]
+  })),
   diamond: diamondSymbol(),
 }
 
@@ -237,6 +250,14 @@ function fitPath(d, x, y, k) {
 const symbolSize = 15
 
 /**
+ * The point to center a symbol on when the middle of its bounds isn't its visual middle. The star's
+ * top point reaches farther from its center than its lower points, so centering its bounds would
+ * sit it low.
+ * @type {Partial<Record<SymbolName, [number, number]>>}
+ */
+const symbolCenters = { star: [8, 8] }
+
+/**
  * How far to lift each symbol above the middle of its box, in grid units. A hover centers icons on
  * the middle of lowercase letters, which sits below the middle of the capitals that start each
  * section title, and its sanitizer won't let an icon's alignment change, so the glyph sits higher.
@@ -254,7 +275,7 @@ function symbolSvg(symbol) {
   const points = outlinePoints(symbols[symbol])
   const [left, top] = [Math.min(...points.map(([x]) => x)), Math.min(...points.map(([, y]) => y))]
   const [right, bottom] = [Math.max(...points.map(([x]) => x)), Math.max(...points.map(([, y]) => y))]
-  const [centerX, centerY] = [(left + right) / 2, (top + bottom) / 2]
+  const [centerX, centerY] = symbolCenters[symbol] ?? [(left + right) / 2, (top + bottom) / 2]
 
   /** Half the side of the square around that point that holds the symbol, the side, and the square's corner. */
   const half = Math.max(centerX - left, right - centerX, centerY - top, bottom - centerY)
