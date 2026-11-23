@@ -9,8 +9,8 @@ const os = require('node:os')
 const path = require('node:path')
 const vscode = require('vscode')
 const { pruneClaudeSessions, readClaudeUsage } = require('./claude')
-const { readCodexUsage } = require('./codex')
 const { expandHome } = require('./files/paths')
+const { createCodexReader } = require('./providers/codex')
 const { getToolLevel } = require('./usage/levels')
 const { buildSegments, windowNames } = require('./view/segments')
 const { buildTooltip } = require('./view/tooltip')
@@ -52,6 +52,12 @@ const pruneIntervalMs = 86_400_000
  * @property {string} openCommand - The Statumo command that opens the tool.
  * @property {(settings: Settings, folders: string[], now: Date) => Promise<import('./usage/model').ToolUsage | null>} read - Reads the tool's usage.
  */
+
+/**
+ * Reads Codex usage, keeping what it has read of each log between refreshes.
+ * @type {ReturnType<typeof createCodexReader>}
+ */
+const readCodexUsage = createCodexReader()
 
 /**
  * The status bar priority Statumo's items sit at, just left of Copilot's 100.1 and the editor status items.
