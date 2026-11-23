@@ -4,11 +4,11 @@
  */
 
 /**
- * How many cells wide a tooltip progress bar is, about 320px at the bar's text size: the hover's
+ * How many cells wide a tooltip progress bar is, about 270px at the bar's text size: the hover's
  * 13px text made smaller twice, about 9px.
  * @type {number}
  */
-const barCells = 59
+const barCells = 50
 
 /**
  * Theme colors for a progress bar's fill, by warning level.
@@ -95,13 +95,13 @@ function progressBar(percent, level = null) {
 
 /**
  * Format a section's amount as a second-level heading, the only way a hover shows text larger than
- * normal: the percent, then a smaller dimmed word.
+ * normal: the percent, then a dimmed word made smaller twice.
  * @param {number} percent - The percent.
  * @param {string} word - What the percent measures, such as `used`.
  * @returns {string} The amount's HTML.
  */
 function amount(percent, word) {
-  return `<h2>${percent}% ${dim(`<small>${word}</small>`)}</h2>`
+  return `<h2>${percent}% ${dim(`<small><small>${word}</small></small>`)}</h2>`
 }
 
 /**
@@ -116,13 +116,13 @@ function gapRow(columns, height = headingGap) {
 }
 
 /**
- * Build the tooltip's title: plain text in a table, so it has the same inset as the sections'
+ * Build the tooltip's title: a second-level heading in a table, so it has the same inset as the sections'
  * tables, whose cells the hover sanitizer won't let lose their default padding and spacing.
  * @param {string} text - The title, unescaped.
  * @returns {string} The title's HTML.
  */
 function tooltipTitle(text) {
-  return `<table><tr><td>${escapeHtml(text)}</td></tr></table>`
+  return `<table><tr><td><h2>${escapeHtml(text)}</h2></td></tr></table>`
 }
 
 /**

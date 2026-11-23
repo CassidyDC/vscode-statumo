@@ -75,7 +75,7 @@ test('lays out each tooltip section as one table of label and note, heading-size
   const sections = tooltip.split('\n\n---\n\n')
 
   assert.equal(sections.length, 5)
-  assert.equal(sections[0], '<table><tr><td>Codex - Statumo</td></tr></table>')
+  assert.equal(sections[0], '<table><tr><td><h2>Codex - Statumo</h2></td></tr></table>')
   assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><small><small><span.*<\/td><\/tr><\/table>$/)
   assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/tr><tr><td colspan="2"><h2>16% .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/tr><tr><td colspan="2"><h2>39% .*used/)
@@ -130,6 +130,6 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   /** The usage's tooltip. */
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{56}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{3}</)
-  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▀{23}<\/span>/)
+  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{48}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{2}</)
+  assert.match(tooltip, /<span style="color:var\(--vscode-progressBar-background\);">▀{20}<\/span>/)
 })
