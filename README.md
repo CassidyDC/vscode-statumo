@@ -2,7 +2,7 @@
 
 Statumo shows how much context and rate limit you've used in Claude Code and Codex, right in the VS Code status bar.
 
-![Statumo in the status bar: Claude at 8%, 22%, and 5%, and Codex at 41%, 2%, and 22%, each percent led by a ring](images/statumo-status-bar.png)
+![Statumo in the status bar: Claude with an empty context ring, then 21%, 9%, and 3%, and Codex at 15%, 0%, and 22%, each percent led by a ring](images/statumo-status-bar.png)
 
 Each tool is one status bar item that starts with its name, Claude or Codex, and shows three percents, each led by a ring that fills to match it in 5% steps:
 
@@ -13,7 +13,7 @@ Each tool is one status bar item that starts with its name, Claude or Codex, and
 
 Hover over an item for the full breakdown, with a progress bar for context and each limit that turns the warning or error color when a limit runs low: the session title, token counts, when each limit resets (just the time for the 5-hour limit, and as today or tomorrow for the weekly limits when it's that soon), your plan when the tool reports it, and how recently each reading arrived. Click an item to open that tool's panel, or right-click the status bar to hide either one.
 
-![The Claude Code hover: context, 5-hour limit, and weekly limit sections, each with a percent and progress bar, above the session title, folder, plan, and reading ages](images/statumo-hover.png)
+![The Claude Code hover: context, 5-hour limit, weekly limit, and weekly Fable limit sections, each with a percent and progress bar, above the session title, folder, plan, and reading ages](images/statumo-hover.png)
 
 ## What each part follows
 
