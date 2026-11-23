@@ -135,7 +135,7 @@ test('draws progress bars from theme colors, coloring low windows', () => {
 })
 
 test('draws an empty bar as the track alone and a full bar as the fill alone', () => {
-  /** Usage whose 5-hour window is unused and whose 7-day window is used up. */
+  /** Usage whose 5-hour window is unused and whose weekly window is used up. */
   const usage = makeUsage({
     limits: {
       fiveHour: { percentUsed: 0, resetsAt: new Date(2026, 10, 22, 14, 30) },

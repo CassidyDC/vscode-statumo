@@ -10,7 +10,7 @@ import { ringIcon } from './rings.js'
  * The full names of the rate-limit windows.
  * @type {Record<'fiveHour' | 'sevenDay', string>}
  */
-const windowNames = { fiveHour: '5-hour limit', sevenDay: '7-day limit' }
+const windowNames = { fiveHour: '5-hour limit', sevenDay: 'weekly limit' }
 
 /**
  * One rate-limit window's part of the status bar.
