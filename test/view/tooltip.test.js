@@ -94,7 +94,6 @@ test('shows when the Fable limit was read only when it differs from the other li
 
   assert.equal(footerDetail(buildTooltip('Claude Code', together, thresholds, now), 'Fable Read'), undefined)
   assert.equal(footerDetail(buildTooltip('Claude Code', apart, thresholds, now), 'Fable Read'), '2h ago')
-  assert.equal(footerDetail(buildTooltip('Claude Code', apart, thresholds, now), 'Limits Read'), '2m ago')
 })
 
 test('lays out each tooltip section as one table of label and note, heading-sized amount, then bar', () => {
@@ -112,12 +111,11 @@ test('lays out each tooltip section as one table of label and note, heading-size
   assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><h6>(<small>){4}<span.*<\/h6><\/td><\/tr><\/table>$/)
   assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets today at 2:30 PM<.*<\/tr><tr><td colspan="2"><h2>16% .*used/)
   assert.match(sections[3], /<b>Weekly limit<\/b>.*Resets Nov 27 at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>39% .*used/)
-  assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Plan<.*Limits Read<.*Last Activity<.*<\/table>$/)
+  assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Plan<.*Last Activity<.*<\/table>$/)
   assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
   assert.equal(footerDetail(sections[4], 'Plan'), 'Plus Subscription')
   assert.equal(footerDetail(sections[4], 'Folder'), '/work/project')
   assert.equal(footerDetail(sections[4], 'Last Activity'), '2m ago')
-  assert.equal(footerDetail(sections[4], 'Limits Read'), '2m ago')
 })
 
 test('shows reset times on the chosen clock, with the time until each reset when asked', () => {
@@ -146,11 +144,20 @@ test('shows the last activity and when the limits were read in their own rows', 
   assert.equal(footerDetail(tooltip, 'Limits Read'), '3h 15m ago')
 })
 
-test('shows a reading from the last minute as Just now', () => {
-  /** A tooltip whose session and limits were both read this minute. */
-  const tooltip = buildTooltip('Codex', makeUsage({ limitsUpdatedAt: now, session: { ...makeUsage().session, updatedAt: now } }), thresholds, now)
+test('leaves out when the limits were read when it shows the same age as the last activity', () => {
+  /** Usage whose limits were read seconds apart from the session's last change, and usage with no session. */
+  const together = makeUsage({ limitsUpdatedAt: new Date(2026, 10, 22, 9, 57, 30) })
+  const sessionless = makeUsage({ session: null })
 
-  assert.equal(footerDetail(tooltip, 'Last Activity'), 'Just now')
+  assert.equal(footerDetail(buildTooltip('Codex', together, thresholds, now), 'Limits Read'), undefined)
+  assert.equal(footerDetail(buildTooltip('Codex', together, thresholds, now), 'Last Activity'), '2m ago')
+  assert.equal(footerDetail(buildTooltip('Codex', sessionless, thresholds, now), 'Limits Read'), '2m ago')
+})
+
+test('shows a reading from the last minute as Just now', () => {
+  /** A tooltip whose limits were read this minute. */
+  const tooltip = buildTooltip('Codex', makeUsage({ limitsUpdatedAt: now }), thresholds, now)
+
   assert.equal(footerDetail(tooltip, 'Limits Read'), 'Just now')
 })
 

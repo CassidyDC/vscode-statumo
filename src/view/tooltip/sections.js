@@ -68,8 +68,10 @@ function planLabel({ plan, access = null }) {
 
 /**
  * Build the tooltip's footer: a table of the session's chat title, the session's folder, the plan,
- * when the limits were read, and the session's last activity, each labelled on the left. The Fable
- * limit gets its own read time when it comes from an older reading than the other limits.
+ * when the limits were read, and the session's last activity, each labelled on the left. The limits'
+ * read time is left out when it shows the same age as the last activity, since one turn usually
+ * writes both. The Fable limit gets its own read time when it comes from an older reading than the
+ * other limits.
  * @param {import('../../usage/model.js').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string} The footer's HTML, or nothing when there is nothing to show.
@@ -80,6 +82,10 @@ function footerSection(usage, now) {
   const plan = planLabel(usage)
   const rows = []
 
+  /** How long ago the session last changed and the limits were read, or null when unknown. */
+  const activityAge = session ? formatAge(session.updatedAt, now) : null
+  const limitsAge = usage.limitsUpdatedAt ? formatAge(usage.limitsUpdatedAt, now) : null
+
   // Text inside an HTML block can't break it with a blank line, so whitespace runs become spaces.
   if (session?.title) rows.push(footerRow('Chat', session.title.replace(/\s+/g, ' ')))
 
@@ -87,13 +93,13 @@ function footerSection(usage, now) {
 
   if (plan) rows.push(footerRow('Plan', plan))
 
-  if (usage.limitsUpdatedAt) rows.push(footerRow('Limits Read', formatAge(usage.limitsUpdatedAt, now)))
+  if (limitsAge && limitsAge !== activityAge) rows.push(footerRow('Limits Read', limitsAge))
 
   if (usage.limits.sevenDayFable && usage.fableUpdatedAt && usage.fableUpdatedAt.getTime() !== usage.limitsUpdatedAt?.getTime()) {
     rows.push(footerRow('Fable Read', formatAge(usage.fableUpdatedAt, now)))
   }
 
-  if (session) rows.push(footerRow('Last Activity', formatAge(session.updatedAt, now)))
+  if (activityAge) rows.push(footerRow('Last Activity', activityAge))
 
   return rows.length ? `<table>${gapRow(3)}${rows.join('')}${gapRow(3, footerEndGap)}</table>` : ''
 }
