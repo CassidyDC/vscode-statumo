@@ -226,7 +226,15 @@ const symbolSize = 15
 const symbolCenters = { star: [8, 8] }
 
 /**
- * Draw one symbol without its ring, at the size codicons draw at.
+ * How far to lift each symbol above the middle of its box, in grid units. A hover centers icons on
+ * the middle of lowercase letters, which sits below the middle of the capitals that start each
+ * section title, and its sanitizer won't let an icon's alignment change, so the glyph sits higher.
+ * @type {number}
+ */
+const symbolLift = 1
+
+/**
+ * Draw one symbol without its ring, at the size codicons draw at, lifted to line up with a hover's titles.
  * @param {SymbolName} symbol - The symbol.
  * @returns {string} The glyph's SVG.
  */
@@ -247,7 +255,7 @@ function symbolSvg(symbol) {
   const k = symbolSize / side
   const margin = (16 - symbolSize) / 2 / k
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="${fitPath(symbols[symbol], x - margin, y - margin, k)}"/></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="${fitPath(symbols[symbol], x - margin, y - margin + symbolLift / k, k)}"/></svg>`
 }
 
 /**
