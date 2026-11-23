@@ -77,14 +77,31 @@ test('lays out each tooltip section as one table of label and note, heading-size
   assert.equal(sections.length, 5)
   assert.equal(sections[0], '<table><tr><td><h2>Codex - Statumo</h2></td></tr></table>')
   assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><h6>(<small>){4}<span.*<\/h6><\/td><\/tr><\/table>$/)
-  assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/tr><tr><td colspan="2"><h2>16% .*used/)
-  assert.match(sections[3], /<b>Weekly limit<\/b>.*Resets Nov 27 at 09:00 \(4d 23h\).*<\/tr><tr><td colspan="2"><h2>39% .*used/)
+  assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 2:30 PM<.*<\/tr><tr><td colspan="2"><h2>16% .*used/)
+  assert.match(sections[3], /<b>Weekly limit<\/b>.*Resets Nov 27 at 9:00 AM<.*<\/tr><tr><td colspan="2"><h2>39% .*used/)
   assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Plan<.*Limits Read<.*Last Activity<.*<\/table>$/)
   assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
   assert.equal(footerDetail(sections[4], 'Plan'), 'Plus subscription')
   assert.equal(footerDetail(sections[4], 'Folder'), '/work/project')
   assert.equal(footerDetail(sections[4], 'Last Activity'), '2m ago')
   assert.equal(footerDetail(sections[4], 'Limits Read'), '2m ago')
+})
+
+test('shows reset times on the chosen clock, with the time until each reset when asked', () => {
+  /** The default tooltip, and one on a 24-hour clock with the time until each reset. */
+  const tooltip = buildTooltip('Codex', makeUsage(), thresholds, now)
+  const detailed = buildTooltip('Codex', makeUsage(), { ...thresholds, timeFormat: '24h', showTimeUntilReset: true }, now)
+
+  assert.match(tooltip, />Resets Nov 22 at 2:30 PM</)
+  assert.match(detailed, />Resets Nov 22 at 14:30 \(4h 30m\)</)
+  assert.match(detailed, />Resets Nov 27 at 09:00 \(4d 23h\)</)
+})
+
+test('leaves a gap row after the footer\'s last row', () => {
+  /** The tooltip's footer. */
+  const footer = buildTooltip('Codex', makeUsage(), thresholds, now).split('\n\n---\n\n').at(-1)
+
+  assert.match(footer, /<\/tr><tr><td colspan="3" height="1"><\/td><\/tr><\/table>$/)
 })
 
 test('shows the last activity and when the limits were read in their own rows', () => {

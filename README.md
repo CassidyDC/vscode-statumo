@@ -54,6 +54,8 @@ Codex needs no setup. Statumo reads the session logs Codex already writes under 
 | --- | --- | --- |
 | `statumo.warningThreshold` | `25` | Percent left at or below which an item uses the warning background. |
 | `statumo.errorThreshold` | `10` | Percent left at or below which an item uses the error background. |
+| `statumo.timeFormat` | `12h` | The clock the hover shows reset times on: `12h`, such as `2:30 PM`, or `24h`, such as `14:30`. |
+| `statumo.showTimeUntilReset` | `false` | Add how long until each limit resets after its reset time in the hover, such as `(4h 30m)`. |
 | `statumo.claude.enabled` | `true` | Show the Claude Code item. |
 | `statumo.claude.configDirectory` | `""` | The Claude config folder. Empty uses `CLAUDE_CONFIG_DIR`, then `~/.claude`. |
 | `statumo.claude.clickCommand` | `claude-vscode.focus` | The command a click on the Claude Code item runs. |

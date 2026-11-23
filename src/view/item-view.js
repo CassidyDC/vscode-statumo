@@ -27,11 +27,11 @@ const gap = ' '
  * and its tooltip has the full breakdown.
  * @param {{ label: string, name: string }} tool - The tool's short and full names.
  * @param {import('../usage/model.js').ToolUsage} usage - The tool's usage.
- * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
+ * @param {import('./tooltip/index.js').TooltipSettings} settings - The thresholds and how to show reset times.
  * @param {Date} now - The current time.
  * @returns {ItemView} The item's content.
  */
-function buildItemView(tool, usage, thresholds, now) {
+function buildItemView(tool, usage, settings, now) {
   /** The item's segments. */
   const segments = buildSegments(usage, now)
 
@@ -43,8 +43,8 @@ function buildItemView(tool, usage, thresholds, now) {
 
   return {
     text: [tool.label, segments.context.text, ...segments.windows.map(window => window.text)].join(gap),
-    tooltip: buildTooltip(tool.name, usage, thresholds, now),
-    level: getToolLevel(usage.limits, thresholds, now),
+    tooltip: buildTooltip(tool.name, usage, settings, now),
+    level: getToolLevel(usage.limits, settings, now),
     label: `${tool.name} ${parts.join(', ')}`,
   }
 }

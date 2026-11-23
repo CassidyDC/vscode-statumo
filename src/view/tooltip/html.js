@@ -56,6 +56,13 @@ const headingGap = 8
 const footerColumnGap = 12
 
 /**
+ * How many pixels tall the empty row after the footer's last row is. With the row's own spacing
+ * and padding, it leaves as much space below the footer as there is above the title.
+ * @type {number}
+ */
+const footerEndGap = 1
+
+/**
  * How many pixels tall the empty row above a section's status is. The hover drops the top margin
  * of a paragraph that starts a table cell, so this row spaces the status from the label as far as
  * the amount's heading margin does.
@@ -203,4 +210,4 @@ function footerRow(label, detail) {
   return `<tr><td>${dim(escapeHtml(label))}</td><td width="${footerColumnGap}"></td><td>${dim(escapeHtml(detail))}</td></tr>`
 }
 
-export { amount, dim, escapeHtml, footerRow, gapRow, progressBar, statusSection, tooltipSection, tooltipTitle }
+export { amount, dim, escapeHtml, footerEndGap, footerRow, gapRow, progressBar, statusSection, tooltipSection, tooltipTitle }

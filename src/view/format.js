@@ -10,12 +10,6 @@
 const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
 
 /**
- * Formats a reset's time of day, such as `09:00`.
- * @type {Intl.DateTimeFormat}
- */
-const clockTime = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-
-/**
  * Stands in for a value that hasn't been reported.
  * @type {string}
  */
@@ -51,15 +45,36 @@ function formatDuration(minutes) {
 }
 
 /**
- * Format when a window resets and how long until then.
+ * Format a time of day on a 12-hour clock, such as `9:00 AM`, or a 24-hour clock, such as `09:00`.
+ * @param {Date} date - The time.
+ * @param {'12h' | '24h'} timeFormat - Which clock to use.
+ * @returns {string} The time of day.
+ */
+function formatClock(date, timeFormat) {
+  /** The hour on a 24-hour clock, and the minutes, padded to two digits. */
+  const hours = date.getHours()
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  if (timeFormat === '24h') return `${String(hours).padStart(2, '0')}:${minutes}`
+  return `${hours % 12 || 12}:${minutes} ${hours < 12 ? 'AM' : 'PM'}`
+}
+
+/**
+ * Format when a window resets, and optionally how long until then.
  * @param {Date} date - The reset time.
  * @param {Date} now - The current time.
- * @returns {string} The reset, such as `Nov 27 at 09:00 (4d 23h)`.
+ * @param {object} [options] - How to format it.
+ * @param {'12h' | '24h'} [options.timeFormat] - Which clock to show the time on.
+ * @param {boolean} [options.showTimeUntilReset] - Whether to add how long until the reset.
+ * @returns {string} The reset, such as `Nov 27 at 9:00 AM`, or `Nov 27 at 09:00 (4d 23h)`.
  */
-function formatReset(date, now) {
+function formatReset(date, now, { timeFormat = '12h', showTimeUntilReset = false } = {}) {
+  /** The reset's date and time of day. */
+  const when = `${shortDate.format(date)} at ${formatClock(date, timeFormat)}`
+  if (!showTimeUntilReset) return when
+
   /** Whole minutes until the reset, rounded up. */
   const minutes = Math.max(0, Math.ceil((date.getTime() - now.getTime()) / 60_000))
-  return `${shortDate.format(date)} at ${clockTime.format(date)} (${formatDuration(minutes)})`
+  return `${when} (${formatDuration(minutes)})`
 }
 
 /**
@@ -74,4 +89,4 @@ function formatAge(date, now) {
   return minutes ? `${formatDuration(minutes)} ago` : 'just now'
 }
 
-export { formatAge, formatDuration, formatReset, formatTokens }
+export { formatAge, formatClock, formatDuration, formatReset, formatTokens }

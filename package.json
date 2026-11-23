@@ -512,6 +512,28 @@
           "maximum": 100,
           "markdownDescription": "Show an item with the error background when either rate-limit window has this percent or less left."
         },
+        "statumo.timeFormat": {
+          "type": "string",
+          "enum": [
+            "12h",
+            "24h"
+          ],
+          "enumItemLabels": [
+            "12-hour",
+            "24-hour"
+          ],
+          "markdownEnumDescriptions": [
+            "Show reset times on a 12-hour clock, such as `2:30 PM`.",
+            "Show reset times on a 24-hour clock, such as `14:30`."
+          ],
+          "default": "12h",
+          "markdownDescription": "The clock the tooltip shows each rate-limit window's reset time on."
+        },
+        "statumo.showTimeUntilReset": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show how long until each rate-limit window resets after its reset time in the tooltip, such as `(4h 30m)`."
+        },
         "statumo.claude.enabled": {
           "type": "boolean",
           "default": true,

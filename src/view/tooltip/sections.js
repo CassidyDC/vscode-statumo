@@ -7,7 +7,7 @@ import { tildify, truncatePath } from '../../files/paths.js'
 import { getWindowLevel, isLimitStale, percentUsed } from '../../usage/levels.js'
 import { formatAge, formatReset, formatTokens } from '../format.js'
 import { windowNames } from '../segments.js'
-import { amount, footerRow, gapRow, progressBar, statusSection, tooltipSection } from './html.js'
+import { amount, footerEndGap, footerRow, gapRow, progressBar, statusSection, tooltipSection } from './html.js'
 
 /**
  * Build the tooltip section for the session's context.
@@ -29,11 +29,11 @@ function contextSection(session) {
  * Build the tooltip section for one rate-limit window.
  * @param {'fiveHour' | 'sevenDay'} key - Which window.
  * @param {import('../../usage/model.js').LimitReading | null} limit - The window's reading.
- * @param {{ warningThreshold: number, errorThreshold: number }} thresholds - Percent-left thresholds.
+ * @param {import('./index.js').TooltipSettings} settings - The thresholds and how to show reset times.
  * @param {Date} now - The current time.
  * @returns {string} The section's HTML.
  */
-function limitSection(key, limit, thresholds, now) {
+function limitSection(key, limit, settings, now) {
   /** The window's name, capitalized. */
   const label = windowNames[key].replace(/^./, letter => letter.toUpperCase())
   if (!limit) return statusSection(label, null, 'Not reported yet', null)
@@ -41,8 +41,8 @@ function limitSection(key, limit, thresholds, now) {
 
   /** The rounded percent used, and when the window resets. */
   const used = percentUsed(limit)
-  const note = limit.resetsAt ? `Resets ${formatReset(limit.resetsAt, now)}` : null
-  return tooltipSection(label, note, amount(used, 'used'), progressBar(used, getWindowLevel(limit, thresholds, now)))
+  const note = limit.resetsAt ? `Resets ${formatReset(limit.resetsAt, now, settings)}` : null
+  return tooltipSection(label, note, amount(used, 'used'), progressBar(used, getWindowLevel(limit, settings, now)))
 }
 
 /**
@@ -77,7 +77,7 @@ function footerSection(usage, now) {
   if (plan) rows.push(footerRow('Plan', plan))
   if (usage.limitsUpdatedAt) rows.push(footerRow('Limits Read', formatAge(usage.limitsUpdatedAt, now)))
   if (session) rows.push(footerRow('Last Activity', formatAge(session.updatedAt, now)))
-  return rows.length ? `<table>${gapRow(3)}${rows.join('')}</table>` : ''
+  return rows.length ? `<table>${gapRow(3)}${rows.join('')}${gapRow(3, footerEndGap)}</table>` : ''
 }
 
 export { contextSection, footerSection, limitSection, planLabel }
