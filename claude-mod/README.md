@@ -37,4 +37,4 @@ Neither file holds a timestamp: Statumo dates each file by when it was last modi
 
 ## Validation
 
-From the repository root, run `claude plugin validate ./claude-mod/.claude-plugin/plugin.json --strict` and `claude plugin validate ./.claude-plugin/marketplace.json --strict`.
+From the repository root, run `claude plugin validate ./claude-mod/.claude-plugin/plugin.json --strict` and `claude plugin validate ./claude-mod/.claude-plugin/marketplace.json --strict`. This folder is both the mod and its `statumo` marketplace, whose one plugin's source is the folder itself.

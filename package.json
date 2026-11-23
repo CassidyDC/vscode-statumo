@@ -37,7 +37,6 @@
   "main": "./src/extension.js",
   "files": [
     "src/",
-    ".claude-plugin/",
     "claude-mod/",
     "images/icon.png",
     "images/statumo-icons.woff",

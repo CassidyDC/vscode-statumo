@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "usage",
-      "source": "./claude-mod",
+      "source": "./",
       "description": "Write live Claude Code context usage and rate limits for the Statumo VS Code status bar."
     }
   ]

@@ -56,13 +56,22 @@ function claudeEnv() {
 }
 
 /**
+ * Find the folder of the Usage mod that ships with Statumo, which is also the `statumo` marketplace.
+ * @param {vscode.ExtensionContext} context - Statumo's context.
+ * @returns {string} The folder.
+ */
+function modFolder(context) {
+  return path.join(context.extensionPath, 'claude-mod')
+}
+
+/**
  * Read the version of the Usage mod that ships with Statumo.
- * @param {string} extensionPath - Statumo's folder.
+ * @param {string} folder - The mod's folder.
  * @returns {Promise<string>} The version.
  */
-async function readBundledVersion(extensionPath) {
+async function readBundledVersion(folder) {
   /** The mod's manifest. */
-  const manifest = JSON.parse(await readFile(path.join(extensionPath, 'claude-mod', '.claude-plugin', 'plugin.json'), 'utf8'))
+  const manifest = JSON.parse(await readFile(path.join(folder, '.claude-plugin', 'plugin.json'), 'utf8'))
   return String(manifest.version)
 }
 
@@ -78,7 +87,7 @@ async function inspectMod(context) {
   if (!cli) return null
 
   /** The version that ships with Statumo, and the installed mod. */
-  const bundledVersion = await readBundledVersion(context.extensionPath)
+  const bundledVersion = await readBundledVersion(modFolder(context))
   const installed = findInstalledMod(await runClaudeJson(cli, ['plugin', 'list'], env))
   return { cli, env, bundledVersion, installed, action: planModAction(installed, bundledVersion) }
 }
@@ -113,7 +122,7 @@ async function applyModAction(context, state, log) {
       { location: vscode.ProgressLocation.Notification, title: `${isInstall ? 'Installing' : 'Updating'} the Usage mod for Claude Code` },
       async progress => {
         progress.report({ message: 'Adding the Statumo marketplace…' })
-        await runPluginCommand(state, ['plugin', 'marketplace', 'add', context.extensionPath])
+        await runPluginCommand(state, ['plugin', 'marketplace', 'add', modFolder(context)])
         progress.report({ message: isInstall ? 'Installing the mod…' : 'Updating the mod…' })
         await runPluginCommand(state, ['plugin', isInstall ? 'install' : 'update', modId, '--scope', state.installed?.scope ?? 'user'])
       },

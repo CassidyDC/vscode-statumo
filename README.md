@@ -40,7 +40,7 @@ Usage needs Claude Code 2.1.304 or later. When Usage isn't installed, or an upda
 To install Usage by hand instead, from the root of a Statumo checkout:
 
 ```sh
-claude plugin marketplace add "$PWD"
+claude plugin marketplace add "$PWD/claude-mod"
 claude plugin install usage@statumo --scope user
 ```
 
@@ -76,7 +76,7 @@ Statumo only reads files on your machine and makes no network requests. It runs 
 
 Run the tests with `npm test`, and lint with `npm run lint`, which checks the documentation and spacing rules in `AGENTS.md` with ESLint and the repository's own rules in `scripts/lint/`. `npx eslint --fix .` fixes most spacing problems. The progress rings in the status bar come from an icon font that `npm run build:icons` builds from the ring shapes drawn in `scripts/icons/`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package`, or build and install it into VS Code with `npm run install:local`. Both use the [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce) that `npm install` adds. The package holds only the files listed under `files` in `package.json`.
 
-The Usage mod for Claude Code lives in `claude-mod/`, and its marketplace in `.claude-plugin/`. Both ship in the extension package, so Statumo can install the mod. Bump the mod's version in `claude-mod/.claude-plugin/plugin.json` whenever it changes, since Statumo offers an update only when the version that ships is newer than the installed one. The mod's [README](claude-mod/README.md) documents the files Statumo reads and how to validate the mod.
+The Usage mod for Claude Code lives in `claude-mod/`, which is also its `statumo` marketplace: `claude-mod/.claude-plugin/` holds both the mod's `plugin.json` and the `marketplace.json` that lists the folder itself. The folder ships in the extension package, so Statumo can install the mod. Bump the mod's version in `claude-mod/.claude-plugin/plugin.json` whenever it changes, since Statumo offers an update only when the version that ships is newer than the installed one. The mod's [README](claude-mod/README.md) documents the files Statumo reads and how to validate the mod.
 
 ## Trademarks
 
