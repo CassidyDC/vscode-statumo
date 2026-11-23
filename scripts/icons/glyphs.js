@@ -218,18 +218,30 @@ function fitPath(d, x, y, k) {
 const symbolSize = 15
 
 /**
+ * The point to center a symbol on when the middle of its bounds isn't its visual middle. The star's
+ * top point reaches farther from its center than its lower points, so centering its bounds would
+ * sit it low.
+ * @type {Partial<Record<SymbolName, [number, number]>>}
+ */
+const symbolCenters = { star: [8, 8] }
+
+/**
  * Draw one symbol without its ring, at the size codicons draw at.
  * @param {SymbolName} symbol - The symbol.
  * @returns {string} The glyph's SVG.
  */
 function symbolSvg(symbol) {
-  /** The symbol's outline points, its bounds, the side of the square around them, and that square's corner. */
+  /** The symbol's outline points, its bounds, and the point to center it on. */
   const points = outlinePoints(symbols[symbol])
   const [left, top] = [Math.min(...points.map(([x]) => x)), Math.min(...points.map(([, y]) => y))]
   const [right, bottom] = [Math.max(...points.map(([x]) => x)), Math.max(...points.map(([, y]) => y))]
-  const side = Math.max(right - left, bottom - top)
-  const x = (left + right - side) / 2
-  const y = (top + bottom - side) / 2
+  const [centerX, centerY] = symbolCenters[symbol] ?? [(left + right) / 2, (top + bottom) / 2]
+
+  /** Half the side of the square around that point that holds the symbol, the side, and the square's corner. */
+  const half = Math.max(centerX - left, right - centerX, centerY - top, bottom - centerY)
+  const side = 2 * half
+  const x = centerX - half
+  const y = centerY - half
 
   /** How much to scale the symbol by, and the margin around it in the original grid. */
   const k = symbolSize / side
