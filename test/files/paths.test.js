@@ -25,6 +25,7 @@ test('shortens long paths in the middle, keeping the first and last folders', ()
     truncatePath('~/Projects/Software/First-Party/Groups/CassidyDC/Packages/Repos/_statumo'),
     '~/…/CassidyDC/Packages/Repos/_statumo',
   )
+
   assert.equal(truncatePath('/Volumes/Data/very/deep/folder/structure/for/a/project'), '/Volumes/…/structure/for/a/project')
   assert.equal(truncatePath(`~/${'x'.repeat(60)}`, 20), `…${'x'.repeat(19)}`)
 })

@@ -26,7 +26,12 @@ A tool's item stays hidden until it has written any usage on this machine.
 
 ### Claude Code
 
-VS Code extensions can't see Claude Code's rate limits directly, so Statumo reads them from **Usage**, a Claude Code mod that ships in this repository's [`claude-mod/`](claude-mod/README.md) folder. Usage writes each session's usage to `~/.claude/usage/sessions/`. Statumo deletes session files there that haven't changed in 30 days. Your plan, and whether you sign in with a subscription or an API key, come from the signed-in account Claude Code records in `~/.claude.json`. Statumo can't see an `ANTHROPIC_API_KEY` set in Claude Code's own environment, so when one takes the place of your subscription, the hover still shows the subscription.
+VS Code extensions can't see Claude Code's rate limits or context window directly, so Statumo reads them from **Usage**, a Claude Code mod that ships in this repository's [`claude-mod/`](claude-mod/README.md) folder. Usage writes them to `~/.claude/statumo/`, or to `statumo/` in your `CLAUDE_CONFIG_DIR`:
+
+- `sessions/` holds one small file per session with its folder, transcript path, and context use. Statumo deletes session files that haven't changed in 30 days.
+- `limits.json` holds the account's latest 5-hour and 7-day limits, rewritten after each reply that reports them.
+
+Chat titles come from Claude Code's own transcripts: Statumo reads the end of the transcript of the session it follows. Your plan, and whether you sign in with a subscription or an API key, come from the signed-in account Claude Code records in `~/.claude.json`. Statumo can't see an `ANTHROPIC_API_KEY` set in Claude Code's own environment, so when one takes the place of your subscription, the hover still shows the subscription.
 
 Usage needs Claude Code 2.1.304 or later. From the root of a Statumo checkout, register the checkout as a marketplace and install Usage at user scope so every session writes its usage, whether it runs in the VS Code panel or a terminal. Claude Code loads the mod from the checkout, so keep it at the registered path.
 
@@ -36,13 +41,6 @@ claude plugin install usage@statumo --scope user
 ```
 
 After pulling a new version, run `claude plugin marketplace update statumo`, then start a new Claude Code session.
-
-If you installed Usage from its old standalone `code-usage-local` marketplace, remove that copy after installing from Statumo:
-
-```sh
-claude plugin uninstall usage@code-usage-local --scope user --keep-data
-claude plugin marketplace remove code-usage-local
-```
 
 ### Codex
 
@@ -63,18 +61,17 @@ Codex needs no setup. Statumo reads the session logs Codex already writes under 
 
 ## Commands
 
-- **Statumo: Refresh Usage** re-reads both tools right away. Statumo also refreshes every 3 seconds and whenever the window regains focus.
-- **Statumo: Open Claude Code** and **Statumo: Open Codex** run the click commands.
+- **Statumo: Refresh Usage** re-reads both tools right away. Statumo also refreshes every 3 seconds while the window has focus, and whenever the window regains focus.
 
 ## Privacy
 
-Statumo only reads files on your machine and makes no network requests. Session titles and folders appear only in the hover tooltip.
+Statumo only reads files on your machine and makes no network requests. For Claude Code, that includes the end of the followed session's transcript, which Statumo reads only to find the chat title. Session titles and folders appear only in the hover tooltip.
 
 ## Development
 
-Run the tests with `npm test`. The progress rings in the status bar come from an icon font that `npm run build:icons` builds from the ring shapes drawn in `scripts/build-icons.js`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`.
+Run the tests with `npm test`. The progress rings in the status bar come from an icon font that `npm run build:icons` builds from the ring shapes drawn in `scripts/icons/`. The script also rewrites `contributes.icons` in `package.json` to match. Build a package with `npm run package` (requires [`@vscode/vsce`](https://github.com/microsoft/vscode-vsce)), or build and install it into VS Code with `npm run install:local`. The package holds only the files listed under `files` in `package.json`.
 
-The Usage mod for Claude Code lives in `claude-mod/` and stays out of the extension package. Its [README](claude-mod/README.md) documents the session file format Statumo reads and how to validate the mod.
+The Usage mod for Claude Code lives in `claude-mod/` and stays out of the extension package. Its [README](claude-mod/README.md) documents the files Statumo reads and how to validate the mod.
 
 ## Trademarks
 
