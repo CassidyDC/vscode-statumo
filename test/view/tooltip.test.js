@@ -79,7 +79,7 @@ test('lays out each tooltip section as one table of label and note, heading-size
   assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2>(<small>){6}<span.*<\/td><\/tr><\/table>$/)
   assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/tr><tr><td colspan="2"><h2>16% .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/tr><tr><td colspan="2"><h2>39% .*used/)
-  assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Last Activity<.*Limits Read<.*Plan<.*<\/table>$/)
+  assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Plan<.*Limits Read<.*Last Activity<.*<\/table>$/)
   assert.equal(footerDetail(sections[4], 'Chat'), 'Fix [link](https://example.com) *now*')
   assert.equal(footerDetail(sections[4], 'Plan'), 'Plus subscription')
   assert.equal(footerDetail(sections[4], 'Folder'), '/work/project')

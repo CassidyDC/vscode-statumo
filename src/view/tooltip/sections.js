@@ -60,8 +60,8 @@ function planLabel({ plan, access = null }) {
 }
 
 /**
- * Build the tooltip's footer: a table of the session's chat title, the session's folder, the
- * session's last activity, when the limits were read, and the plan, each labelled on the left.
+ * Build the tooltip's footer: a table of the session's chat title, the session's folder, the plan,
+ * when the limits were read, and the session's last activity, each labelled on the left.
  * @param {import('../../usage/model.js').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string} The footer's HTML, or nothing when there is nothing to show.
@@ -74,9 +74,9 @@ function footerSection(usage, now) {
   // Text inside an HTML block can't break it with a blank line, so whitespace runs become spaces.
   if (session?.title) rows.push(footerRow('Chat', session.title.replace(/\s+/g, ' ')))
   if (session?.cwd) rows.push(footerRow('Folder', truncatePath(tildify(session.cwd))))
-  if (session) rows.push(footerRow('Last Activity', formatAge(session.updatedAt, now)))
-  if (usage.limitsUpdatedAt) rows.push(footerRow('Limits Read', formatAge(usage.limitsUpdatedAt, now)))
   if (plan) rows.push(footerRow('Plan', plan))
+  if (usage.limitsUpdatedAt) rows.push(footerRow('Limits Read', formatAge(usage.limitsUpdatedAt, now)))
+  if (session) rows.push(footerRow('Last Activity', formatAge(session.updatedAt, now)))
   return rows.length ? `<table>${gapRow(3)}${rows.join('')}</table>` : ''
 }
 
