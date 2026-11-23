@@ -76,7 +76,7 @@ test('lays out each tooltip section as one table of label and note, heading-size
 
   assert.equal(sections.length, 5)
   assert.equal(sections[0], '<table><tr><td><h2>Codex - Statumo</h2></td></tr></table>')
-  assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2><small><small><span.*<\/td><\/tr><\/table>$/)
+  assert.match(sections[1], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>Context<\/b><\/td><td align="right">.*48\.3k \/ 400k tokens.*<\/td><\/tr><tr><td colspan="2"><h2>12% .*used.*<\/h2>(<small>){6}<span.*<\/td><\/tr><\/table>$/)
   assert.match(sections[2], /^<table width="100%"><tr><td colspan="2" height="8"><\/td><\/tr><tr><td><b>5-hour limit<\/b><\/td><td align="right">.*Resets Nov 22 at 14:30 \(4h 30m\).*<\/tr><tr><td colspan="2"><h2>16% .*used/)
   assert.match(sections[3], /Resets Nov 27 at 09:00 \(4d 23h\).*<\/tr><tr><td colspan="2"><h2>39% .*used/)
   assert.match(sections[4], /^<table><tr><td colspan="3" height="8"><\/td><\/tr><tr><td><span[^>]*>Chat<.*Folder<.*Last Activity<.*Limits Read<.*Plan<.*<\/table>$/)
@@ -130,6 +130,22 @@ test('draws progress bars from theme colors, coloring low windows', () => {
   /** The usage's tooltip. */
   const tooltip = buildTooltip('Codex', usage, thresholds, now)
 
-  assert.match(tooltip, /<span style="color:var\(--vscode-editorError-foreground\);">▀{57}<\/span><span style="color:var\(--vscode-editorHoverWidget-border\);">▀{3}</)
-  assert.match(tooltip, /<span style="color:var\(--vscode-button-background\);">▀{23}<\/span>/)
+  assert.match(tooltip, /<span style="background-color:var\(--vscode-editorHoverWidget-border\);border-radius:2px;"><span style="background-color:var\(--vscode-editorError-foreground\);border-radius:2px;">\u00a0{221}<\/span>\u00a0{12}<\/span>/)
+  assert.match(tooltip, /<span style="background-color:var\(--vscode-button-background\);border-radius:2px;">\u00a0{91}<\/span>\u00a0{142}<\/span>/)
+})
+
+test('draws an empty bar as the track alone and a full bar as the fill alone', () => {
+  /** Usage whose 5-hour window is unused and whose 7-day window is used up. */
+  const usage = makeUsage({
+    limits: {
+      fiveHour: { percentUsed: 0, resetsAt: new Date(2026, 10, 22, 14, 30) },
+      sevenDay: { percentUsed: 100, resetsAt: new Date(2026, 10, 27, 9, 0) },
+    },
+  })
+
+  /** The usage's tooltip. */
+  const tooltip = buildTooltip('Codex', usage, thresholds, now)
+
+  assert.match(tooltip, /<span style="background-color:var\(--vscode-editorHoverWidget-border\);border-radius:2px;">\u00a0{233}<\/span>/)
+  assert.match(tooltip, /border-radius:2px;"><span style="background-color:var\(--vscode-editorError-foreground\);border-radius:2px;">\u00a0{233}<\/span><\/span>/)
 })

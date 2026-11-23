@@ -4,11 +4,23 @@
  */
 
 /**
- * How many cells wide a tooltip progress bar is, about 325px at the bar's text size: the hover's
- * 13px text made smaller twice, about 9px.
+ * How many no-break spaces wide a tooltip progress bar is, about 325px at the bar's text size.
  * @type {number}
  */
-const barCells = 60
+const barSpaces = 233
+
+/**
+ * How many times a tooltip progress bar's text is made smaller, from the hover's 13px to about
+ * 4.4px, which sets how tall the bar's background is: about 5px.
+ * @type {number}
+ */
+const barShrinks = 6
+
+/**
+ * How many pixels the corners of a progress bar's fill and track are rounded by.
+ * @type {number}
+ */
+const barRadius = 2
 
 /**
  * Theme colors for a progress bar's fill, by warning level: the primary button's color, the theme's
@@ -22,7 +34,7 @@ const barFills = {
 }
 
 /**
- * Theme color for the unfilled part of a progress bar: the hover's border, which is opaque so the cells join without seams.
+ * Theme color for the unfilled part of a progress bar: the hover's border, which is opaque so the fill covers it.
  * @type {string}
  */
 const barTrack = 'var(--vscode-editorHoverWidget-border)'
@@ -70,28 +82,31 @@ function dim(text) {
 }
 
 /**
- * Draw a progress bar as HTML the hover sanitizer keeps: runs of upper-half block characters in
- * text made smaller twice, which join into a solid line about 4.5px tall, colored with theme colors.
+ * Draw a progress bar as HTML the hover sanitizer keeps: a span of no-break spaces with a
+ * rounded background in the track's color, holding a shorter one in the fill's color, in text
+ * made smaller enough times that the backgrounds are a thin line.
  *
- * The upper half block is one of the few block characters the system font falls back to Menlo for,
- * which draws them edge to edge. Others, such as the lower quarter block, fall back to a font that
- * leaves a gap between each cell.
+ * Each background is one box, so it has none of the seams that a run of block characters shows
+ * where cells meet at fractions of a pixel.
  * @param {number} percent - How full the bar is, from 0 to 100.
  * @param {'error' | 'warning' | null} [level] - The warning level that colors the fill.
  * @returns {string} The bar's HTML.
  */
 function progressBar(percent, level = null) {
-  /** How many cells the fill spans. */
-  const filled = Math.round((Math.max(0, Math.min(100, percent)) / 100) * barCells)
+  /** How many spaces the fill spans. */
+  const filled = Math.round((Math.max(0, Math.min(100, percent)) / 100) * barSpaces)
 
   /**
-   * Draw one colored run of cells.
-   * @param {string} color - The run's color.
-   * @param {number} cells - How many cells the run spans.
-   * @returns {string} The run's HTML, or nothing when it spans no cells.
+   * Draw a run of spaces on a rounded background.
+   * @param {string} color - The background's color.
+   * @param {string} content - The run's spaces and any run inside it.
+   * @returns {string} The run's HTML.
    */
-  const run = (color, cells) => cells ? `<span style="color:${color};">${'▀'.repeat(cells)}</span>` : ''
-  return `<small><small>${run(barFills[level ?? 'normal'], filled)}${run(barTrack, barCells - filled)}</small></small>`
+  const run = (color, content) => `<span style="background-color:${color};border-radius:${barRadius}px;">${content}</span>`
+
+  /** The fill's run, or nothing when it spans no spaces. */
+  const fill = filled ? run(barFills[level ?? 'normal'], '\u00a0'.repeat(filled)) : ''
+  return `${'<small>'.repeat(barShrinks)}${run(barTrack, fill + '\u00a0'.repeat(barSpaces - filled))}${'</small>'.repeat(barShrinks)}`
 }
 
 /**
