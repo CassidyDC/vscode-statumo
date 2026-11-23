@@ -439,8 +439,8 @@ function footerRow(label, detail) {
 }
 
 /**
- * Build the tooltip's footer: a table of the session's chat title, the plan, the session's folder,
- * the session's last activity or when it ended, and when the limits were read, each labelled on the left.
+ * Build the tooltip's footer: a table of the session's chat title, the session's folder, the
+ * session's last activity or when it ended, when the limits were read, and the plan, each labelled on the left.
  * @param {import('./usage').ToolUsage} usage - The tool's readings.
  * @param {Date} now - The current time.
  * @returns {string} The footer's HTML, or nothing when there is nothing to show.
@@ -452,10 +452,10 @@ function footerSection(usage, now) {
 
   // Text inside an HTML block can't break it with a blank line, so whitespace runs become spaces.
   if (session?.title) rows.push(footerRow('Chat', session.title.replace(/\s+/g, ' ')))
-  if (plan) rows.push(footerRow('Plan', plan))
   if (session?.cwd) rows.push(footerRow('Folder', truncatePath(tildify(session.cwd))))
   if (session) rows.push(footerRow(session.isEnded ? 'Ended' : 'Last Activity', formatAge(session.updatedAt, now)))
   if (usage.limitsUpdatedAt) rows.push(footerRow('Limits Read', formatAge(usage.limitsUpdatedAt, now)))
+  if (plan) rows.push(footerRow('Plan', plan))
 
   return rows.length ? `<table>${gapRow(3)}${rows.join('')}</table>` : ''
 }
